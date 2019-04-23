@@ -1,0 +1,41 @@
+  <!-- <title>Garden &#9752;</title> -->
+<div ng-controller="gardenCtrl as ctrl">
+  <span class="error" ng-if="ctrl.error"> {{ctrl.error}} </span>
+  <span class="message" ng-if="ctrl.message"> {{ctrl.message}} </span>
+  <span class="message" ng-if="ctrl.status"> {{ctrl.status}} </span>
+
+  <div>
+    <h4>Programma veloce:</h4>
+    <div ng-repeat="cycle in ctrl.program" class="program-cycle">
+      <div class="program-zones">
+          <div ng-repeat="zone in cycle.zones">
+             <label>{{zone.name}}</label>
+             <input type="checkbox" ng-model="zone.enabled" />
+          </div>
+      </div>
+      <p>
+        <span>Minuti: </span>
+        <input type="text" ng-model="cycle.time" style="width: 3em" />
+      </p>
+      <button ng-click="ctrl.removeCycle($index)">Rimuovi</button>
+    </div>
+    <button ng-click="ctrl.addCycle()">Aggiungi ciclo</button>
+  </div>
+
+  <br/>
+  <br/>
+  <button ng-click="ctrl.start()" ng-disabled="ctrl.isDisableButton()">Vai!</button>
+  <br/>
+  <br/>
+  <button ng-click="ctrl.stop()">STOP</button>
+  <br/>
+
+  <div class="bot"> 
+    <h3>Prossime irrigazioni:</h3>
+      <p ng-repeat="cycle in ctrl.nextCycles">
+        <span ng-if="cycle.scheduledTime">Programma "{{cycle.name}}" schedulato {{cycle.scheduledTime}}</span>
+        <span ng-if="!cycle.scheduledTime">Programma "{{cycle.name}}" in coda</span>
+      </p>
+    <p> Flusso: {{ctrl.flow.flowLMin | number : 1 }} <small><sup>Lit</sup>/<sub>min</sub></small>, {{ctrl.flow.totalMc | number : 3 }} <small>M<sup>3</sup></small> </p>
+  </div>
+</div>

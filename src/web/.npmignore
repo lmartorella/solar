@@ -1,0 +1,9 @@
+.vscode
+**/*.ts
+**/*.map
+**/tsconfig.json
+etc
+bin/*.pdb
+bin/*.xml
+bin/*.config
+*.tgz
