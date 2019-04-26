@@ -6,13 +6,17 @@ using Lucky.Home.Db;
 using System.Threading;
 using Lucky.Home.Power;
 using System.Threading.Tasks;
+using Lucky.Home.Application;
+using Lucky.Home;
+
+[assembly: Application(typeof (HomeApp))]
 
 namespace Lucky.Home.Application
 {
     /// <summary>
     /// The home application
     /// </summary>
-    class HomeApp : AppService
+    class HomeApp : ServiceBase, IApplication
     {
         private Timer _timerMinute;
         private event Action _dayRotation;
@@ -22,7 +26,7 @@ namespace Lucky.Home.Application
         /// <summary>
         /// Fetch all devices. To be called when the list of the devices changes
         /// </summary>
-        public override async Task Start()
+        public async Task Start()
         {
             var deviceMan = Manager.GetService<IDeviceManager>();
             IDevice[] devices = deviceMan.Devices;
@@ -68,7 +72,7 @@ namespace Lucky.Home.Application
 
                     Task.Delay(1500).ContinueWith(t =>
                     {
-                        Manager.GetService<HomeApp>().Kill("killed by parent process");
+                        Manager.Kill(Logger, "killed by parent process");
                     });
                 }
             };

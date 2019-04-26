@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lucky.Home.Serialization;
 
-// ReSharper disable UnusedMember.Global
 #pragma warning disable 649
 
 namespace Lucky.Home.Sinks
@@ -37,7 +36,6 @@ namespace Lucky.Home.Sinks
             RunLoop(lastData);
         }
 
-        // ReSharper disable once ClassNeverInstantiated.Local
         private class ReadStatusResponse : ISerializable
         {
             /// <summary>

@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Lucky.Home</RootNamespace>
-    <AssemblyName>Home.Server.App</AssemblyName>
+    <AssemblyName>Home.Samples</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Application\HomeApp.cs" />
+    <Compile Include="HomeApp.cs" />
     <Compile Include="Devices\BarometricTesterDevice.cs" />
     <Compile Include="Devices\FlowTesterDevice.cs" />
     <Compile Include="Devices\GardenDevice.cs" />

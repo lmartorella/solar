@@ -2,8 +2,6 @@
 using Lucky.Home.Services;
 using Lucky.Home.Sinks;
 
-// ReSharper disable UnusedMember.Global
-
 namespace Lucky.Home.Devices
 {
     [Device("Temperature Tester")]

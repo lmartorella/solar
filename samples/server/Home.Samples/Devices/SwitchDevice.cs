@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lucky.Home.Sinks;
 
-// ReSharper disable once UnusedMember.Global
-
 namespace Lucky.Home.Devices
 {
     /// <summary>

@@ -3,8 +3,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Lucky.Home.Serialization;
 
-// ReSharper disable NotAccessedField.Local
-// ReSharper disable UnusedMember.Global
 #pragma warning disable 649
 
 namespace Lucky.Home.Sinks
@@ -22,7 +20,6 @@ namespace Lucky.Home.Sinks
             Status = new bool[0];
         }
 
-        // ReSharper disable once ClassNeverInstantiated.Local
         private class ReadStatusResponse
         {
             public ushort SwitchCount;
