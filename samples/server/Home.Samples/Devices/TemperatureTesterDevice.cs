@@ -4,6 +4,9 @@ using Lucky.Home.Sinks;
 
 namespace Lucky.Home.Devices
 {
+    /// <summary>
+    /// Test a temperature sink and displays data on stdout
+    /// </summary>
     [Device("Temperature Tester")]
     [Requires(typeof(TemperatureSink))]
     public class TemperatureTesterDevice : DeviceBase

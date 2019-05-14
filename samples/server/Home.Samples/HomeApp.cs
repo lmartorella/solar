@@ -23,15 +23,13 @@ namespace Lucky.Home.Application
         private DateTime _nextPeriodStart;
         private static readonly TimeSpan PeriodLenght = TimeSpan.FromDays(1);
 
-        /// <summary>
-        /// Fetch all devices. To be called when the list of the devices changes
-        /// </summary>
         public async Task Start()
         {
+            // Get all registered devices
             var deviceMan = Manager.GetService<IDeviceManager>();
             IDevice[] devices = deviceMan.Devices;
 
-            // Process all device created
+            // Process all solar devices
             foreach (var device in devices.OfType<ISolarPanelDevice>())
             {
                 var db = new FsTimeSeries<PowerData, DayPowerData>(device.Name);
@@ -58,12 +56,14 @@ namespace Lucky.Home.Application
                 }
             }, null, 0, 30 * 1000);
 
+            // If a mail should be sent at startup, do it now
             var mail = Manager.GetService<IConfigurationService>().GetConfig("sendMail");
             if (!string.IsNullOrEmpty(mail))
             {
-                await Manager.GetService<INotificationService>().SendMail("Messaggio", mail);
+                await Manager.GetService<INotificationService>().SendMail(Resources.startupMessage, mail);
             }
 
+            // Implements a IPC pipe with web server
             Manager.GetService<PipeServer>().Message += (o, e) =>
             {
                 if (e.Request.Command == "kill")

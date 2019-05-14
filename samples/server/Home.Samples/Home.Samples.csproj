@@ -45,7 +45,6 @@
     <Compile Include="Devices\FlowTesterDevice.cs" />
     <Compile Include="Devices\GardenDevice.cs" />
     <Compile Include="Devices\ClockDevice.cs" />
-    <Compile Include="Devices\EchoLineTesterDevice.cs" />
     <Compile Include="Devices\ISolarPanelDevice.cs" />
     <Compile Include="Devices\SamilInverterLoggerDevice.cs" />
     <Compile Include="Devices\SamilInverterTesterDevice.cs" />
@@ -60,8 +59,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Services\IJsonWebServer.cs" />
-    <Compile Include="Services\PipeJsonServer.cs" />
     <Compile Include="Services\PipeServer.cs" />
     <Compile Include="Sinks\BarometricSink.cs" />
     <Compile Include="Sinks\DigitalInputArraySink.cs" />

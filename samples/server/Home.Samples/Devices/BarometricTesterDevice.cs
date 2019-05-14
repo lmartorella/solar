@@ -5,6 +5,9 @@ using System.Threading;
 
 namespace Lucky.Home.Devices
 {
+    /// <summary>
+    /// Tester device for Bosch BPM180 sensor and displays data on stdout
+    /// </summary>
     [Device("Barometric Tester")]
     [Requires(typeof(BarometricSink))]
     class BarometricTesterDevice : DeviceBase

@@ -43,7 +43,9 @@ namespace Lucky.Home.Sinks
         public short Temperature;
     }
 
-
+    /// <summary>
+    /// Read data from a DHT11 temperature sensor
+    /// </summary>
     [SinkId("TEMP")]
     class TemperatureSink : SinkBase
     {

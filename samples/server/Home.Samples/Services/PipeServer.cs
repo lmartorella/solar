@@ -1,7 +1,5 @@
 ﻿using Lucky.Home.Devices;
-using Lucky.Home.Sinks;
 using Lucky.Net;
-using Lucky.Home.Services;
 using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
@@ -43,7 +41,10 @@ namespace Lucky.Home.Services
         public bool CloseServer;
     }
 
-    public class PipeServer : ServiceBase
+    /// <summary>
+    /// The pipe communication for the web.server
+    /// </summary>
+    class PipeServer : ServiceBase
     {
         public class MessageEventArgs : EventArgs
         {

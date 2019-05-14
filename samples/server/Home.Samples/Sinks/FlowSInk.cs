@@ -23,6 +23,10 @@ namespace Lucky.Home.Sinks
         public double FlowLMin;
     }
 
+    /// <summary>
+    /// Sink for water flow device. Each tick count is a nominal quantity of water (e.g. 5.5 ticks/seconds means 1 liter/minute).
+    /// The sink sends both current flow and total amount of water counted.
+    /// </summary>
     [SinkId("FLOW")]
     class FlowSink : SinkBase
     {

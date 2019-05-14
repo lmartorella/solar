@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Lucky.Home.Sinks
 {
+    /// <summary>
+    /// Sink adapter for Bosch BPM180 sensor
+    /// </summary>
     [SinkId("BM18")]
     class BarometricSink : SinkBase
     {

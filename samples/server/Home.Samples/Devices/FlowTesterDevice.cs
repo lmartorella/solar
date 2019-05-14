@@ -5,6 +5,9 @@ using System.Threading;
 
 namespace Lucky.Home.Devices
 {
+    /// <summary>
+    /// Test device for water flow sinks
+    /// </summary>
     [Device("Flow Tester")]
     [Requires(typeof(FlowSink))]
     class FlowTesterDevice : DeviceBase

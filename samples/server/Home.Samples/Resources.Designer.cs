@@ -61,24 +61,18 @@ namespace Lucky.Home {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;html&gt;
-        ///&lt;head&gt;
-        ///   &lt;style&gt;
-        ///      body { background: lightgreen }
-        ///      .title { color: darkred }
-        ///   &lt;/style&gt;
-        ///&lt;/head&gt;
-        ///&lt;body&gt;
-        ///	&lt;h2 class=&quot;title&quot;&gt;Solar Power Today: {0} kWh&lt;/h2&gt;
-        ///    &lt;table width=&quot;100%&quot;&gt;
+        ///   Looks up a localized string similar to &lt;!-- Used to send mails of daily solar panel activity --&gt;
+        ///&lt;div style=&quot;background: lightgreen&quot; &gt;
+        ///	&lt;h2 style=&quot;color: darkred&quot;&gt;Solar Power Today: {0} kWh&lt;/h2&gt;
+        ///    &lt;table width=&quot;100%&quot; style=&quot;background: lightgreen&quot;&gt;
         ///		&lt;tr&gt;
         ///			&lt;td&gt;
-        ///				&lt;img src=&quot;cid:summary&quot; width=&quot;250&quot; heigth=&quot;250&quot; /&gt;
+        ///				&lt;!--&lt;img src=&quot;cid:summary&quot; width=&quot;250&quot; heigth=&quot;250&quot; /&gt;--&gt;
+        ///				&lt;p&gt;Chart coming soon!&lt;/p&gt;
         ///			&lt;/td&gt;
         ///		&lt;/tr&gt;
         ///    &lt;/table&gt;
-        ///&lt;/body&gt;
-        ///&lt;/html&gt;.
+        ///&lt;/div&gt;.
         /// </summary>
         internal static string solar_daily_summary {
             get {
@@ -92,6 +86,15 @@ namespace Lucky.Home {
         internal static string solar_daily_summary_title {
             get {
                 return ResourceManager.GetString("solar_daily_summary_title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Message.
+        /// </summary>
+        internal static string startupMessage {
+            get {
+                return ResourceManager.GetString("startupMessage", resourceCulture);
             }
         }
     }

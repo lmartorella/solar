@@ -7,6 +7,10 @@ using System.Threading;
 
 namespace Lucky.Home.Model
 {
+    /// <summary>
+    /// Generic serializable model of a week/day-based program.
+    /// Used by garden programmer device
+    /// </summary>
     public class TimeProgram<TCycle> where TCycle : TimeProgram<TCycle>.Cycle
     {
         // Cover the timelapse during DST

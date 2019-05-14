@@ -124,4 +124,7 @@
   <data name="solar_daily_summary_title" xml:space="preserve">
     <value>Solar Power Today: {0} kWh</value>
   </data>
+  <data name="startupMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
 </root>

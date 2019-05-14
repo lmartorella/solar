@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Lucky.Home.Devices
 {
+    /// <summary>
+    /// Uses a display line to display current time
+    /// </summary>
     [Device("Clock")]
     [RequiresArray(typeof(DisplaySink))]
     public class ClockDevice : DeviceBase

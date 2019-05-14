@@ -121,6 +121,9 @@ namespace Lucky.Home.Devices
         public double TotalQtyMc;
     }
 
+    /// <summary>
+    /// Control and diagnose a custom garden programmer
+    /// </summary>
     [Device("Garden")]
     [Requires(typeof(GardenSink))]
     [Requires(typeof(FlowSink))]

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Lucky.Home.Sinks
 {
     /// <summary>
-    /// Passive/poll based switch array
+    /// Interface for garden programmer sink
     /// </summary>
     [SinkId("GARD")]
     class GardenSink : SinkBase
