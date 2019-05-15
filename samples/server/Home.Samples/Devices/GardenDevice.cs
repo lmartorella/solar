@@ -190,7 +190,7 @@ namespace Lucky.Home.Devices
             _counterFq = counterFq;
             _timeProgram = new TimeProgram<GardenCycle>(Logger);
 
-            var cfgColder = Manager.GetService<PersistenceService>().GetAppFolderPath("Server");
+            var cfgColder = Manager.GetService<PersistenceService>().GetAppFolderPath("server");
             _cfgFile = new FileInfo(Path.Combine(cfgColder, "gardenCfg.json"));
             if (!_cfgFile.Exists)
             {

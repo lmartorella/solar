@@ -1,8 +1,6 @@
-import { MainController } from "./common";
-
 export class AdminController {
-    static $inject = ['$scope', '$http'];
-    constructor(private $scope: { main: MainController }, private $http: ng.IHttpService) {
+    static $inject = ['$http'];
+    constructor(private $http: ng.IHttpService) {
     }
 
     halt() {

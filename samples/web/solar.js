@@ -1,29 +1,14 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as moment from 'moment';
-import { csvFolder } from './settings';
+const path = require('path');
+const fs = require('fs');
+const moment = require('moment');
+const { setTimeout } = require('timers');
+const { etcDir } = require('../../src/web/settings');
 
-interface IPvImmData {
-    error?: string;
-    currentW?: number;
-    currentTsTime?: string;
-    currentTsDate?: string;
-    totalDayWh?: number;
-    peakW?: number;
-    peakTs?: string;
-    totalKwh?: number;
-    mode?: number;
-    fault?: string;
-}
+const csvFolder = path.join(etcDir, 'DB/SAMIL');
 
-interface ICsv {
-    rows: any[][];
-    colKeys: { [key: string]: number };
-}
-
-function parseCsv(path: string): ICsv {
+function parseCsv(path) {
     var content = fs.readFileSync(path, 'utf8');
-    var colKeys: { [key: string]: number } = { };
+    var colKeys = { };
     var rows = content.split('\n').map((line, idx) => {
         var cells = line.replace('\r', '').split(',');
         if (idx === 0) {
@@ -51,7 +36,7 @@ function parseCsv(path: string): ICsv {
     };
 }
 
-function findPeak(csv: ICsv, colKey: string): any[] {
+function findPeak(csv, colKey) {
     var peakRow = csv.rows[0];
     var idx = csv.colKeys[colKey];
     csv.rows.forEach(row => {
@@ -62,7 +47,7 @@ function findPeak(csv: ICsv, colKey: string): any[] {
     return peakRow;
 }
 
-function decodeFault(fault: number): string {
+function decodeFault(fault) {
     switch (fault) { 
         case 0x800:
             return "Mancanza rete";
@@ -75,7 +60,11 @@ function decodeFault(fault: number): string {
 }
 
 // Day can be 0 or -1 (T-1), -2, etc..
-function getCsvName(day?: number): string {
+function getCsvName(day) {
+    if (!fs.existsSync(csvFolder) || !fs.readdirSync(csvFolder)) {
+        return null;
+    }
+
     // Get the latest CSV in the disk
     var files = fs.readdirSync(csvFolder).filter(f => fs.lstatSync(path.join(csvFolder, f)).isFile() && f[0] !== '_');
     // Sort it by date
@@ -89,7 +78,7 @@ function getCsvName(day?: number): string {
     return files[idx];
 }
 
-function getPvData(): IPvImmData {
+function getPvData() {
     var csv = getCsvName(0);
     if (!csv) {
         return { error: 'No files found' };
@@ -98,7 +87,7 @@ function getPvData(): IPvImmData {
     // Now parse it
     var data = parseCsv(path.join(csvFolder, csv));
 
-    var ret: IPvImmData = { currentW: 0 };
+    var ret = { currentW: 0 };
     if (data.rows.length > 1) {
         var lastSample = data.rows[data.rows.length - 1];
         ret.currentW = lastSample[data.colKeys['PowerW']];
@@ -117,24 +106,24 @@ function getPvData(): IPvImmData {
     return ret;
 }
 
-function formatDur(dur: moment.Duration): string {
+function formatDur(dur) {
     var ts = moment().startOf('day').add(dur);
     return ts.format('HH:mm');
 }
 
 
 // Sample each round minute
-function sampleAtMin(arr: { ts: string, value: number }[]): { ts: string, value: number }[] {
+function sampleAtMin(arr) {
     if (arr.length === 0) {
         return [];
     }
 
-    let toDateMin = (str: string) => {
+    let toDateMin = (str) => {
         var dur = moment.duration(str);
         return moment.duration(Math.floor(dur.asMinutes()), "minutes");
     }
 
-    let lastMin: moment.Duration = toDateMin(arr[0].ts);
+    let lastMin = toDateMin(arr[0].ts);
     let count = 0;
     let acc = 0;
     return arr.reduce((ret, val) => {
@@ -151,7 +140,7 @@ function sampleAtMin(arr: { ts: string, value: number }[]): { ts: string, value:
     }, []);
 }
 
-function first<T>(arr: T[], handler: (t: T) => boolean): number {
+function first(arr, handler) {
     for (let i = 0; i < arr.length; i++) {
         if (handler(arr[i])) {
             return i;
@@ -160,7 +149,7 @@ function first<T>(arr: T[], handler: (t: T) => boolean): number {
     return -1;
 }
 
-function last<T>(arr: T[], handler: (t: T) => boolean): number {
+function last(arr, handler) {
     for (let i = arr.length - 1; i >= 0; i--) {
         if (handler(arr[i])) {
             return i;
@@ -169,7 +158,7 @@ function last<T>(arr: T[], handler: (t: T) => boolean): number {
     return -1;
 }
 
-function getPvChart(day?: number): { ts: string, value: number }[] {
+function getPvChart(day) {
     var csv = getCsvName(day);
     if (!csv) {
         return [];
@@ -178,7 +167,7 @@ function getPvChart(day?: number): { ts: string, value: number }[] {
     var tsIdx = data.colKeys['TimeStamp'];
     var powIdx = data.colKeys['PowerW'];
     let ret = sampleAtMin(data.rows.map(row => {
-        return { ts: row[tsIdx] as string, value: row[powIdx] as number };
+        return { ts: row[tsIdx], value: row[powIdx] };
     }));
     // Trim initial and final zeroes
     let i1 = first(ret, i => i.value > 0);
@@ -190,4 +179,21 @@ function getPvChart(day?: number): { ts: string, value: number }[] {
     }
 }
 
-export { getPvData, getPvChart };
+function register(app) {
+    app.get('/r/imm', (req, res) => {
+        var pvData = getPvData();
+        if (pvData.error) {
+            res.send({ error: pvData.error });
+        } else {
+            res.send(pvData);
+        }
+    });
+
+    app.get('/r/powToday', (req, res) => {
+        setTimeout(() => {
+            res.send(getPvChart(req.query && Number(req.query.day)));
+        }, 1000);
+    });
+}
+
+module.exports = { register };

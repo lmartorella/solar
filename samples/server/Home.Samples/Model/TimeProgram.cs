@@ -65,7 +65,7 @@ namespace Lucky.Home.Model
         {
             if (program == null || program.Cycles == null)
             {
-                throw new ArgumentNullException("program", "Missing program");
+                return;
             }
             foreach (var t in program.Cycles.Select((cycle, idx) => new { cycle, idx }))
             {
