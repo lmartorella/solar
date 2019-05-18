@@ -9,9 +9,9 @@ This is a dll library containing some interesting samples:
 - a garden irrigation control (designed for [this](../garden/README.md) hardware).
 - sample code to interface DHT11 temperature/humidity sink.
 - sample code to interface Bosch BPM180 pressure/temperature sink.
-- a water flow meter (with reed-based revolution counter)
-- digital switch interface (input)
-- digital actuator interface (output)
+- a water flow meter (through pulse counter)
+- digital input interface (input), for wall switches, opto-coupled power line presence, etc... 
+- digital actuator interface (output), for relays boards, etc..
 
 In addition it implements a IPC message-based channel for the [remote web access](../web/README.md). 
 
