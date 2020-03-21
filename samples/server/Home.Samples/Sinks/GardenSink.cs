@@ -18,10 +18,8 @@ namespace Lucky.Home.Sinks
             Off = 0,
             // Immediate program mode
             ProgramImmediate,
-            // Display water level (future usage))
-            LevelCheck,
-            // Program the timer mode
-            ProgramTimer,
+            // Display flow level
+            FlowCheck,
             // Looping a program (manual or automatic)
             InUse,
             // Timer used after new programming, while the display shows OK, to go back to imm state (2 seconds)
@@ -42,11 +40,19 @@ namespace Lucky.Home.Sinks
             public byte ZoneMask;
         }
 
-        private class WriteStatusMessageRequest
+        private class WriteProgramMessageRequest
         {
             [SerializeAsDynArray]
             public ImmediateZoneTime[] ZoneTimes;
         }
+
+        private class UpdateFlowMessageRequest
+        {
+            public int Code = -1;
+            public int Flow;
+        }
+
+        private int _lastFlow = -1;
 
         public class TimerState
         {
@@ -85,13 +91,27 @@ namespace Lucky.Home.Sinks
 
             await Write(async writer =>
             {
-                await writer.Write(new WriteStatusMessageRequest
+                await writer.Write(new WriteProgramMessageRequest
                 {
                     ZoneTimes = zoneTimes
                 });
             });
             // Log aloud new state
             await Read(true);
+        }
+
+        public async Task UpdateFlowData(int flow)
+        {
+            if (flow != _lastFlow)
+            {
+                await Write(async writer =>
+                {
+                    await writer.Write(new UpdateFlowMessageRequest
+                    {
+                        Flow = flow
+                    });
+                });
+            }
         }
     }
 }
