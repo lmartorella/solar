@@ -194,7 +194,7 @@ namespace Lucky.Home.Devices
             _cfgFile = new FileInfo(Path.Combine(cfgColder, "gardenCfg.json"));
             if (!_cfgFile.Exists)
             {
-                using (var stream = _cfgFile.OpenWrite())
+                using (var stream = _cfgFile.Open(FileMode.Create))
                 {
                     // No data. Write the current settings
                     new DataContractJsonSerializer(typeof(Configuration)).WriteObject(stream, new Configuration { Program = TimeProgram<GardenCycle>.DefaultProgram });
