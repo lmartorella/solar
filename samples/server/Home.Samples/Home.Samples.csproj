@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Devices\DigitalInputLoggerDevice.cs" />
     <Compile Include="HomeApp.cs" />
     <Compile Include="Devices\BarometricTesterDevice.cs" />
     <Compile Include="Devices\FlowTesterDevice.cs" />
@@ -52,7 +53,6 @@
     <Compile Include="Model\TimeProgram.cs" />
     <Compile Include="Power\PowerData.cs" />
     <Compile Include="Devices\SamilInverterDeviceBase.cs" />
-    <Compile Include="Devices\SwitchDevice.cs" />
     <Compile Include="Devices\TemperatureTesterDevice.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>

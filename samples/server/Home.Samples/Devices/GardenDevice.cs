@@ -194,7 +194,7 @@ namespace Lucky.Home.Devices
             _cfgFile = new FileInfo(Path.Combine(cfgColder, "gardenCfg.json"));
             if (!_cfgFile.Exists)
             {
-                using (var stream = _cfgFile.OpenWrite())
+                using (var stream = _cfgFile.Open(FileMode.Create))
                 {
                     // No data. Write the current settings
                     new DataContractJsonSerializer(typeof(Configuration)).WriteObject(stream, new Configuration { Program = TimeProgram<GardenCycle>.DefaultProgram });
@@ -491,7 +491,7 @@ namespace Lucky.Home.Devices
 
             double startQty = 0;
 
-            var flowData = (await ReadFlow());
+            var flowData = await ReadFlow();
             if (flowData != null)
             {
                 startQty = data.TotalQtyMc = flowData.TotalMc;
@@ -514,7 +514,7 @@ namespace Lucky.Home.Devices
                 Logger.Log("Garden", "cycle end", cycle.Name);
                 if (startQty > 0)
                 {
-                    var flowData1 = (await ReadFlow());
+                    var flowData1 = await ReadFlow();
                     if (flowData1 != null)
                     {
                         data.QtyL = (flowData1.TotalMc - startQty) * 1000.0;

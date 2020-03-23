@@ -99,7 +99,6 @@ namespace Lucky.Home.Sinks
                     var msg = new WriterStatusMessage(SubCount, data);
                     await writer.Write(msg);
                 });
-                Debug.WriteLine("x");
             }
         }
     }
