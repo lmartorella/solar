@@ -59,6 +59,11 @@ namespace Lucky.Home.Sinks
             public int SubIndex;
         }
 
+        public bool GetStatus(int subIndex)
+        {
+            return subIndex < _lastState.Length ? _lastState[subIndex] : false;
+        }
+
         private bool[] _lastState;
 
         protected async override Task OnInitialize()
