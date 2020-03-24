@@ -48,8 +48,8 @@ namespace Lucky.Home.Sinks
 
         private class UpdateFlowMessageRequest
         {
-            public int Code = -1;
-            public int Flow;
+            public short Code = -1;
+            public short Flow;
         }
 
         private int _lastFlow = -1;
@@ -108,9 +108,10 @@ namespace Lucky.Home.Sinks
                 {
                     await writer.Write(new UpdateFlowMessageRequest
                     {
-                        Flow = flow
+                        Flow = (short)flow
                     });
                 });
+                _lastFlow = flow;
             }
         }
     }

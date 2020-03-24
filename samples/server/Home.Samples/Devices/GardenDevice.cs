@@ -227,6 +227,13 @@ namespace Lucky.Home.Devices
                         e.Response = Task.Run(async () =>
                         {
                             FlowData flowData = await ReadFlow();
+                            
+                            // Tactical
+                            if (flowData != null)
+                            {
+                                await GetFirstOnlineSink<GardenSink>()?.UpdateFlowData((int)flowData.FlowLMin);
+                            }
+
                             var nextCycles = _cycleQueue.Select(q => Tuple.Create(q.Name, (DateTime?)null))
                                             .Concat(_timeProgram?.GetNextCycles(DateTime.Now).Select(c => Tuple.Create(c.Item1.Name, (DateTime?)c.Item2)))
                                             .Take(4);
