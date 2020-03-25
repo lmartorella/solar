@@ -109,6 +109,24 @@ namespace Lucky.Home.Sinks
                 }
             }
 
+            private ulong DiffTicks(ulong t2, ulong t1, int size)
+            {
+                switch (size)
+                {
+                    case 1:
+                        return (ulong)((byte)t2 - (byte)t1);
+                    case 2:
+                        ushort d = (ushort)((ushort)t2 - (ushort)t1);
+                        return d;
+                    case 4:
+                        return ((uint)t2 - (uint)t1);
+                    case 8:
+                        return t2 - t1;
+                    default:
+                        throw new InvalidOperationException("Tick size not supported: " + size);
+                }
+            }
+
             private bool[] FromBits(byte[] data, int bitCount)
             {
                 var ret = new bool[bitCount];
@@ -144,7 +162,7 @@ namespace Lucky.Home.Sinks
                 {
                     var time = FromTicks(await feeder(tickSize));
                     var data = await feeder(byteLen);
-                    ulong delta = nowT - time;
+                    ulong delta = DiffTicks(nowT, time, tickSize);
                     DateTime timestamp = now - TimeSpan.FromSeconds((double)delta / ticksPerSecond);
                     Events[i] = new BulkChangeEvent { State = FromBits(data, bitCount), Timestamp = timestamp };
                 }
@@ -197,9 +215,12 @@ namespace Lucky.Home.Sinks
 
                 // Outside the Read to avoid reenter of other sinks
                 var raise = EventReceived;
-                foreach (var evt in events)
+                if (raise != null)
                 {
-                    raise(this, evt);
+                    foreach (var evt in events)
+                    {
+                        raise(this, evt);
+                    }
                 }
             }
         }
