@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Sinks
@@ -23,6 +22,9 @@ namespace Lucky.Home.Sinks
         public double FlowLMin;
     }
 
+// Unused class members
+#pragma warning disable 649
+
     /// <summary>
     /// Sink for water flow device. Each tick count is a nominal quantity of water (e.g. 5.5 ticks/seconds means 1 liter/minute).
     /// The sink sends both current flow and total amount of water counted.
@@ -38,13 +40,16 @@ namespace Lucky.Home.Sinks
             /// <summary>
             /// Total counter
             /// </summary>
-            public UInt32 Count;
+            public uint Count;
 
             /// <summary>
             /// Count in the time unit (count/seconds)
             /// </summary>
-            public UInt16 Frequency;
+            public ushort Frequency;
         }
+
+// Unused class members
+#pragma warning restore 649
 
         /// <summary>
         /// fq is frequency / L/min (5.5 on sample counter)

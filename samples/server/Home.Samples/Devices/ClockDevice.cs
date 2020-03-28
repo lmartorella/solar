@@ -14,7 +14,7 @@ namespace Lucky.Home.Devices
     {
         public ClockDevice()
         {
-            StartLoop();
+            _ = StartLoop();
         }
 
         private async Task StartLoop()

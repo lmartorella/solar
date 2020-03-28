@@ -278,7 +278,7 @@ namespace Lucky.Home.Devices
                 }
             };
 
-            StartLoop();
+            _ = StartLoop();
         }
 
         private async Task<FlowData> ReadFlow()
