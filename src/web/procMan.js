@@ -2,30 +2,29 @@ const child_process = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const net = require('net');
+const { binDir, etcDir, logsFile, settings } = require('./settings');
 
-let logPath;
 let restartMailText;
 let process;
 let killing;
+const processName = 'Home.Server.exe';
 
 /**
  * Manages home server health
  */
-function start(binPath, etcPath, processName) {
-    logPath = path.join(etcPath, 'log.txt');
-
+function start() {
     // Aready started
     if (process && process.pid) {
         throw new Error("Already started");
     }
 
     // Launch process
-    let args = ['', '-wrk', etcPath];
+    let args = ['-wrk', etcDir];
     if (restartMailText) {
         args.push('-sendMail');
         args.push(restartMailText);
     }
-    process = child_process.spawn(path.join(binPath, processName), args, {
+    process = child_process.spawn(path.join(binDir, processName), args, {
         stdio: 'ignore'
     });
     restartMailText = null;
@@ -51,7 +50,7 @@ function start(binPath, etcPath, processName) {
 }
 
 function log(msg) {
-    fs.appendFileSync(logPath, msg + '\n');
+    fs.appendFileSync(logsFile, msg + '\n');
 }
 
 async function kill() {
@@ -110,7 +109,7 @@ function sendMessage(data) {
                     respond();
                 }
             });
-            pipe.once('end', data => {
+            pipe.once('end', () => {
                 respond();
             });
             

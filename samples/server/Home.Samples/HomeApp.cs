@@ -60,7 +60,7 @@ namespace Lucky.Home.Application
             var mail = Manager.GetService<IConfigurationService>().GetConfig("sendMail");
             if (!string.IsNullOrEmpty(mail))
             {
-                await Manager.GetService<INotificationService>().SendMail(Resources.startupMessage, mail);
+                await Manager.GetService<INotificationService>().SendMail(Resources.startupMessage, mail, true);
             }
 
             // Implements a IPC pipe with web server

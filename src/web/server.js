@@ -4,7 +4,7 @@ const express = require('express');
 const passport = require('passport');
 const compression = require('compression');
 const passportLocal = require('passport-local');
-const { binDir, etcDir, logsFile, settings } = require('./settings');
+const { logsFile, settings } = require('./settings');
 const procMan = require('./procMan');
 const samples = require('../../samples/web');
 
@@ -117,15 +117,15 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
-    res.send(200);
+    res.sendStatus(200);
 });
 app.get('/logout', (req, res) => {
     req.logout();
-    res.send(401);
+    res.sendStatus(401);
 });
 
 app.listen(80, () => {
   console.log('Webserver started at port 80');
 })
 
-procMan.start(binDir, etcDir, 'Home.Server.exe');
+procMan.start();

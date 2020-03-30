@@ -658,7 +658,7 @@ namespace Lucky.Home.Devices
                     )
                 );
 
-                Manager.GetService<INotificationService>().SendMail("Giardino irrigato", body);
+                Manager.GetService<INotificationService>().SendMail("Giardino irrigato", body, false);
                 _mailData.Clear();
             }
         }
