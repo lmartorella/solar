@@ -1,4 +1,5 @@
 ﻿using Lucky.Home.Devices;
+using Lucky.Home.Devices.Garden;
 using Lucky.Net;
 using System;
 using System.Runtime.Serialization;
@@ -64,7 +65,7 @@ namespace Lucky.Home.Services
                 var r = await args.Response;
                 return Tuple.Create(r, r.CloseServer);
             };
-            server.Start();
+            _ = server.Start();
         }
     }
 }
