@@ -1,8 +1,7 @@
 const child_process = require('child_process');
 const path = require('path');
-const fs = require('fs');
 const net = require('net');
-const { binDir, etcDir, logsFile, settings } = require('./settings');
+const { binDir, etcDir, logger } = require('./settings');
 
 let restartMailText;
 let process;
@@ -30,54 +29,47 @@ function start() {
     restartMailText = null;
 
     process.once('exit', async (code, signal) => {
-        log('Server process closed with code ' + code + ", signal " + signal);
         process = null;
         if (!killing) {
+            logger('Server process closed with code ' + code + ", signal " + signal, true);
+
             // Store fail reason to send mail after restart
             restartMailText = 'Server process closed with code ' + code + ", signal " + signal + '. Restarting';
-
-            await new Promise(resolve => setTimeout(resolve, 3500))
+            await new Promise(resolve => setTimeout(resolve, 3500));
             start();
+        } else {
+            logger('Server killed.', true);
         }
+        killing = false;
     });
 
     process.on('err', (err) => {
-        log('Server process FAIL TO START: ' + err.message);
+        logger('Server process FAIL TO START: ' + err.message, true);
         process = null;
     });
 
-    console.log('Home server started.');
-}
-
-function log(msg) {
-    fs.appendFileSync(logsFile, msg + '\n');
+    logger('Home server started.', true);
 }
 
 async function kill() {
+    logger('Home server killing...', true);
     return new Promise((resolve, reject) => {
         // Aready started
         if (!process || !process.pid) {
             reject(new Error("Already killed"));
         }
         killing = true;
-
         process.once('exit', () => {
-            process = null;
             resolve();
         });
-        resolve(sendMessage({ command: "kill" }));
+        sendMessage({ command: "kill" });
     });
-}
-
-async function halt() {
-    await kill();
-    console.log('Home server halted.');
 }
 
 async function restart() {
     await kill();
+    logger('Home server killed for restarting...', true);
     await new Promise(resolve => setTimeout(resolve, 3500));
-    console.log('Home server killed. Restarting...');
     start();
 }
 
@@ -120,4 +112,4 @@ function sendMessage(data) {
     });
 }
 
-module.exports = { start, halt, restart, sendMessage };
+module.exports = { start, restart, sendMessage, kill };

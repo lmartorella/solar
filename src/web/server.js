@@ -79,7 +79,7 @@ app.get('/r/logs', ensureLoggedIn(), (req, res) => {
 
 app.get('/r/halt', ensureLoggedIn(), async (req, res) => {
     try {
-        await procMan.halt();
+        await procMan.kill();
     } catch (err) {
         res.send("ERR: " + err.message);
         return;

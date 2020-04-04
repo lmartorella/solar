@@ -16,5 +16,13 @@ if (!fs.existsSync(serverCfgFile)) {
 
 const settings = JSON.parse(fs.readFileSync(serverCfgFile, 'utf8'));
 
-module.exports = { binDir, etcDir, logsFile, settings };
+const logger = (msg, echo) => {
+    msg = new Date().toISOString() + " " + msg;
+    fs.appendFileSync(logsFile, msg + '\n');
+    if (echo) {
+        console.log(msg);
+    }
+}
+
+module.exports = { binDir, etcDir, logsFile, settings, logger };
 
