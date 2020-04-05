@@ -60,7 +60,7 @@ namespace Lucky.Home.Sinks
             public ImmediateZoneTime[] ZoneRemTimes;
         }
 
-        public async Task<TimerState> Read(bool log, int timeout = 0)
+        public async Task<TimerState> Read(bool log, int timeout = 3000)
         {
             TimerState state = null;
             await Read(async reader =>

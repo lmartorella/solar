@@ -41,10 +41,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Devices\DigitalInputLoggerDevice.cs" />
+    <Compile Include="Devices\Garden\Configuration.cs" />
+    <Compile Include="Devices\Garden\GardenCsvRecord.cs" />
+    <Compile Include="Devices\Garden\GardenCycle.cs" />
+    <Compile Include="Devices\Garden\GardenWebResponse.cs" />
+    <Compile Include="Devices\Garden\ImmediateProgram.cs" />
+    <Compile Include="Devices\Garden\NextCycle.cs" />
+    <Compile Include="Devices\Garden\PumpOperationObserver.cs" />
+    <Compile Include="Devices\Garden\RunningProgram.cs" />
+    <Compile Include="Devices\Garden\ZoneTime.cs" />
+    <Compile Include="Devices\Garden\ZoneTimeWithQuantity.cs" />
     <Compile Include="HomeApp.cs" />
     <Compile Include="Devices\BarometricTesterDevice.cs" />
     <Compile Include="Devices\FlowTesterDevice.cs" />
-    <Compile Include="Devices\GardenDevice.cs" />
+    <Compile Include="Devices\Garden\GardenDevice.cs" />
     <Compile Include="Devices\ClockDevice.cs" />
     <Compile Include="Devices\ISolarPanelDevice.cs" />
     <Compile Include="Devices\SamilInverterLoggerDevice.cs" />
