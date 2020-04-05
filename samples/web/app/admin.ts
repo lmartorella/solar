@@ -4,7 +4,7 @@ export class AdminController {
     }
 
     halt() {
-        this.$http.get('/r/halt').then(resp => {
+        this.$http.get('/svc/halt').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -12,7 +12,7 @@ export class AdminController {
     }
 
     start() {
-        this.$http.get('/r/start').then(resp => {
+        this.$http.get('/svc/start').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -20,7 +20,7 @@ export class AdminController {
     }
 
     restart() {
-        this.$http.get('/r/restart').then(resp => {
+        this.$http.get('/svc/restart').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -30,7 +30,7 @@ export class AdminController {
     sendButton() {
         var fileEl = document.getElementById('file') as HTMLInputElement;
         var req = new XMLHttpRequest();
-        req.open("PUT", "/r/gardenCfg");
+        req.open("PUT", "/svc/gardenCfg");
         req.setRequestHeader("Content-type", "application/octect-stream");
         req.onload = () => {
             alert('Done');

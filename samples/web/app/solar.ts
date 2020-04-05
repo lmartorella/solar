@@ -1,3 +1,5 @@
+import { res, format } from "./resources";
+
 import * as Plotly from "plotly.js";
 
 interface IPvData { 
@@ -16,34 +18,34 @@ export class SolarController {
     static $inject = ['$http', '$q', '$scope'];
     constructor(private $http: ng.IHttpService, private $q: ng.IQService) {
 
-        this.$http.get<IPvData>('/r/imm').then(resp => {
+        this.$http.get<IPvData>('/svc/solarImmData').then(resp => {
             if (resp.status == 200) {
                 this.pvData = resp.data;
                 if (this.pvData.error) {
-                    this.firstLine = `ERRORE: ${this.pvData.error}`;
+                    this.firstLine = format("Error", this.pvData.error);
                     this.firstLineClass = 'err';
                 } else {
                     switch (this.pvData.mode) {
                         case undefined:
                         case 0:
-                            this.firstLine = 'OFF';
+                            this.firstLine = res["Solar_Off"];
                             this.firstLineClass = 'gray';
                             break;
                         case 1:
-                            this.firstLine = `Potenza: ${this.pvData.currentW}W`;
+                            this.firstLine = format("Solar_On", { power: this.pvData.currentW });
                             break;
                         case 2:
-                            this.firstLine = `ERRORE: ${this.pvData.fault}`;
+                            this.firstLine = format("Error", this.pvData.fault);
                             this.firstLineClass = 'err';
                             break;
                         default:
-                            this.firstLine = `Errore: modalità sconosciuta: ${this.pvData.mode}`;
+                            this.firstLine = format("Solar_UnknownMode", { mode: this.pvData.mode });
                             this.firstLineClass = 'unknown';
                             break;
                     }
                 }
             } else {
-                this.firstLine = 'HTTP ERROR: ' + resp.statusText;
+                this.firstLine = format("Error", resp.statusText);
                 this.firstLineClass = 'err';
             }
         });
@@ -58,7 +60,7 @@ export class SolarController {
         // Fetch the last 4 days
         var promises = [];
         for (let day = -count + 1; day <= 0; day++) {
-            promises.push(this.$http.get('/r/powToday?day=' + day).then(resp => {
+            promises.push(this.$http.get('/svc/solarPowToday?day=' + day).then(resp => {
                 if (resp.status == 200 && Array.isArray(resp.data) && resp.data.length) {
                     return {
                         x: resp.data.map(s => s.ts),

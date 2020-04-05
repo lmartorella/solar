@@ -180,7 +180,11 @@ function getPvChart(day) {
 }
 
 function register(app) {
-    app.get('/r/imm', (req, res) => {
+    app.get('/src/solarStatus', async (_req, res) => {
+        res.send(await procMan.sendMessage({ command: "solar.getStatus" }));
+    });
+
+    app.get('/svc/solarImmData', (_req, res) => {
         var pvData = getPvData();
         if (pvData.error) {
             res.send({ error: pvData.error });
@@ -189,7 +193,7 @@ function register(app) {
         }
     });
 
-    app.get('/r/powToday', (req, res) => {
+    app.get('/svc/solarPowToday', (req, res) => {
         setTimeout(() => {
             res.send(getPvChart(req.query && Number(req.query.day)));
         }, 1000);
