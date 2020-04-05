@@ -30,6 +30,9 @@ function start() {
 
     process.once('exit', async (code, signal) => {
         process = null;
+        if (code == 0xE0434352) {
+            code = ".NetException";
+        }
         if (!killing) {
             logger('Server process closed with code ' + code + ", signal " + signal, true);
 

@@ -52,7 +52,7 @@ export class GardenController {
     constructor(private $http: ng.IHttpService) { }
 
     public $onInit() {
-        this.status = res["Garden_LoadingStatus"];
+        this.status = res["Device_StatusLoading"];
 
         // Fetch zones
         this.$http.get<IGardenStatusResponse>("/svc/gardenStatus").then(resp => {

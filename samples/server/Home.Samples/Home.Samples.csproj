@@ -44,32 +44,32 @@
     <Compile Include="Devices\Garden\Configuration.cs" />
     <Compile Include="Devices\Garden\GardenCsvRecord.cs" />
     <Compile Include="Devices\Garden\GardenCycle.cs" />
-    <Compile Include="Devices\Garden\GardenWebResponse.cs" />
     <Compile Include="Devices\Garden\ImmediateProgram.cs" />
     <Compile Include="Devices\Garden\NextCycle.cs" />
+    <Compile Include="Devices\Garden\WebMessages.cs" />
     <Compile Include="Devices\Garden\PumpOperationObserver.cs" />
     <Compile Include="Devices\Garden\RunningProgram.cs" />
     <Compile Include="Devices\Garden\ZoneTime.cs" />
     <Compile Include="Devices\Garden\ZoneTimeWithQuantity.cs" />
+    <Compile Include="Devices\Solar\WebMessages.cs" />
     <Compile Include="HomeApp.cs" />
     <Compile Include="Devices\BarometricTesterDevice.cs" />
     <Compile Include="Devices\FlowTesterDevice.cs" />
     <Compile Include="Devices\Garden\GardenDevice.cs" />
     <Compile Include="Devices\ClockDevice.cs" />
-    <Compile Include="Devices\ISolarPanelDevice.cs" />
-    <Compile Include="Devices\SamilInverterLoggerDevice.cs" />
-    <Compile Include="Devices\SamilInverterTesterDevice.cs" />
+    <Compile Include="Devices\Solar\ISolarPanelDevice.cs" />
+    <Compile Include="Devices\Solar\SamilInverterLoggerDevice.cs" />
+    <Compile Include="Devices\Solar\SamilInverterTesterDevice.cs" />
     <Compile Include="Model\DateTimeExtension.cs" />
     <Compile Include="Model\TimeProgram.cs" />
     <Compile Include="Power\PowerData.cs" />
-    <Compile Include="Devices\SamilInverterDeviceBase.cs" />
+    <Compile Include="Devices\Solar\SamilInverterDeviceBase.cs" />
     <Compile Include="Devices\TemperatureTesterDevice.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Services\PipeServer.cs" />
     <Compile Include="Sinks\BarometricSink.cs" />
     <Compile Include="Sinks\DigitalInputArraySink.cs" />
     <Compile Include="Sinks\DigitalOutputArraySink.cs" />
@@ -95,6 +95,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="UI\solar_daily_summary.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,20 +1,21 @@
 <!-- <title>Solar &#9728;</title> -->
 <div ng-controller="solarCtrl as ctrl" >
+    <span class="message"> {{ctrl.status}} </span>
     <p><span class="header" ng-class="ctrl.firstLineClass"> {{ctrl.firstLine}} </span> 
        <a ng-click="ctrl.drawDays(1)" href="#">{{res["Solar_ChartToday"]}}</a>
        &nbsp;
        <a ng-click="ctrl.drawDays(4)" href="#">{{res["Solar_Chart4days"]}}</a>
     </p>
-    <p class="total-pw" ng-show="ctrl.pvData.totalDayWh"> {{res["Solar_EnergyToday"]}} <b>{{ctrl.pvData.totalDayWh / 1000}} kWh</b> </p>
-    <p class="peak-pw" ng-show="ctrl.pvData.peakW"> Picco di <b>{{ctrl.pvData.peakW}}W</b> alle {{ctrl.pvData.peakTs}} </p>
+    <p class="total-pw" ng-if="ctrl.pvData.totalDayWh"> {{res["Solar_EnergyToday"]}} <b>{{ctrl.pvData.totalDayWh / 1000}} kWh</b> </p>
+    <p class="peak-pw" ng-if="ctrl.pvData.peakW"> Picco di <b>{{ctrl.pvData.peakW}}W</b> alle {{ctrl.pvData.peakTsTime}} </p>
     <br/>
     <br/>
     <br/>
-    <p class="total-pw" ng-show="ctrl.pvData.totalKwh"> {{res["Solar_EnergyTotal"]}} <b>{{ctrl.pvData.totalKwh}} kWh</b> </p>
+    <p class="total-pw" ng-if="ctrl.pvData.totalKwh"> {{res["Solar_EnergyTotal"]}} <b>{{ctrl.pvData.totalKwh}} kWh</b> </p>
 
     <div id="chart"></div>
 
     <p class="bot muted"> 
-      <span ng-show="ctrl.pvData.currentTsTime"> {{format(["Solar_Updated"], ctrl.pvData)}} </span> 
+      <span ng-if="ctrl.pvData.currentTs"> {{format(["Solar_Updated"], ctrl.pvData)}} </span> 
     </p>
 </div>

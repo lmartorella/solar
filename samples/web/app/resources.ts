@@ -34,9 +34,12 @@ export const Strings = {
     "Solar_Chart4days": "Chart last 4 days",
     "Solar_EnergyToday": "Today's energy:",
     "Solar_EnergyTotal": "Total energy:",
-    "Solar_Updated": args => `Update at ${args.currentTsTime} of ${args.currentTsDate}.`,
+    "Solar_Updated": args => `Update at ${args.currentTs}.`,
     "Solar_Off": "OFF",
     "Solar_On": args => `Power: ${args.power}W`,
+    "Solar_FaultNoGrid": "No grid power",
+    "Solar_FaultLowFreq": "Grid frequency too low",
+    "Solar_FaultHighFreq": "Grid frequency too high"
 };
 
 export const it_it_Strings = { 
@@ -65,9 +68,12 @@ export const it_it_Strings = {
     "Solar_Chart4days": "Andamento 4 giorni",
     "Solar_EnergyToday": "Energia oggi:",
     "Solar_EnergyTotal": "Energia totale:",
-    "Solar_Updated": args => `Aggiornato alle ${args.currentTsTime} del ${args.currentTsDate}.`,
+    "Solar_Updated": args => `Aggiornato ${args.currentTs}.`,
     "Solar_On": args => `Potenza: ${args.power}W`,
     "Solar_UnknownMode": args => `Errore: modalità sconosciuta: ${args.mode}`,
+    "Solar_FaultNoGrid": "Mancanza rete",
+    "Solar_FaultLowFreq": "Frequenza rete troppo bassa",
+    "Solar_FaultHighFreq": "Frequenza rete troppo alta"
 };
 
 const res = { ...Strings, ...it_it_Strings };

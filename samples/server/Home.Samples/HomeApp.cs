@@ -8,6 +8,8 @@ using Lucky.Home.Power;
 using System.Threading.Tasks;
 using Lucky.Home.Application;
 using Lucky.Home;
+using Lucky.Home.Devices.Solar;
+using Lucky.Home.Devices.Garden;
 
 [assembly: Application(typeof (HomeApp))]
 
@@ -25,6 +27,10 @@ namespace Lucky.Home.Application
 
         public async Task Start()
         {
+            // Register web messages for pipe service
+            Manager.GetService<PipeServer>().RegisterAdditionalRequestTypes(new[] { typeof(GardenWebRequest) });
+            Manager.GetService<PipeServer>().RegisterAdditionalResponseTypes(new[] { typeof(GardenWebResponse), typeof(SolarWebResponse) });
+
             // Get all registered devices
             var deviceMan = Manager.GetService<IDeviceManager>();
             IDevice[] devices = deviceMan.Devices;
@@ -68,8 +74,7 @@ namespace Lucky.Home.Application
             {
                 if (e.Request.Command == "kill")
                 {
-                    e.Response = Task.FromResult(new WebResponse { CloseServer = true });
-
+                    e.CloseServer = true;
                     Task.Delay(1500).ContinueWith(t =>
                     {
                         Manager.Kill(Logger, "killed by parent process");

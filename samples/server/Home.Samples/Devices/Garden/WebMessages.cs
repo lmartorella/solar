@@ -5,20 +5,30 @@ using System.Runtime.Serialization;
 namespace Lucky.Home.Devices.Garden
 {
     [DataContract]
+    public class GardenWebRequest : WebRequest
+    {
+        [DataMember(Name = "immediate")]
+        public ImmediateZone[] ImmediateZones { get; set; }
+    }
+
+    [DataContract]
+    public class ImmediateZone
+    {
+        [DataMember(Name = "zones")]
+        public int[] Zones { get; set; }
+
+        [DataMember(Name = "time")]
+        public int Time { get; set; }
+
+        public override string ToString()
+        {
+            return "Zones: " + string.Join(",", Zones) + " [Time: " + Time + "]";
+        }
+    }
+
+    [DataContract]
     public class GardenWebResponse : WebResponse
     {
-        /// <summary>
-        /// Status
-        /// </summary>
-        [DataMember(Name = "status")]
-        public string Status { get; set; }
-
-        /// <summary>
-        /// Result/error
-        /// </summary>
-        [DataMember(Name = "error")]
-        public string Error { get; set; }
-
         /// <summary>
         /// Configuration
         /// </summary>
@@ -44,4 +54,3 @@ namespace Lucky.Home.Devices.Garden
         public NextCycle[] NextCycles { get; set; }
     }
 }
-
