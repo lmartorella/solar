@@ -16,12 +16,14 @@ export class SolarController {
     public firstLine: string;
     private pvData: IPvData;
     public status: string;
+    public loaded: boolean;
 
     static $inject = ['$http', '$q', '$scope'];
     constructor(private $http: ng.IHttpService, private $q: ng.IQService) { }
 
     public $onInit() {
         this.status = res["Device_StatusLoading"];
+        this.loaded = false;
 
         this.$http.get<IPvData>('/svc/solarStatus').then(resp => {
             if (resp.status == 200 && resp.data) {
@@ -54,6 +56,11 @@ export class SolarController {
                 this.firstLine = format("Error", resp.statusText);
                 this.firstLineClass = 'err';
             }
+        }, err => {
+            this.firstLine = format("Error", err.statusText);
+            this.firstLineClass = 'err';
+        }).finally(() => {
+            this.loaded = true;
         });
     }
 

@@ -35,7 +35,7 @@ class Cycle {
 }
 
 export class GardenController {
-    
+    public loaded: boolean;
     public message: string;
     public error: string;
     private zoneNames: string[] = [];
@@ -53,6 +53,7 @@ export class GardenController {
 
     public $onInit() {
         this.status = res["Device_StatusLoading"];
+        this.loaded = false;
 
         // Fetch zones
         this.$http.get<IGardenStatusResponse>("/svc/gardenStatus").then(resp => {
@@ -69,10 +70,12 @@ export class GardenController {
                     });
                 }
             } else {
-                this.error = format("Garden_ErrorConf", '');
+                this.error = format("Garden_ErrorConf", resp.statusText);
             }
         }, err => {
             this.error = format("Garden_ErrorConf", err.statusText);
+        }).finally(() => {
+            this.loaded = true;
         });
     }
 

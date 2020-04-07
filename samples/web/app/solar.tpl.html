@@ -1,10 +1,11 @@
 <!-- <title>Solar &#9728;</title> -->
 <div ng-controller="solarCtrl as ctrl" >
-    <span class="message"> {{ctrl.status}} </span>
+  <span class="message"> {{ctrl.status}} </span>
+  <div ng-show="ctrl.loaded">
     <p><span class="header" ng-class="ctrl.firstLineClass"> {{ctrl.firstLine}} </span> 
-       <a ng-click="ctrl.drawDays(1)" href="#">{{res["Solar_ChartToday"]}}</a>
-       &nbsp;
-       <a ng-click="ctrl.drawDays(4)" href="#">{{res["Solar_Chart4days"]}}</a>
+      <a ng-click="ctrl.drawDays(1)" href="#">{{res["Solar_ChartToday"]}}</a>
+      &nbsp;
+      <a ng-click="ctrl.drawDays(4)" href="#">{{res["Solar_Chart4days"]}}</a>
     </p>
     <p class="total-pw" ng-if="ctrl.pvData.totalDayWh"> {{res["Solar_EnergyToday"]}} <b>{{ctrl.pvData.totalDayWh / 1000}} kWh</b> </p>
     <p class="peak-pw" ng-if="ctrl.pvData.peakW"> Picco di <b>{{ctrl.pvData.peakW}}W</b> alle {{ctrl.pvData.peakTsTime}} </p>
@@ -18,4 +19,5 @@
     <p class="bot muted"> 
       <span ng-if="ctrl.pvData.currentTs"> {{format(["Solar_Updated"], ctrl.pvData)}} </span> 
     </p>
+  </div>
 </div>
