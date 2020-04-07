@@ -61,7 +61,7 @@ namespace Lucky.Home {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Total Power: {PowerKWh} kWh
+        ///   Looks up a localized string similar to Total Energy: {PowerKWh} kWh
         ///Peak of {PeakPowerW}W at {PeakTimestamp}.
         ///
         ///Daylight time: {SunTime}
@@ -79,6 +79,15 @@ namespace Lucky.Home {
         internal static string solar_daily_summary_title {
             get {
                 return ResourceManager.GetString("solar_daily_summary_title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to h&apos; hours and &apos;mm&apos; minutes&apos;.
+        /// </summary>
+        internal static string solar_daylight_format {
+            get {
+                return ResourceManager.GetString("solar_daylight_format", resourceCulture);
             }
         }
         

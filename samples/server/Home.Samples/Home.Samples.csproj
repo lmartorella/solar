@@ -65,6 +65,11 @@
     <Compile Include="Power\PowerData.cs" />
     <Compile Include="Devices\Solar\SamilInverterDeviceBase.cs" />
     <Compile Include="Devices\TemperatureTesterDevice.cs" />
+    <Compile Include="Resources.it-IT.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.it-IT.resx</DependentUpon>
+    </Compile>
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -88,12 +93,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources.it-IT.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.it-IT.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="UI\solar_daily_summary.it-IT.txt" />
     <Content Include="UI\solar_daily_summary.txt" />
   </ItemGroup>
   <ItemGroup>
