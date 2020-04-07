@@ -94,7 +94,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="UI\solar_daily_summary.html" />
+    <Content Include="UI\solar_daily_summary.txt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />

@@ -1,0 +1,5 @@
+﻿Total Power: {PowerKWh} kWh
+Peak of {PeakPowerW}W at {PeakTimestamp}.
+
+Daylight time: {SunTime}
+	
