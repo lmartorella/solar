@@ -42,7 +42,7 @@ function ensureLoggedIn() {
         if (req.session) {
           req.session.returnTo = req.originalUrl || req.url;
         }
-        return res.send(401); // Unauth
+        return res.sendStatus(401); // Unauth
       }
       next();
     }
@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
 // Register custom endpoints
 samples.register(app, ensureLoggedIn);
 
-app.get('/svc/logs', ensureLoggedIn(), (req, res) => {
+app.get('/svc/logs', ensureLoggedIn(), (_req, res) => {
     // Stream log file
     res.setHeader("Content-Type", "text/plain");
     if (fs.existsSync(logsFile)) {
@@ -77,7 +77,7 @@ app.get('/svc/logs', ensureLoggedIn(), (req, res) => {
     }
 });
 
-app.get('/svc/halt', ensureLoggedIn(), async (req, res) => {
+app.get('/svc/halt', ensureLoggedIn(), async (_req, res) => {
     try {
         await procMan.kill();
     } catch (err) {
@@ -87,7 +87,7 @@ app.get('/svc/halt', ensureLoggedIn(), async (req, res) => {
     res.send("Halted");
 });
 
-app.get('/svc/start', ensureLoggedIn(), async (req, res) => {
+app.get('/svc/start', ensureLoggedIn(), async (_req, res) => {
     try {
         await procMan.start();
     } catch (err) {
@@ -97,7 +97,7 @@ app.get('/svc/start', ensureLoggedIn(), async (req, res) => {
     res.send("Started");
 });
 
-app.get('/svc/restart', ensureLoggedIn(), async (req, res) => {
+app.get('/svc/restart', ensureLoggedIn(), async (_req, res) => {
     try {
         await procMan.restart();
     } catch (err) {
