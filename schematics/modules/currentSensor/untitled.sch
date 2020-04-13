@@ -8361,6 +8361,10 @@ Use 2.4 gain.</text>
 </nets>
 </sheet>
 </sheets>
+<errors>
+<approved hash="104,1,58.42,60.96,IC1,V+,+5V,,,"/>
+<approved hash="104,1,58.42,45.72,IC1,V-,GND,,,"/>
+</errors>
 </schematic>
 </drawing>
 <compatibility>
