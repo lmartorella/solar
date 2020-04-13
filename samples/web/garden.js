@@ -8,7 +8,7 @@ const gardenCsvFile = path.join(etcDir, 'DB/GARDEN/garden.csv');
 
 function register(app, privileged) {
     app.get('/svc/gardenStatus', async (_req, res) => {
-        res.send(await procMan.sendMessage({ command: "garden.getStatus" }));
+        res.send(await procMan.sendMessage("GardenWebRequest", { command: "garden.getStatus" }));
     });
     
     app.post('/svc/gardenStart', privileged(), async (req, res) => {
@@ -21,16 +21,16 @@ function register(app, privileged) {
             return;
         }
     
-        let resp = await procMan.sendMessage({ command: "garden.setImmediate", immediate });
+        let resp = await procMan.sendMessage("GardenWebRequest", { command: "garden.setImmediate", immediate });
         res.send(resp);
     });
     
-    app.post('/svc/gardenStop', privileged(), async (req, res) => {
-        let resp = await procMan.sendMessage({ command: "garden.stop" });
+    app.post('/svc/gardenStop', privileged(), async (_req, res) => {
+        let resp = await procMan.sendMessage("GardenWebRequest", { command: "garden.stop" });
         res.send(resp);
     });
     
-    app.get('/svc/gardenCfg', privileged(), async (req, res) => {
+    app.get('/svc/gardenCfg', privileged(), async (_req, res) => {
         // Stream config file
         const stream = fs.existsSync(gardenCfgFile) && fs.createReadStream(gardenCfgFile);
         if (stream) {
@@ -41,7 +41,7 @@ function register(app, privileged) {
         }
     });
     
-    app.get('/svc/gardenCsv', privileged(), async (req, res) => {
+    app.get('/svc/gardenCsv', privileged(), async (_req, res) => {
         // Stream csv file
         const stream = fs.existsSync(gardenCsvFile) && fs.createReadStream(gardenCsvFile);
         if (stream) {

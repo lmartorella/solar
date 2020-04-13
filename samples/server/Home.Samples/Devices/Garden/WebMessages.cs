@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 
 namespace Lucky.Home.Devices.Garden
 {
-    [DataContract]
+    [DataContract(Namespace = "Net")]
     public class GardenWebRequest : WebRequest
     {
         [DataMember(Name = "immediate")]
