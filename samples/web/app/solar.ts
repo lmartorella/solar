@@ -1,6 +1,9 @@
+import { res, format } from "./resources";
+
 import * as Plotly from "plotly.js";
 
 interface IPvData { 
+    online?: boolean;
     error?: string;
     mode: number;
     currentW: number;
@@ -12,40 +15,52 @@ export class SolarController {
     public firstLineClass: string;
     public firstLine: string;
     private pvData: IPvData;
+    public status: string;
+    public loaded: boolean;
 
     static $inject = ['$http', '$q', '$scope'];
-    constructor(private $http: ng.IHttpService, private $q: ng.IQService) {
+    constructor(private $http: ng.IHttpService, private $q: ng.IQService) { }
 
-        this.$http.get<IPvData>('/r/imm').then(resp => {
-            if (resp.status == 200) {
+    public $onInit() {
+        this.status = res["Device_StatusLoading"];
+        this.loaded = false;
+
+        this.$http.get<IPvData>('/svc/solarStatus').then(resp => {
+            if (resp.status == 200 && resp.data) {
                 this.pvData = resp.data;
+                this.status =  resp.data.online ? res["Device_StatusOnline"] : res["Device_StatusOffline"];
                 if (this.pvData.error) {
-                    this.firstLine = `ERRORE: ${this.pvData.error}`;
+                    this.firstLine = format("Error", this.pvData.error);
                     this.firstLineClass = 'err';
                 } else {
                     switch (this.pvData.mode) {
                         case undefined:
                         case 0:
-                            this.firstLine = 'OFF';
+                            this.firstLine = res["Solar_Off"];
                             this.firstLineClass = 'gray';
                             break;
                         case 1:
-                            this.firstLine = `Potenza: ${this.pvData.currentW}W`;
+                            this.firstLine = format("Solar_On", { power: this.pvData.currentW });
                             break;
                         case 2:
-                            this.firstLine = `ERRORE: ${this.pvData.fault}`;
+                            this.firstLine = format("Error", this.decodeFault(this.pvData.fault));
                             this.firstLineClass = 'err';
                             break;
                         default:
-                            this.firstLine = `Errore: modalità sconosciuta: ${this.pvData.mode}`;
+                            this.firstLine = format("Solar_UnknownMode", { mode: this.pvData.mode });
                             this.firstLineClass = 'unknown';
                             break;
                     }
                 }
             } else {
-                this.firstLine = 'HTTP ERROR: ' + resp.statusText;
+                this.firstLine = format("Error", resp.statusText);
                 this.firstLineClass = 'err';
             }
+        }, err => {
+            this.firstLine = format("Error", err.statusText);
+            this.firstLineClass = 'err';
+        }).finally(() => {
+            this.loaded = true;
         });
     }
 
@@ -58,7 +73,7 @@ export class SolarController {
         // Fetch the last 4 days
         var promises = [];
         for (let day = -count + 1; day <= 0; day++) {
-            promises.push(this.$http.get('/r/powToday?day=' + day).then(resp => {
+            promises.push(this.$http.get('/svc/solarPowToday?day=' + day).then(resp => {
                 if (resp.status == 200 && Array.isArray(resp.data) && resp.data.length) {
                     return {
                         x: resp.data.map(s => s.ts),
@@ -89,6 +104,18 @@ export class SolarController {
                 }
             });
         });
+    }
+
+    private decodeFault(fault: number) {
+        switch (fault) { 
+            case 0x800:
+                return res["Solar_FaultNoGrid"];
+            case 0x1000:
+                return res["Solar_FaultLowFreq"];
+            case 0x2000:
+                return res["Solar_FaultHighFreq"];
+        }
+        return fault && ('0x' + fault.toString(16));
     }
 }
 

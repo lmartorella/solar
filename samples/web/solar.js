@@ -3,6 +3,7 @@ const fs = require('fs');
 const moment = require('moment');
 const { setTimeout } = require('timers');
 const { etcDir } = require('../../src/web/settings');
+const procMan = require('../../src/web/procMan');
 
 const csvFolder = path.join(etcDir, 'DB/SAMIL');
 
@@ -36,29 +37,6 @@ function parseCsv(path) {
     };
 }
 
-function findPeak(csv, colKey) {
-    var peakRow = csv.rows[0];
-    var idx = csv.colKeys[colKey];
-    csv.rows.forEach(row => {
-        if (row[idx] > peakRow[idx]) {
-            peakRow = row;
-        }
-    });
-    return peakRow;
-}
-
-function decodeFault(fault) {
-    switch (fault) { 
-        case 0x800:
-            return "Mancanza rete";
-        case 0x1000:
-            return "Frequenza rete troppo bassa";
-        case 0x2000:
-            return "Frequenza rete troppo alta";
-    }
-    return fault && ('0x' + fault.toString(16));
-}
-
 // Day can be 0 or -1 (T-1), -2, etc..
 function getCsvName(day) {
     if (!fs.existsSync(csvFolder) || !fs.readdirSync(csvFolder)) {
@@ -76,34 +54,6 @@ function getCsvName(day) {
     }
     // Take the T-N one
     return files[idx];
-}
-
-function getPvData() {
-    var csv = getCsvName(0);
-    if (!csv) {
-        return { error: 'No files found' };
-    }
-
-    // Now parse it
-    var data = parseCsv(path.join(csvFolder, csv));
-
-    var ret = { currentW: 0 };
-    if (data.rows.length > 1) {
-        var lastSample = data.rows[data.rows.length - 1];
-        ret.currentW = lastSample[data.colKeys['PowerW']];
-        ret.currentTsTime = lastSample[data.colKeys['TimeStamp']];
-        ret.currentTsDate = csv.replace('.csv', ''); 
-        ret.totalDayWh = lastSample[data.colKeys['EnergyTodayWh']]; 
-        ret.totalKwh = lastSample[data.colKeys['TotalEnergyKWh']]; 
-        ret.mode = lastSample[data.colKeys['Mode']];
-        ret.fault = decodeFault(lastSample[data.colKeys['Fault']]);
-
-        // Find the peak power
-        var peakPow = findPeak(data, 'PowerW');
-        ret.peakW = peakPow[data.colKeys['PowerW']];
-        ret.peakTs = peakPow[data.colKeys['TimeStamp']];
-    }
-    return ret;
 }
 
 function formatDur(dur) {
@@ -180,16 +130,11 @@ function getPvChart(day) {
 }
 
 function register(app) {
-    app.get('/r/imm', (req, res) => {
-        var pvData = getPvData();
-        if (pvData.error) {
-            res.send({ error: pvData.error });
-        } else {
-            res.send(pvData);
-        }
+    app.get('/svc/solarStatus', async (_req, res) => {
+        res.send(await procMan.sendMessage({ command: "solar.getStatus" }));
     });
 
-    app.get('/r/powToday', (req, res) => {
+    app.get('/svc/solarPowToday', (req, res) => {
         setTimeout(() => {
             res.send(getPvChart(req.query && Number(req.query.day)));
         }, 1000);

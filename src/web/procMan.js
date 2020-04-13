@@ -30,6 +30,9 @@ function start() {
 
     process.once('exit', async (code, signal) => {
         process = null;
+        if (code == 0xE0434352) {
+            code = ".NetException";
+        }
         if (!killing) {
             logger('Server process closed with code ' + code + ", signal " + signal, true);
 
@@ -73,7 +76,16 @@ async function restart() {
     start();
 }
 
-function sendMessage(data) {
+function sendMessage(msgType, data) {
+    if (typeof msgType !== "string") {
+        data = msgType;
+        msgType = null;
+    }
+    if (msgType) {
+        // Polymorphism support for C# DataContractJsonSerializer requires __types to be the first property
+        data = Object.assign({ __type: msgType + ":Net" }, data);
+    }
+    const message = JSON.stringify(data);
     return new Promise((resolve, reject) => {
         // Make request to server
         let pipe = net.connect('\\\\.\\pipe\\NETHOME', () => {
@@ -106,7 +118,7 @@ function sendMessage(data) {
             });
             
             // Send request
-            pipe.write(JSON.stringify(data) + '\r\n');
+            pipe.write(message + '\r\n');
         });
         pipe.on('error', err => reject(err));
     });

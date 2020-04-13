@@ -1,15 +1,14 @@
 <div ng-controller="adminController as ctrl" >  
-    <p><a href="/r/logs" download>Logs</a></p>
-    <p><a href="" ng-click="ctrl.halt()" >Halt server</a></p>
-    <p><a href="" ng-click="ctrl.start()">Start server</a></p>
-    <p><a href="" ng-click="ctrl.restart()">Restart server</a></p>
-    
-    <p><a href="/r/gardenCsv" download="garden.csv">Download garden.csv</a></p>
-    
-    <p><a href="/r/gardenCfg" download="gardenCfg.json">Download garden config</a></p>
+    <p><a href="/svc/logs" download>{{res["Menu_Logs"]}}</a></p>
+    <p><a href="" ng-click="ctrl.halt()" >{{res["Admin_Halt"]}}</a></p>
+    <p><a href="" ng-click="ctrl.start()">{{res["Admin_Start"]}}</a></p>
+    <p><a href="" ng-click="ctrl.restart()">{{res["Admin_Restart"]}}</a></p>
+    <p><a href="/svc/gardenCsv" download="garden.csv">{{res["Admin_DownloadGardenCsv"]}}</a></p>
+    <p><a href="/svc/gardenCfg" download="gardenCfg.json">{{res["Admin_DownloadGardenConfig"]}}</a></p>
+
     <div>
-      <label for="file">Upload garden config</label>
+      <label for="file">{{res["Admin_UploadGardenConfig"]}}</label>
       <input type="file" id="file"/>
-      <button ng-click="ctrl.sendButton()">Upload garden config</button>
+      <button ng-click="ctrl.sendButton()">{{res["Admin_UploadGardenConfig"]}}</button>
     </div>
 </div>

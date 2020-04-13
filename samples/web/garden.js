@@ -7,12 +7,11 @@ const gardenCfgFile = path.join(etcDir, 'server/gardenCfg.json');
 const gardenCsvFile = path.join(etcDir, 'DB/GARDEN/garden.csv');
 
 function register(app, privileged) {
-    app.get('/r/gardenStatus', async (req, res) => {
-        let resp = await procMan.sendMessage({ command: "garden.getStatus" });
-        res.send(resp);
+    app.get('/svc/gardenStatus', async (_req, res) => {
+        res.send(await procMan.sendMessage("GardenWebRequest", { command: "garden.getStatus" }));
     });
     
-    app.post('/r/gardenStart', privileged(), async (req, res) => {
+    app.post('/svc/gardenStart', privileged(), async (req, res) => {
         let immediate = req.body;
         if (!Array.isArray(immediate) || !immediate.every(v => typeof v === "object") || immediate.every(v => v.time <= 0)) {
             // Do nothing
@@ -22,16 +21,16 @@ function register(app, privileged) {
             return;
         }
     
-        let resp = await procMan.sendMessage({ command: "garden.setImmediate", immediate });
+        let resp = await procMan.sendMessage("GardenWebRequest", { command: "garden.setImmediate", immediate });
         res.send(resp);
     });
     
-    app.post('/r/gardenStop', privileged(), async (req, res) => {
-        let resp = await procMan.sendMessage({ command: "garden.stop" });
+    app.post('/svc/gardenStop', privileged(), async (_req, res) => {
+        let resp = await procMan.sendMessage("GardenWebRequest", { command: "garden.stop" });
         res.send(resp);
     });
     
-    app.get('/r/gardenCfg', privileged(), async (req, res) => {
+    app.get('/svc/gardenCfg', privileged(), async (_req, res) => {
         // Stream config file
         const stream = fs.existsSync(gardenCfgFile) && fs.createReadStream(gardenCfgFile);
         if (stream) {
@@ -42,7 +41,7 @@ function register(app, privileged) {
         }
     });
     
-    app.get('/r/gardenCsv', privileged(), async (req, res) => {
+    app.get('/svc/gardenCsv', privileged(), async (_req, res) => {
         // Stream csv file
         const stream = fs.existsSync(gardenCsvFile) && fs.createReadStream(gardenCsvFile);
         if (stream) {
@@ -53,7 +52,7 @@ function register(app, privileged) {
         }
     });
     
-    app.put('/r/gardenCfg', privileged(), async (req, res) => {
+    app.put('/svc/gardenCfg', privileged(), async (req, res) => {
         if (req.headers["content-type"] === "application/octect-stream") {
             // Stream back config file
             fs.writeFileSync(gardenCfgFile, req.body);

@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
 // Register custom endpoints
 samples.register(app, ensureLoggedIn);
 
-app.get('/r/logs', ensureLoggedIn(), (req, res) => {
+app.get('/svc/logs', ensureLoggedIn(), (req, res) => {
     // Stream log file
     res.setHeader("Content-Type", "text/plain");
     if (fs.existsSync(logsFile)) {
@@ -77,7 +77,7 @@ app.get('/r/logs', ensureLoggedIn(), (req, res) => {
     }
 });
 
-app.get('/r/halt', ensureLoggedIn(), async (req, res) => {
+app.get('/svc/halt', ensureLoggedIn(), async (req, res) => {
     try {
         await procMan.kill();
     } catch (err) {
@@ -87,7 +87,7 @@ app.get('/r/halt', ensureLoggedIn(), async (req, res) => {
     res.send("Halted");
 });
 
-app.get('/r/start', ensureLoggedIn(), async (req, res) => {
+app.get('/svc/start', ensureLoggedIn(), async (req, res) => {
     try {
         await procMan.start();
     } catch (err) {
@@ -97,7 +97,7 @@ app.get('/r/start', ensureLoggedIn(), async (req, res) => {
     res.send("Started");
 });
 
-app.get('/r/restart', ensureLoggedIn(), async (req, res) => {
+app.get('/svc/restart', ensureLoggedIn(), async (req, res) => {
     try {
         await procMan.restart();
     } catch (err) {

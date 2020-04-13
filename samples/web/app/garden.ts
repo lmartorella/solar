@@ -1,3 +1,5 @@
+import { res, format } from "./resources";
+
 declare var moment: any;
 moment.locale("it-IT");
 
@@ -33,7 +35,7 @@ class Cycle {
 }
 
 export class GardenController {
-    
+    public loaded: boolean;
     public message: string;
     public error: string;
     private zoneNames: string[] = [];
@@ -47,12 +49,17 @@ export class GardenController {
     public nextCycles: { name: string, scheduledTime: string }[];
 
     static $inject = ['$http', '$scope'];
-    constructor(private $http: ng.IHttpService) {
+    constructor(private $http: ng.IHttpService) { }
+
+    public $onInit() {
+        this.status = res["Device_StatusLoading"];
+        this.loaded = false;
+
         // Fetch zones
-        this.$http.get<IGardenStatusResponse>("/r/gardenStatus").then(resp => {
+        this.$http.get<IGardenStatusResponse>("/svc/gardenStatus").then(resp => {
             if (resp.status == 200 && resp.data) {
                 this.zoneNames = resp.data.config && resp.data.config.zones;
-                this.status =  resp.data.online ? 'Online' : (resp.data.config ? 'OFFLINE' : 'NOT CONFIGURED');
+                this.status =  resp.data.online ? res["Device_StatusOnline"] : (resp.data.config ? res["Device_StatusOffline"] : res["Garden_MissingConf"]);
                 this.flow = resp.data.flowData;
                 this.disableButton = false;
 
@@ -63,10 +70,12 @@ export class GardenController {
                     });
                 }
             } else {
-                this.error = "Cannot fetch cfg";
+                this.error = format("Garden_ErrorConf", resp.statusText);
             }
         }, err => {
-            this.error = "Cannot fetch cfg: " + err.statusText;
+            this.error = format("Garden_ErrorConf", err.statusText);
+        }).finally(() => {
+            this.loaded = true;
         });
     }
 
@@ -76,36 +85,36 @@ export class GardenController {
 
     stop() {
         this.disableButton = true;
-        this.$http.post<IGardenStartStopResponse>("/r/gardenStop", "").then(resp => {
+        this.$http.post<IGardenStartStopResponse>("/svc/gardenStop", "").then(resp => {
             if (resp.status == 200) {
                 if (resp.data.error) {
-                    this.error = "ERROR: " + resp.data.error;
+                    this.error = format("Error", resp.data.error);
                 } else {
-                    this.message = "Fermato!";
+                    this.message = res["Garden_Stopped"];  
                 }
             } else {
-                this.error = "Cannot stop garden!";
+                this.error = format("Garden_StopError", '');
             }
         }, err => {
-            this.error = "Cannot stop garden: " + err.statusText;
+            this.error = format("Garden_StopError", err.statusText);
         });
     }
 
     start() {
         this.disableButton = true;
         var body = this.program.map(cycle => ({ zones: cycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(cycle.time) }));
-        this.$http.post<IGardenStartStopResponse>("/r/gardenStart", JSON.stringify(body)).then(resp => {
+        this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", JSON.stringify(body)).then(resp => {
             if (resp.status == 200) {
                 if (resp.data.error) {
-                    this.error = "ERROR: " + resp.data.error;
+                    this.error = format("Error", resp.data.error);
                 } else {
-                    this.message = "Avviato!";
+                    this.message = res["Garden_Started"];  
                 }
             } else {
-                this.error = "Cannot start garden!";
+                this.error = format("Garden_StartError", '');
             }
         }, err => {
-            this.error = "Cannot start garden: " + err.statusText;
+            this.error = format("Garden_StartError", err.statusText);
         });
     }
 

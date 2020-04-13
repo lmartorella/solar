@@ -33,6 +33,7 @@ namespace Lucky.Home.Devices.Garden
         private FileWatcher _fileWatcher;
         private readonly double _counterFq;
         private PumpOperationObserver _pumpOpObserver = new PumpOperationObserver();
+        private EventHandler<PipeServer.MessageEventArgs> _pipeMessageHandler;
 
         public GardenDevice(double counterFq = 5.5)
         {
@@ -56,7 +57,7 @@ namespace Lucky.Home.Devices.Garden
             ReadConfig();
 
             // To receive commands from UI
-            Manager.GetService<PipeServer>().Message += (o, e) =>
+            _pipeMessageHandler = (o, e) =>
             {
                 switch (e.Request.Command)
                 {
@@ -84,12 +85,12 @@ namespace Lucky.Home.Devices.Garden
                         });
                         break;
                     case "garden.setImmediate":
-                        Logger.Log("setImmediate", "msg", string.Join(",", e.Request.ImmediateZones.Select(z => z.ToString())));
+                        Logger.Log("setImmediate", "msg", string.Join(",", ((GardenWebRequest)e.Request).ImmediateZones.Select(z => z.ToString())));
                         e.Response = Task.FromResult((WebResponse) new GardenWebResponse
                         {
                             Error = ScheduleCycle(new ImmediateProgram
                             {
-                                ZoneTimes = e.Request.ImmediateZones.Select(prg => new ZoneTime
+                                ZoneTimes = ((GardenWebRequest)e.Request).ImmediateZones.Select(prg => new ZoneTime
                                 {
                                     Minutes = prg.Time,
                                     Zones = prg.Zones
@@ -114,6 +115,7 @@ namespace Lucky.Home.Devices.Garden
                         break;
                 }
             };
+            Manager.GetService<PipeServer>().Message += _pipeMessageHandler;
 
             _ = StartLoop();
         }
@@ -246,6 +248,7 @@ namespace Lucky.Home.Devices.Garden
                 _timeProgram.Dispose();
             }
             _fileWatcher.Dispose();
+            Manager.GetService<PipeServer>().Message -= _pipeMessageHandler;
             return base.OnTerminate();
         }
 
