@@ -1,5 +1,6 @@
 ﻿using Lucky.Home.Services;
 using Lucky.Home.Sinks;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace Lucky.Home.Devices.Garden
@@ -22,7 +23,18 @@ namespace Lucky.Home.Devices.Garden
 
         public override string ToString()
         {
-            return "Zones: " + string.Join(",", Zones) + " [Time: " + Time + "]";
+            return ToString("");
+        }
+
+        public string ToString(string format, string[] zoneNames = null)
+        {
+            switch (format) 
+            {
+                case "f":
+                    return string.Format(Resources.immediateToString, string.Join(", ", Zones.Select(i => zoneNames[i])), Time);
+                default:
+                    return "Zones: " + string.Join(",", Zones) + " [Time: " + Time + "]";
+            }
         }
     }
 

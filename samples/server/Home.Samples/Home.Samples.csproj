@@ -106,9 +106,7 @@
     <Content Include="UI\solar_daily_summary.it-IT.txt" />
     <Content Include="UI\solar_daily_summary.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

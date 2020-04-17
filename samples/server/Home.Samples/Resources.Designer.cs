@@ -61,6 +61,51 @@ namespace Lucky.Home {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Quick: {0}.
+        /// </summary>
+        internal static string gardenImmediate {
+            get {
+                return ResourceManager.GetString("gardenImmediate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   {0}: {1} minutes ({2} liters).
+        /// </summary>
+        internal static string gardenMailBody {
+            get {
+                return ResourceManager.GetString("gardenMailBody", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performed cycles:.
+        /// </summary>
+        internal static string gardenMailHeader {
+            get {
+                return ResourceManager.GetString("gardenMailHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Irrigated garden.
+        /// </summary>
+        internal static string gardenMailTitle {
+            get {
+                return ResourceManager.GetString("gardenMailTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1} minutes.
+        /// </summary>
+        internal static string immediateToString {
+            get {
+                return ResourceManager.GetString("immediateToString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total Energy: {PowerKWh} kWh
         ///Peak of {PeakPowerW}W at {PeakTimestamp}.
         ///

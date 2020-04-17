@@ -181,7 +181,7 @@ namespace Lucky.Home.Devices.Garden
             if (nextCycle == null || nextCycle.Item2 > (now + TimeSpan.FromMinutes(5)))
             {
                 // Schedule mail
-                string body = "Cicli effettuati:" + Environment.NewLine;
+                string body = Resources.gardenMailHeader + Environment.NewLine;
                 body += string.Join(
                     Environment.NewLine,
                     _mailData.Select(data =>
@@ -190,14 +190,14 @@ namespace Lucky.Home.Devices.Garden
                             string.Join(Environment.NewLine,
                                 data.ZoneData.Select(t =>
                                 {
-                                    return string.Format("  {0}: {1} minuti ({2} litri)", GetZoneNames(t.Zones), t.Minutes, t.QuantityL);
+                                    return string.Format(Resources.gardenMailBody, GetZoneNames(t.Zones), t.Minutes, t.QuantityL);
                                 })
                             )
                         )
                     )
                 );
 
-                Manager.GetService<INotificationService>().SendMail("Giardino irrigato", body, false);
+                Manager.GetService<INotificationService>().SendMail(Resources.gardenMailTitle, body, false);
                 _mailData.Clear();
             }
         }

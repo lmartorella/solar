@@ -117,6 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="gardenImmediate" xml:space="preserve">
+    <value>Quick: {0}</value>
+  </data>
+  <data name="gardenMailBody" xml:space="preserve">
+    <value>  {0}: {1} minutes ({2} liters)</value>
+  </data>
+  <data name="gardenMailHeader" xml:space="preserve">
+    <value>Performed cycles:</value>
+  </data>
+  <data name="gardenMailTitle" xml:space="preserve">
+    <value>Irrigated garden</value>
+  </data>
+  <data name="immediateToString" xml:space="preserve">
+    <value>{0}: {1} minutes</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="solar_daily_summary" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>ui\solar_daily_summary.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>

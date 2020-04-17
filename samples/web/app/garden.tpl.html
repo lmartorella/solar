@@ -4,7 +4,8 @@
   <span class="message" ng-if="ctrl.message"> {{ctrl.message}} </span>
   <span class="message"> {{ctrl.status}} </span>
 
-  <div ng-show="ctrl.loaded">
+  <!-- Editor to add immediate cycle -->
+  <div ng-show="ctrl.loaded && !ctrl.immediateStarted">
     <h4>{{res["Garden_QuickCycle"]}}</h4>
     <div ng-repeat="cycle in ctrl.program" class="program-cycle">
       <div class="program-zones">
@@ -19,17 +20,16 @@
       </p>
       <button ng-click="ctrl.removeCycle($index)">{{res["Garden_Remove"]}}</button>
     </div>
-    <button ng-click="ctrl.addCycle()">{{res["Garden_Add"]}}</button>
+    <div>
+      <button ng-click="ctrl.addCycle()">{{res["Garden_Add"]}}</button>
+    </div>
+    <div>
+      <button ng-click="ctrl.start()" ng-disabled="ctrl.program.length === 0">{{res["Garden_Start"]}}</button>
+    </div>
   </div>
 
   <div ng-show="ctrl.loaded">
-    <br/>
-    <br/>
-    <button ng-click="ctrl.start()" ng-disabled="ctrl.isDisableButton()">{{res["Garden_Start"]}}</button>
-    <br/>
-    <br/>
     <button ng-click="ctrl.stop()">{{res["Garden_Stop"]}}</button>
-    <br/>
   </div>
 
   <div class="bot" ng-show="ctrl.loaded"> 

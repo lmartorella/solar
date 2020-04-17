@@ -69,7 +69,7 @@ namespace Lucky.Home.Devices.Garden
                             // Tactical
                             if (flowData != null)
                             {
-                                await GetFirstOnlineSink<GardenSink>()?.UpdateFlowData((int)flowData.FlowLMin);
+                                await (GetFirstOnlineSink<GardenSink>()?.UpdateFlowData((int)flowData.FlowLMin) ?? Task.FromResult<string>(null));
                             }
 
                             var nextCycles = _cycleQueue.Select(q => Tuple.Create(q.Name, (DateTime?)null))
@@ -85,17 +85,18 @@ namespace Lucky.Home.Devices.Garden
                         });
                         break;
                     case "garden.setImmediate":
-                        Logger.Log("setImmediate", "msg", string.Join(",", ((GardenWebRequest)e.Request).ImmediateZones.Select(z => z.ToString())));
+                        var zones = ((GardenWebRequest)e.Request).ImmediateZones;
+                        Logger.Log("setImmediate", "msg", string.Join(",", zones.Select(z => z.ToString())));
                         e.Response = Task.FromResult((WebResponse) new GardenWebResponse
                         {
                             Error = ScheduleCycle(new ImmediateProgram
                             {
-                                ZoneTimes = ((GardenWebRequest)e.Request).ImmediateZones.Select(prg => new ZoneTime
+                                ZoneTimes = zones.Select(prg => new ZoneTime
                                 {
                                     Minutes = prg.Time,
                                     Zones = prg.Zones
                                 }).ToArray(),
-                                Name = "Immediato"
+                                Name = string.Format(Resources.gardenImmediate, string.Join("; ", zones.Select(z => z.ToString("f", _zoneNames))))
                             })
                         });
                         break;

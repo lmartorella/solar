@@ -4,6 +4,7 @@ declare var moment: any;
 moment.locale("it-IT");
 
 interface IGardenStatusResponse {
+    error?: string;
     config: {
         zones: string[];
     };
@@ -21,11 +22,9 @@ interface IGardenStartStopResponse {
 }
 
 class Cycle {
-    constructor(zoneNames: string[]) {
+    constructor(zoneNames: string[], public time: string) {
         this.zones = zoneNames.map((name, index) => ({ name, index }))
     }
-
-    time: number = 0;
 
     zones: { 
         name: string;
@@ -39,14 +38,14 @@ export class GardenController {
     public message: string;
     public error: string;
     private zoneNames: string[] = [];
-    private program: Cycle[] = [];
+    public program: Cycle[] = [];
     public status: string;
-    public disableButton = true;
     public flow: { 
         totalMc: number;
         flowLMin: number;
     };
     public nextCycles: { name: string, scheduledTime: string }[];
+    public immediateStarted: boolean;
 
     static $inject = ['$http', '$scope'];
     constructor(private $http: ng.IHttpService) { }
@@ -58,16 +57,19 @@ export class GardenController {
         // Fetch zones
         this.$http.get<IGardenStatusResponse>("/svc/gardenStatus").then(resp => {
             if (resp.status == 200 && resp.data) {
-                this.zoneNames = resp.data.config && resp.data.config.zones;
-                this.status =  resp.data.online ? res["Device_StatusOnline"] : (resp.data.config ? res["Device_StatusOffline"] : res["Garden_MissingConf"]);
-                this.flow = resp.data.flowData;
-                this.disableButton = false;
-
-                let now = moment.now();
-                if (resp.data.nextCycles) {
-                    this.nextCycles = resp.data.nextCycles.map(({ name, scheduledTime }) => {
-                        return { name, scheduledTime: scheduledTime && moment.duration(moment(scheduledTime).diff(now)).humanize(true) };
-                    });
+                if (resp.data.error) {
+                    this.error = format("Garden_ErrorConf", resp.data.error);
+                } else {
+                    this.zoneNames = resp.data.config && resp.data.config.zones;
+                    this.status =  resp.data.online ? res["Device_StatusOnline"] : (resp.data.config ? res["Device_StatusOffline"] : res["Garden_MissingConf"]);
+                    this.flow = resp.data.flowData;
+    
+                    let now = moment.now();
+                    if (resp.data.nextCycles) {
+                        this.nextCycles = resp.data.nextCycles.map(({ name, scheduledTime }) => {
+                            return { name, scheduledTime: scheduledTime && moment.duration(moment(scheduledTime).diff(now)).humanize(true) };
+                        });
+                    }
                 }
             } else {
                 this.error = format("Garden_ErrorConf", resp.statusText);
@@ -79,18 +81,14 @@ export class GardenController {
         });
     }
 
-    public isDisableButton() {
-        return this.disableButton || this.program.length === 0;
-    }
-
     stop() {
-        this.disableButton = true;
         this.$http.post<IGardenStartStopResponse>("/svc/gardenStop", "").then(resp => {
             if (resp.status == 200) {
                 if (resp.data.error) {
                     this.error = format("Error", resp.data.error);
                 } else {
                     this.message = res["Garden_Stopped"];  
+                    this.immediateStarted = false;
                 }
             } else {
                 this.error = format("Garden_StopError", '');
@@ -101,7 +99,6 @@ export class GardenController {
     }
 
     start() {
-        this.disableButton = true;
         var body = this.program.map(cycle => ({ zones: cycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(cycle.time) }));
         this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", JSON.stringify(body)).then(resp => {
             if (resp.status == 200) {
@@ -109,6 +106,7 @@ export class GardenController {
                     this.error = format("Error", resp.data.error);
                 } else {
                     this.message = res["Garden_Started"];  
+                    this.immediateStarted = true;
                 }
             } else {
                 this.error = format("Garden_StartError", '');
@@ -119,7 +117,7 @@ export class GardenController {
     }
 
     addCycle(): void {
-        this.program.push(new Cycle(this.zoneNames));
+        this.program.push(new Cycle(this.zoneNames, "5"));
     }
 
     removeCycle(index: number): void {
