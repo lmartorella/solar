@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Lucky.Home.Devices
 {
@@ -111,8 +112,9 @@ namespace Lucky.Home.Devices
 
         private CalibrationData _calibData;
 
-        public BarometricTesterDevice()
+        protected override void OnInitialize()
         {
+            base.OnInitialize();
             _timer = new Timer(async o =>
             {
                 if (IsFullOnline)
@@ -149,6 +151,12 @@ namespace Lucky.Home.Devices
         private void WriteData(BarometricSink sink, byte[] data)
         {
             Console.WriteLine("{0}: {1}", sink.ToString(), string.Join(" ", data.Select(b => b.ToString("x2"))));
+        }
+
+        protected override Task OnTerminate()
+        {
+            _timer.Dispose();
+            return base.OnTerminate();
         }
     }
 }
