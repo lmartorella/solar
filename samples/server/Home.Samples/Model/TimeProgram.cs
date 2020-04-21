@@ -70,10 +70,6 @@ namespace Lucky.Home.Model
             foreach (var t in program.Cycles.Select((cycle, idx) => new { cycle, idx }))
             {
                 var name = t.cycle.Name ?? t.idx.ToString();
-                if (t.cycle.End.HasValue && t.cycle.Start.HasValue && t.cycle.Start > t.cycle.End)
-                {
-                    throw new ArgumentOutOfRangeException("cycle " + name, "End before start");
-                }
                 if (t.cycle.WeekDays != null && t.cycle.WeekDays.Length == 0)
                 {
                     t.cycle.WeekDays = null;
@@ -86,9 +82,9 @@ namespace Lucky.Home.Model
                 {
                     throw new ArgumentOutOfRangeException("cycle " + name, "No day period nor week days specified");
                 }
-                if (t.cycle.DayPeriod > 0 && (!t.cycle.Start.HasValue && !program.Start.HasValue))
+                if (t.cycle.DayPeriod > 0 && !t.cycle.Start.HasValue)
                 {
-                    throw new ArgumentOutOfRangeException("cycle " + name, "No start date for periodic table, and no global start date");
+                    throw new ArgumentOutOfRangeException("cycle " + name, "No start date for periodic table");
                 }
                 if (t.cycle.StartTime < TimeSpan.Zero || t.cycle.StartTime > TimeSpan.FromDays(1))
                 {
@@ -108,14 +104,6 @@ namespace Lucky.Home.Model
             /// </summary>
             [DataMember(Name = "cycles")]
             public TCycle[] Cycles { get; set; }
-
-            /// <summary>
-            /// Global start date (e.g. for rain-disabling)?
-            /// </summary>
-            [DataMember(Name = "start")]
-            public string StartStr { get { return Start.ToIso(); } set { Start = value.FromIso(); } }
-            [IgnoreDataMember]
-            public DateTime? Start { get; set; }
         }
 
         /// <summary>
@@ -131,7 +119,7 @@ namespace Lucky.Home.Model
             public string Name { get; set; }
 
             /// <summary>
-            /// Enable/Disabled
+            /// If disabled, it will never run
             /// </summary>
             [DataMember(Name = "disabled")]
             public bool Disabled { get; set; }
@@ -141,24 +129,8 @@ namespace Lucky.Home.Model
             /// </summary>
             [DataMember(Name = "start")]
             public string StartStr { get { return Start.ToIso();  } set { Start = value.FromIso();  } }
-
-            /// <summary>
-            /// Start date-time
-            /// </summary>
             [IgnoreDataMember]
             public DateTime? Start { get; set; }
-
-            /// <summary>
-            /// End date-time
-            /// </summary>
-            [DataMember(Name = "end")]
-            public string EndStr { get { return End.ToIso(); } set { End = value.FromIso(); } }
-
-            /// <summary>
-            /// End date-time
-            /// </summary>
-            [IgnoreDataMember]
-            public DateTime? End { get; set; }
 
             /// <summary>
             /// If > 0, period in number of days
@@ -177,10 +149,6 @@ namespace Lucky.Home.Model
             /// </summary>
             [DataMember(Name = "startTime")]
             public string StartTimeStr { get { return ToIso(StartTime); } set { StartTime = FromIsoT(value); } }
-
-            /// <summary>
-            /// Time of day of start activity
-            /// </summary>
             [IgnoreDataMember]
             public TimeSpan StartTime { get; set; }
         }
@@ -267,30 +235,31 @@ namespace Lucky.Home.Model
 
         public static IEnumerable<Tuple<TCycle, DateTime>> GetNextCycles(ProgramData program, DateTime now)
         {
-            if (program.Cycles == null || program.Cycles.Length == 0)
+            if (program.Cycles == null)
+            {
+                yield break;
+            }
+
+            // Active cycles
+            var activeCycles = program.Cycles.Where(c => !c.Disabled).ToArray();
+            if (activeCycles.Length == 0)
             {
                 yield break;
             }
 
             // Next times
-            Tuple<DateTime, int>[] nextTimes = program.Cycles.Select((cycle, i) => Tuple.Create(GetNextTick(program, cycle, now), i)).ToArray();
+            var nextTimes = activeCycles.Select((cycle, i) => Tuple.Create(i, GetNextTick(cycle, now))).ToArray();
 
             // Take the closer one
             while (true)
             {
-                Tuple<DateTime, int> closer = nextTimes.OrderBy(tuple => tuple.Item1).First();
-
-                if (closer.Item1 == DateTime.MaxValue)
-                {
-                    yield break;
-                }
-                var index = closer.Item2;
-                var cycle = program.Cycles[index];
-                var nextTime = closer.Item1;
+                var closer = nextTimes.OrderBy(tuple => tuple.Item2).First();
+                var cycle = activeCycles[closer.Item1];
+                var nextTime = closer.Item2;
                 yield return Tuple.Create(cycle, nextTime);
 
                 // Replace with next
-                nextTimes[index] = Tuple.Create(GetNextTick(program, cycle, nextTime + TimeSpan.FromSeconds(1)), index);
+                nextTimes[closer.Item1] = Tuple.Create(closer.Item1, GetNextTick(cycle, nextTime + TimeSpan.FromSeconds(1)));
             }
         }
 
@@ -302,25 +271,12 @@ namespace Lucky.Home.Model
         /// <summary>
         /// Get the next event timestamp for that cycle starting from now
         /// </summary>
-        public static DateTime GetNextTick(ProgramData program, Cycle cycle, DateTime now)
+        public static DateTime GetNextTick(Cycle cycle, DateTime now)
         {
-            if (cycle.Disabled)
-            {
-                return DateTime.MaxValue;
-            }
-
-            // Check begin / end
+            // Check begin / end of the cycle itself
             if (cycle.Start.HasValue && now < cycle.Start.Value)
             {
                 now = cycle.Start.Value;
-            }
-            if (program.Start.HasValue && now < program.Start.Value)
-            {
-                now = program.Start.Value;
-            }
-            if (cycle.End.HasValue && now > cycle.End)
-            {
-                return DateTime.MaxValue;
             }
 
             // Calc the next valid starting day 
@@ -333,7 +289,7 @@ namespace Lucky.Home.Model
             else
             {
                 // Get the next periodic day
-                nextDay = GetNextValidPeriodicDay(cycle.DayPeriod, nextDay, cycle.Start.HasValue ? cycle.Start.Value : program.Start.Value);
+                nextDay = GetNextValidPeriodicDay(cycle.DayPeriod, nextDay, cycle.Start.Value);
             }
 
             return nextDay + cycle.StartTime;
