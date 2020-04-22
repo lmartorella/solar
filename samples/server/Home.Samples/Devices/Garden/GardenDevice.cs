@@ -26,20 +26,39 @@ namespace Lucky.Home.Devices.Garden
         private static TimeSpan MAIN_POLL_PERIOD = TimeSpan.FromSeconds(3);
 
         private FileInfo _cfgFile;
-        private object _timeProgramLock = new object();
         private readonly TimeProgram<GardenCycle> _timeProgram;
-        private readonly Queue<ImmediateProgram> _cycleQueue = new Queue<ImmediateProgram>();
+        private readonly Queue<ImmediateProgram> _immediateQueue = new Queue<ImmediateProgram>();
         private string[] _zoneNames = new string[0];
         private FileWatcher _fileWatcher;
         private readonly double _counterFq;
+        private readonly MailScheduler _executedCyclesMailScheduler;
+        private readonly MailScheduler _suspendedCyclesMailScheduler;
         private PumpOperationObserver _pumpOpObserver = new PumpOperationObserver();
         private EventHandler<PipeServer.MessageEventArgs> _pipeMessageHandler;
+
+        public bool InUse { get; private set; }
 
         public GardenDevice(double counterFq = 5.5)
         {
             _counterFq = counterFq;
             _timeProgram = new TimeProgram<GardenCycle>(Logger);
-            _timeProgram.CycleTriggered += HandleProgramCycle;
+
+            _executedCyclesMailScheduler = new MailScheduler(this, Resources.gardenMailTitle, Resources.gardenMailHeader);
+            _suspendedCyclesMailScheduler = new MailScheduler(this, Resources.gardenMailSuspendedTitle, Resources.gardenMailSuspendedHeader);
+
+            _timeProgram.CycleTriggered += (_, e) =>
+                {
+                    Logger.Log("ScheduleProgram", "name", e.Item.Name, "suspended", e.Item.Suspended);
+                    if (e.Item.Suspended)
+                    {
+                        // Send a mail after the duration, to let the mail scheduler to coalesce mails
+                        _suspendedCyclesMailScheduler.ScheduleMail(DateTime.Now + e.Item.NomimalDuration, e.Item.Name);
+                    }
+                    else
+                    {
+                        ScheduleCycle(new ImmediateProgram { ZoneTimes = e.Item.ZoneTimes, Name = e.Item.Name });
+                    }
+                };
 
             var cfgColder = Manager.GetService<PersistenceService>().GetAppFolderPath("server");
             _cfgFile = new FileInfo(Path.Combine(cfgColder, "gardenCfg.json"));
@@ -57,7 +76,7 @@ namespace Lucky.Home.Devices.Garden
             ReadConfig();
 
             // To receive commands from UI
-            _pipeMessageHandler = (o, e) =>
+            _pipeMessageHandler = (_, e) =>
             {
                 switch (e.Request.Command)
                 {
@@ -72,15 +91,22 @@ namespace Lucky.Home.Devices.Garden
                                 await (GetFirstOnlineSink<GardenSink>()?.UpdateFlowData((int)flowData.FlowLMin) ?? Task.FromResult<string>(null));
                             }
 
-                            var nextCycles = _cycleQueue.Select(q => Tuple.Create(q.Name, (DateTime?)null))
-                                            .Concat(_timeProgram?.GetNextCycles(DateTime.Now).Select(c => Tuple.Create(c.Item1.Name, (DateTime?)c.Item2)))
-                                            .Take(4);
+                            NextCycle[] nextCycles;
+                            lock (_immediateQueue)
+                            {
+                                lock (_timeProgram)
+                                {
+                                    nextCycles = _immediateQueue.Select(q => new NextCycle(q))
+                                                    .Concat(_timeProgram?.GetNextCycles(DateTime.Now).Select(c => new NextCycle(c.Item1, c.Item2)))
+                                                    .Take(4).ToArray();
+                                }
+                            }
 
                             return (WebResponse) new GardenWebResponse {
                                 Online = GetFirstOnlineSink<GardenSink>() != null,
                                 Configuration = new Configuration { Program = _timeProgram.Program, ZoneNames = _zoneNames },
                                 FlowData = flowData,
-                                NextCycles = nextCycles.Select(t => new NextCycle { Name = t.Item1, ScheduledTime = t.Item2 }).ToArray()
+                                NextCycles = nextCycles
                             };
                         });
                         break;
@@ -171,13 +197,14 @@ namespace Lucky.Home.Devices.Garden
                 // Program in progress?
                 bool cycleIsWaiting = false;
                 // Check for new program to run
-                lock (_cycleQueue)
+                lock (_immediateQueue)
                 {
-                    cycleIsWaiting = _cycleQueue.Count > 0;
+                    cycleIsWaiting = _immediateQueue.Count > 0;
                 }
 
                 // Do I need to contact the garden sink?
-                if (runningProgram != null || cycleIsWaiting)
+                InUse = runningProgram != null || cycleIsWaiting;
+                if (InUse)
                 {
                     var gardenSink = GetFirstOnlineSink<GardenSink>();
                     if (gardenSink != null)
@@ -210,9 +237,9 @@ namespace Lucky.Home.Devices.Garden
                             {
                                 ImmediateProgram cycle;
                                 GardenSink.ImmediateZoneTime[] zoneTimes = null;
-                                lock (_cycleQueue)
+                                lock (_immediateQueue)
                                 {
-                                    cycle = _cycleQueue.Dequeue();
+                                    cycle = _immediateQueue.Dequeue();
                                     zoneTimes = cycle.ZoneTimes.Select(t => new GardenSink.ImmediateZoneTime { Time = (byte)t.Minutes, ZoneMask = ToZoneMask(t.Zones) }).ToArray();
                                 }
                                 await gardenSink.WriteProgram(zoneTimes);
@@ -244,7 +271,7 @@ namespace Lucky.Home.Devices.Garden
 
         protected override Task OnTerminate()
         {
-            lock (_timeProgramLock)
+            lock (_timeProgram)
             {
                 _timeProgram.Dispose();
             }
@@ -255,26 +282,26 @@ namespace Lucky.Home.Devices.Garden
 
         private void ReadConfig()
         {
-            lock (_timeProgramLock)
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(Configuration));
+            Configuration configuration;
+            try
             {
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(Configuration));
-                Configuration configuration;
-                try
+                using (var stream = File.Open(_cfgFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    using (var stream = File.Open(_cfgFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        configuration = serializer.ReadObject(stream) as Configuration;
-                    }
+                    configuration = serializer.ReadObject(stream) as Configuration;
                 }
-                catch (Exception exc)
-                {
-                    Logger.Log("Cannot read garden configuration", "Exc", exc.Message);
-                    return;
-                }
+            }
+            catch (Exception exc)
+            {
+                Logger.Log("Cannot read garden configuration", "Exc", exc.Message);
+                return;
+            }
 
-                // Apply configuration
-                Logger.Log("New configuration acquired", "cycles#", configuration?.Program?.Cycles?.Length);
+            // Apply configuration
+            Logger.Log("New configuration acquired", "cycles#", configuration?.Program?.Cycles?.Length);
 
+            lock (_timeProgram)
+            {
                 try
                 {
                     _timeProgram.SetProgram(configuration.Program);
@@ -288,19 +315,13 @@ namespace Lucky.Home.Devices.Garden
             }
         }
 
-        private void HandleProgramCycle(object sender, TimeProgram<GardenCycle>.CycleTriggeredEventArgs e)
-        {
-            Logger.Log("ScheduleProgram", "name", e.Cycle.Name);
-            ScheduleCycle(new ImmediateProgram { ZoneTimes = e.Cycle.ZoneTimes, Name = e.Cycle.Name } );
-        }
-
         private string ScheduleCycle(ImmediateProgram program)
         {
             if (!program.IsEmpty)
             {
-                lock (_cycleQueue)
+                lock (_immediateQueue)
                 {
-                    _cycleQueue.Enqueue(program);
+                    _immediateQueue.Enqueue(program);
                 }
                 return null;
             }
@@ -334,10 +355,15 @@ namespace Lucky.Home.Devices.Garden
 
         internal Tuple<GardenCycle, DateTime> GetNextCycle(DateTime now)
         {
-            lock (_timeProgramLock)
+            lock (_timeProgram)
             {
                 return _timeProgram.GetNextCycles(now).FirstOrDefault();
             }
+        }
+
+        internal void ScheduleMail(DateTime now, string name, ZoneTimeWithQuantity[] results)
+        {
+            _executedCyclesMailScheduler.ScheduleMail(now, name, results);
         }
     }
 }

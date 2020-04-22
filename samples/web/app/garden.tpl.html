@@ -35,7 +35,10 @@
   <div class="bot" ng-show="ctrl.loaded"> 
     <h3>{{res["Garden_NextCycles"]}}</h3>
       <p ng-repeat="cycle in ctrl.nextCycles">
-        <span>{{format(cycle.scheduledTime ? "Garden_ScheduledProgram" : "Garden_QueuedProgram", cycle)}}</span>
+        <span ng-class="{ 'suspended': cycle.suspended }">
+          {{format(cycle.scheduledTime ? "Garden_ScheduledProgram" : "Garden_QueuedProgram", cycle)}}
+          <span ng-if="cycle.suspended"> {{format("Garden_Suspended")}}</span>
+        </span>
       </p>
     <p> {{res["Garden_FlowInfo"]}} {{ctrl.flow.flowLMin | number : 1 }} <small><sup>Lit</sup>/<sub>min</sub></small>, {{ctrl.flow.totalMc | number : 3 }} <small>M<sup>3</sup></small> </p>
   </div>

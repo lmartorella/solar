@@ -1,4 +1,6 @@
 ﻿using Lucky.Home.Model;
+using System;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace Lucky.Home.Devices.Garden
@@ -11,6 +13,15 @@ namespace Lucky.Home.Devices.Garden
         /// </summary>
         [DataMember(Name = "zoneTimes")]
         public ZoneTime[] ZoneTimes;
+
+        [IgnoreDataMember]
+        internal TimeSpan NomimalDuration
+        {
+            get
+            {
+                return TimeSpan.FromMinutes(ZoneTimes.Sum(zt => zt.Minutes));
+            }
+        }
     }
 }
 

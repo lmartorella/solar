@@ -14,7 +14,7 @@ interface IGardenStatusResponse {
         totalMc: number;
         flowLMin: number;
     };
-    nextCycles: { name: string, scheduledTime: string }[];
+    nextCycles: { name: string, scheduledTime: string, suspended: boolean }[];
 }
 
 interface IGardenStartStopResponse {
@@ -44,7 +44,7 @@ export class GardenController {
         totalMc: number;
         flowLMin: number;
     };
-    public nextCycles: { name: string, scheduledTime: string }[];
+    public nextCycles: { name: string, scheduledTime: string, suspended: boolean }[];
     public immediateStarted: boolean;
 
     static $inject = ['$http', '$scope'];
@@ -66,9 +66,10 @@ export class GardenController {
     
                     let now = moment.now();
                     if (resp.data.nextCycles) {
-                        this.nextCycles = resp.data.nextCycles.map(({ name, scheduledTime }) => {
-                            return { name, scheduledTime: scheduledTime && moment.duration(moment(scheduledTime).diff(now)).humanize(true) };
-                        });
+                        this.nextCycles = resp.data.nextCycles;
+                        this.nextCycles.forEach(cycle => {
+                            cycle.scheduledTime = cycle.scheduledTime && moment.duration(moment(cycle.scheduledTime).diff(now)).humanize(true)
+                        })
                     }
                 }
             } else {

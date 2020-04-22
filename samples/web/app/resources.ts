@@ -31,6 +31,7 @@ export const Strings = {
     "Garden_FlowInfo": "Flow:",
     "Garden_MissingConf": "Missing configuration",
     "Garden_ErrorConf": err => `Cannot fetch configuration: ${err}`,
+    "Garden_Suspended": " (suspended)",
 
     "Solar_ChartToday": "Chart today",
     "Solar_Chart4days": "Chart last 4 days",
@@ -45,6 +46,6 @@ export const Strings = {
 };
 
 const res = { ...Strings, ...itStrings };
-const format = (str, args) => res[str](args);
+const format = (str, args) => (typeof res[str] === "function") ? res[str](args): res[str];
 
 export { res, format };

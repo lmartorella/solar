@@ -119,10 +119,16 @@ namespace Lucky.Home.Model
             public string Name { get; set; }
 
             /// <summary>
-            /// If disabled, it will never run
+            /// If disabled, it will never run, nor be displayed in the next cycle list
             /// </summary>
             [DataMember(Name = "disabled")]
             public bool Disabled { get; set; }
+
+            /// <summary>
+            /// If suspended, it will not run, but it will be displayed in the next cycle list, and notification will be sent (as a reminder).
+            /// </summary>
+            [DataMember(Name = "suspended")]
+            public bool Suspended { get; set; }
 
             /// <summary>
             /// Start date-time
@@ -170,15 +176,10 @@ namespace Lucky.Home.Model
             return TimeSpan.ParseExact(str, "c", null);
         }
 
-        public class CycleTriggeredEventArgs : EventArgs
-        {
-            public TCycle Cycle;
-        }
-
         /// <summary>
         /// Event raised when a cycle program kicks in
         /// </summary>
-        public event EventHandler<CycleTriggeredEventArgs> CycleTriggered;
+        public event EventHandler<ItemEventArgs<TCycle>> CycleTriggered;
 
         private void InitTimers()
         {
@@ -265,7 +266,7 @@ namespace Lucky.Home.Model
 
         private void RaiseEvent(TCycle cycle)
         {
-            CycleTriggered?.Invoke(this, new CycleTriggeredEventArgs { Cycle = cycle });
+            CycleTriggered?.Invoke(this, new ItemEventArgs<TCycle>(cycle));
         }
 
         /// <summary>
