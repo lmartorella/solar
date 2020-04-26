@@ -63,6 +63,7 @@
     <Compile Include="Devices\Solar\SamilInverterTesterDevice.cs" />
     <Compile Include="Model\DateTimeExtension.cs" />
     <Compile Include="Model\TimeProgram.cs" />
+    <Compile Include="Power\DayPowerData.cs" />
     <Compile Include="Power\PowerData.cs" />
     <Compile Include="Devices\Solar\SamilInverterDeviceBase.cs" />
     <Compile Include="Devices\TemperatureTesterDevice.cs" />

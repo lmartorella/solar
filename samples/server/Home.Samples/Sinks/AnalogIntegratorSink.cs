@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+#pragma warning disable 649
+
 namespace Lucky.Home.Sinks
 {
     /// <summary>
@@ -21,7 +23,10 @@ namespace Lucky.Home.Sinks
             public UInt16 Count;
         }
 
-        public async Task<double?> ReadData()
+        /// <summary>
+        /// Read data. Returns <see ref="defaultValue"/> if the sample is invalid
+        /// </summary>
+        public async Task<double> ReadData(double defaultValue)
         {
             double? retValue = null;
             await Read(async reader =>
@@ -32,7 +37,7 @@ namespace Lucky.Home.Sinks
                     retValue = ((double)msg.Value / msg.Count) * msg.Factor;
                 }
             });
-            return retValue;
+            return retValue.HasValue ? retValue.Value : defaultValue;
         }
     }
 }

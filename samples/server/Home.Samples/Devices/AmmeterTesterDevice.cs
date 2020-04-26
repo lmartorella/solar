@@ -21,10 +21,10 @@ namespace Lucky.Home.Devices
             _timer = new Timer(async o =>
             {
                 var integrator = GetFirstOnlineSink<AnalogIntegratorSink>();
-                if (integrator != null)
+                if (integrator != null && integrator.IsOnline)
                 {
-                    var reading = await integrator.ReadData();
-                    var text = reading != null ? string.Format("{0:0.00}A", reading) : "N/A";
+                    var reading = await integrator.ReadData(-1.0);
+                    var text = reading >=0 ? string.Format("{0:0.00}A", reading) : "N/A";
                     var display = GetFirstOnlineSink<DisplaySink>();
                     if (display != null)
                     {
