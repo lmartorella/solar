@@ -6,11 +6,12 @@
 
   <!-- Editor to add immediate cycle -->
   <div ng-show="ctrl.loaded && !ctrl.immediateStarted" class="garden-section">
-    <h4>{{res["Garden_QuickCycle"]}}</h4>
     <div>
-      <button ng-click="ctrl.addCycle()">{{res["Garden_Add"]}}</button>
+      <button ng-click="ctrl.addImmediateCycle()">{{res["Garden_AddImmediate"]}}</button>
     </div>
-    <div ng-repeat="cycle in ctrl.immediateProgram" class="program-cycle">
+    <h4 ng-hide="ctrl.immediateCycles.length === 0">{{res["Garden_QuickCycle"]}}</h4>
+    <!-- List immediate program cycles -->
+    <div ng-repeat="cycle in ctrl.immediateCycles" class="program-cycle">
       <div class="program-zones">
           <div ng-repeat="zone in cycle.zones">
              <label>{{zone.name}}</label>
@@ -21,10 +22,10 @@
         <span>{{res["Garden_Minutes"]}}</span>
         <input type="text" ng-model="cycle.time" style="width: 3em" />
       </p>
-      <button ng-click="ctrl.removeCycle($index)">{{res["Garden_Remove"]}}</button>
+      <button ng-click="ctrl.removeImmediate($index)">{{res["Garden_RemoveImmediate"]}}</button>
     </div>
     <div>
-      <button ng-click="ctrl.start()" ng-hide="ctrl.immediateProgram.length === 0">{{res["Garden_Start"]}}</button>
+      <button ng-click="ctrl.startImmediate()" ng-hide="ctrl.immediateCycles.length === 0">{{res["Garden_StartImmediate"]}}</button>
     </div>
   </div>
 
@@ -32,11 +33,37 @@
     <button ng-click="ctrl.stop()">{{res["Garden_Stop"]}}</button>
   </div>
 
+  <!-- Section to suspend/resume for rain -->
   <div ng-show="ctrl.loaded" class="garden-section">
     <button ng-click="ctrl.resumeAll()" ng-show="ctrl.canResumeAll">{{res["Garden_ResumeAll"]}}</button>
     <button ng-click="ctrl.suspendAll()" ng-show="ctrl.canSuspendAll">{{res["Garden_SuspendAll"]}}</button>
   </div>
 
+  <!-- Editor to edit program cycle -->
+  <div ng-show="ctrl.loaded && ctrl.config.program.cycles.length > 0" class="garden-section">
+    <div>
+      <button ng-hide="ctrl.editProgramMode" ng-click="ctrl.editProgramMode = true">{{res["Garden_EditProgram"]}}</button>
+    </div>
+    <h4 ng-if="ctrl.editProgramMode">{{res["Garden_EditProgram"]}}</h4>
+    <!-- List program cycles -->
+    <div ng-if="ctrl.editProgramMode" ng-repeat="cycle in ctrl.config.program.cycles" class="program-cycle">
+      <div>
+          <label>{{cycle.name}}</label>
+      </div>
+      <div>
+        <label>{{res["Garden_SuspendedCheckbox"]}}</label>
+        <input type="checkbox" ng-model="cycle.suspended">
+      </div>
+      <div>
+        <label>{{res["Garden_DisabledCheckbox"]}}</label>
+        <input type="checkbox" ng-model="cycle.disabled">
+      </div>
+    </div>
+    <div ng-if="ctrl.editProgramMode">
+      <button ng-click="ctrl.saveProgram()">{{res["Garden_SaveProgram"]}}</button>
+    </div>
+  </div>
+  
   <div class="bot" ng-show="ctrl.loaded"> 
     <h3>{{res["Garden_NextCycles"]}}</h3>
       <p ng-repeat="cycle in ctrl.nextCycles">

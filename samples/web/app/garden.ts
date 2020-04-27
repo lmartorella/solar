@@ -52,8 +52,8 @@ export class GardenController {
     public message: string;
     public error: string;
     private zoneNames: string[] = [];
-    public immediateProgram: ImmediateCycle[] = [];
-    private config: IConfig;
+    public immediateCycles: ImmediateCycle[] = [];
+    public config: IConfig;
     public status: string;
     public flow: { 
         totalMc: number;
@@ -63,6 +63,7 @@ export class GardenController {
     public immediateStarted: boolean;
     public canSuspendAll: boolean;
     public canResumeAll: boolean;
+    public editProgramMode: boolean;
 
     static $inject = ['$http', '$scope'];
     constructor(private $http: ng.IHttpService) { }
@@ -129,30 +130,30 @@ export class GardenController {
         });
     }
 
-    start() {
-        var body = this.immediateProgram.map(cycle => ({ zones: cycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(cycle.time) }));
+    public startImmediate() {
+        var body = this.immediateCycles.map(cycle => ({ zones: cycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(cycle.time) }));
         this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", JSON.stringify(body)).then(resp => {
             if (resp.status == 200) {
                 if (resp.data.error) {
                     this.error = format("Error", resp.data.error);
                 } else {
-                    this.message = res["Garden_Started"];  
+                    this.message = res["Garden_StartedImmediate"];  
                     this.immediateStarted = true;
                 }
             } else {
-                this.error = format("Garden_StartError", '');
+                this.error = format("Garden_ImmediateError", '');
             }
         }, err => {
-            this.error = format("Garden_StartError", err.statusText);
+            this.error = format("Garden_ImmediateError", err.statusText);
         });
     }
 
-    addCycle(): void {
-        this.immediateProgram.push(new ImmediateCycle(this.zoneNames, "5"));
+    addImmediateCycle(): void {
+        this.immediateCycles.push(new ImmediateCycle(this.zoneNames, "5"));
     }
 
-    removeCycle(index: number): void {
-        this.immediateProgram.splice(index, 1);
+    removeImmediate(index: number): void {
+        this.immediateCycles.splice(index, 1);
     }
 
     resumeAll(): void {
