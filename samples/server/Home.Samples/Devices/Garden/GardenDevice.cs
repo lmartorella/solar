@@ -1,5 +1,4 @@
-﻿using Lucky.Db;
-using Lucky.Home.IO;
+﻿using Lucky.Home.IO;
 using Lucky.Home.Model;
 using Lucky.Home.Services;
 using Lucky.Home.Sinks;
