@@ -48,15 +48,31 @@ function register(app, privileged) {
             res.setHeader("Content-Type", "text/csv");
             stream.pipe(res);
         } else {
-            res.sendStatus(404);
+            res.sendStatus(404); 
         }
     });
     
     app.put('/svc/gardenCfg', privileged(), async (req, res) => {
         if (req.headers["content-type"] === "application/octect-stream") {
-            // Stream back config file
+            // Stream back config as file
             fs.writeFileSync(gardenCfgFile, req.body);
             res.sendStatus(200);
+        } else if ((req.headers["content-type"] || '').indexOf("application/json") === 0) {
+            // Beautify JSON
+            const changeProcessed = procMan.sendMessage("WebRequest", { command: "garden.waitNewConfig" });
+            fs.writeFile(gardenCfgFile, JSON.stringify(req.body, null, 3), err => {
+                if (err) {
+                    res.sendStatus(500);
+                } else {
+                    // Wait some additional time for the .NET process to pick up the changes
+                    changeProcessed.then(() => {
+                        // Changes picked-up
+                        res.sendStatus(200);
+                    }, err => {
+                        res.sendStatus(500);
+                    });
+                }
+            });
         } else {
             res.sendStatus(500);
         }

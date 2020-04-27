@@ -32,6 +32,8 @@ export const Strings = {
     "Garden_MissingConf": "Missing configuration",
     "Garden_ErrorConf": err => `Cannot fetch configuration: ${err}`,
     "Garden_Suspended": " (suspended)",
+    "Garden_SuspendAll": "Suspend for Rain",
+    "Garden_ResumeAll": "Resume from Rain",
 
     "Solar_ChartToday": "Chart today",
     "Solar_Chart4days": "Chart last 4 days",

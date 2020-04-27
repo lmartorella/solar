@@ -1,5 +1,4 @@
-﻿using Lucky.Db;
-using Lucky.Home.IO;
+﻿using Lucky.Home.IO;
 using Lucky.Home.Model;
 using Lucky.Home.Services;
 using Lucky.Home.Sinks;
@@ -35,6 +34,7 @@ namespace Lucky.Home.Devices.Garden
         private readonly MailScheduler _suspendedCyclesMailScheduler;
         private PumpOperationObserver _pumpOpObserver = new PumpOperationObserver();
         private EventHandler<PipeServer.MessageEventArgs> _pipeMessageHandler;
+        private Action _configurationLoaded;
 
         public bool InUse { get; private set; }
 
@@ -139,6 +139,19 @@ namespace Lucky.Home.Devices.Garden
                             error = "Cannot stop, no sink";
                         }
                         e.Response = Task.FromResult((WebResponse) new GardenWebResponse { Error = error });
+                        break;
+                    case "garden.waitNewConfig":
+                        // Wait for a new configuration to be applied
+                        var source = new TaskCompletionSource<bool>();
+                        Action handler = null;
+                        handler = () =>
+                        {
+                            _configurationLoaded -= handler;
+                            source.SetResult(true);
+                        };
+                        _configurationLoaded += handler;
+
+                        e.Response = Task.WhenAny(source.Task, Task.Delay(TimeSpan.FromSeconds(5))).ContinueWith(t => new WebResponse());
                         break;
                 }
             };
@@ -313,6 +326,8 @@ namespace Lucky.Home.Devices.Garden
                     Logger.Log("CONFIGURATION ERROR", "exc", exc.Message);
                 }
             }
+
+            _configurationLoaded?.Invoke();
         }
 
         private string ScheduleCycle(ImmediateProgram program)

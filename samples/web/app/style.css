@@ -39,6 +39,11 @@
     width: 75%;
 }
 
+.garden-section {
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
+
 .program-cycle {
     border: 1px black solid;
     background: #f0f8ff69;

@@ -5,9 +5,12 @@
   <span class="message"> {{ctrl.status}} </span>
 
   <!-- Editor to add immediate cycle -->
-  <div ng-show="ctrl.loaded && !ctrl.immediateStarted">
+  <div ng-show="ctrl.loaded && !ctrl.immediateStarted" class="garden-section">
     <h4>{{res["Garden_QuickCycle"]}}</h4>
-    <div ng-repeat="cycle in ctrl.program" class="program-cycle">
+    <div>
+      <button ng-click="ctrl.addCycle()">{{res["Garden_Add"]}}</button>
+    </div>
+    <div ng-repeat="cycle in ctrl.immediateProgram" class="program-cycle">
       <div class="program-zones">
           <div ng-repeat="zone in cycle.zones">
              <label>{{zone.name}}</label>
@@ -21,15 +24,17 @@
       <button ng-click="ctrl.removeCycle($index)">{{res["Garden_Remove"]}}</button>
     </div>
     <div>
-      <button ng-click="ctrl.addCycle()">{{res["Garden_Add"]}}</button>
-    </div>
-    <div>
-      <button ng-click="ctrl.start()" ng-disabled="ctrl.program.length === 0">{{res["Garden_Start"]}}</button>
+      <button ng-click="ctrl.start()" ng-hide="ctrl.immediateProgram.length === 0">{{res["Garden_Start"]}}</button>
     </div>
   </div>
 
   <div ng-show="ctrl.loaded">
     <button ng-click="ctrl.stop()">{{res["Garden_Stop"]}}</button>
+  </div>
+
+  <div ng-show="ctrl.loaded" class="garden-section">
+    <button ng-click="ctrl.resumeAll()" ng-show="ctrl.canResumeAll">{{res["Garden_ResumeAll"]}}</button>
+    <button ng-click="ctrl.suspendAll()" ng-show="ctrl.canSuspendAll">{{res["Garden_SuspendAll"]}}</button>
   </div>
 
   <div class="bot" ng-show="ctrl.loaded"> 
