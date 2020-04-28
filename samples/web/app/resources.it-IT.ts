@@ -23,8 +23,10 @@ export const Strings = {
     "Garden_SuspendAll": "Sospendi per pioggia",
     "Garden_ResumeAll": "Ripristina dopo pioggia",
     "Garden_EditProgram": "Modifica programma",
-    "Garden_SuspendedCheckbox": "Sospeso",
-    "Garden_DisabledCheckbox": "Disabilitato",
+    "Garden_SuspendedCheckbox": "Sospeso:",
+    "Garden_DisabledCheckbox": "Disabilitato:",
+    "Garden_StartAt": "Inizio:",
+    "Garden_Duration": "Durata (min):",
     "Garden_SaveProgram": "Salva Programma",
 
     "Solar_ChartToday": "Andamento oggi",

@@ -158,19 +158,18 @@ export class GardenController {
 
     resumeAll(): void {
         this.config.program.cycles.forEach(c => c.suspended = false);
-        this.sendConfig().then(() => {
-            this.loadConfig();
-        });
+        this.saveProgram();
     }
 
     suspendAll(): void {
         this.config.program.cycles.forEach(c => c.suspended = true);
-        this.sendConfig().then(() => {
-            this.loadConfig();
-        });
+        this.saveProgram();
     }
 
-    private sendConfig(): ng.IHttpPromise<any> {
-        return this.$http.put("/svc/gardenCfg", this.config);
+    private saveProgram(): ng.IPromise<void> {
+        return this.$http.put("/svc/gardenCfg", this.config).then(() => {
+            this.editProgramMode = false;
+            this.loadConfig();
+        });
     }
 }

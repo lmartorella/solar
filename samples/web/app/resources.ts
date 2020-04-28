@@ -35,8 +35,10 @@ export const Strings = {
     "Garden_SuspendAll": "Suspend for Rain",
     "Garden_ResumeAll": "Resume from Rain",
     "Garden_EditProgram": "Edit program",
-    "Garden_SuspendedCheckbox": "Suspended",
-    "Garden_DisabledCheckbox": "Disabled",
+    "Garden_SuspendedCheckbox": "Suspended:",
+    "Garden_DisabledCheckbox": "Disabled:",
+    "Garden_StartAt": "Start at:",
+    "Garden_Duration": "Duration (min):",
     "Garden_SaveProgram": "Save Program",
 
     "Solar_ChartToday": "Chart today",

@@ -48,7 +48,15 @@
     <!-- List program cycles -->
     <div ng-if="ctrl.editProgramMode" ng-repeat="cycle in ctrl.config.program.cycles" class="program-cycle">
       <div>
-          <label>{{cycle.name}}</label>
+          <label><em>{{cycle.name}}</em></label>
+      </div>
+      <div>
+        <label>{{res["Garden_StartAt"]}}</label>
+        <input type="string" ng-model="cycle.startTime">
+      </div>
+      <div>
+        <label>{{res["Garden_Duration"]}}</label>
+        <input ng-disabled="cycle.zoneTimes.length !== 1" type="number" ng-model="cycle.zoneTimes[0].minutes">
       </div>
       <div>
         <label>{{res["Garden_SuspendedCheckbox"]}}</label>
