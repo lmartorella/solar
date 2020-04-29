@@ -31,6 +31,7 @@ export const Strings = {
     "Garden_FlowInfo": "Flow:",
     "Garden_MissingConf": "Missing configuration",
     "Garden_ErrorConf": err => `Cannot fetch configuration: ${err}`,
+    "Garden_ErrorSetConf": err => `Invalid configuration data: ${err}`,
     "Garden_Suspended": " (suspended)",
     "Garden_SuspendAll": "Suspend for Rain",
     "Garden_ResumeAll": "Resume from Rain",

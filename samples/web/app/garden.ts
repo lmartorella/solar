@@ -1,4 +1,5 @@
 import { res, format } from "./resources";
+import { IHttpPromise } from "angular";
 
 declare var moment: any;
 moment.locale("it-IT");
@@ -23,8 +24,11 @@ interface IScheduledCycle extends ICycle {
     scheduledTime: string;
 }
 
-interface IGardenStatusResponse {
+interface IGardenResponse {
     error?: string;
+}
+
+interface IGardenStatusResponse extends IGardenResponse {
     config: IConfig;
     online: boolean;
     configured: boolean;
@@ -35,7 +39,7 @@ interface IGardenStatusResponse {
     nextCycles: IScheduledCycle[];
 }
 
-interface IGardenStartStopResponse {
+interface IGardenStartStopResponse extends IGardenResponse {
     error: string;
 }
 
@@ -78,35 +82,43 @@ export class GardenController {
         this.loadConfig();
     }
 
-    private loadConfig() {
-        // Fetch zones
-        this.$http.get<IGardenStatusResponse>("/svc/gardenStatus").then(resp => {
+    private checkXhr<T extends IGardenResponse>(xhr: ng.IHttpPromise<T>): ng.IPromise<T> {
+        return xhr.then(resp => {
             if (resp.status == 200 && resp.data) {
                 if (resp.data.error) {
-                    this.error = format("Garden_ErrorConf", resp.data.error);
+                    throw new Error(resp.data.error);
                 } else {
-                    this.status =  resp.data.online ? res["Device_StatusOnline"] : (resp.data.config ? res["Device_StatusOffline"] : res["Garden_MissingConf"]);
-                    this.flow = resp.data.flowData;
-    
-                    let now = moment.now();
-                    if (resp.data.nextCycles) {
-                        this.nextCycles = resp.data.nextCycles;
-                        this.nextCycles.forEach(cycle => {
-                            cycle.scheduledTime = cycle.scheduledTime && moment.duration(moment(cycle.scheduledTime).diff(now)).humanize(true)
-                        })
-                    }
-
-                    this.config = resp.data.config || { };
-                    this.zoneNames = this.config.zones = this.config.zones || [];
-                    this.config.program = this.config.program || { };
-                    this.config.program.cycles = this.config.program.cycles || [];
-                    this.updateProgram();
+                    return resp.data;
                 }
             } else {
-                this.error = format("Garden_ErrorConf", resp.statusText);
+                throw new Error(resp.statusText);
             }
         }, err => {
-            this.error = format("Garden_ErrorConf", err.statusText);
+            throw new Error(err.statusText || err.message);
+        });
+    }
+
+    private loadConfig() {
+        // Fetch zones
+        this.checkXhr(this.$http.get<IGardenStatusResponse>("/svc/gardenStatus")).then(resp => {
+            this.status =  resp.online ? res["Device_StatusOnline"] : (resp.config ? res["Device_StatusOffline"] : res["Garden_MissingConf"]);
+            this.flow = resp.flowData;
+
+            let now = moment.now();
+            if (resp.nextCycles) {
+                this.nextCycles = resp.nextCycles;
+                this.nextCycles.forEach(cycle => {
+                    cycle.scheduledTime = cycle.scheduledTime && moment.duration(moment(cycle.scheduledTime).diff(now)).humanize(true)
+                })
+            }
+
+            this.config = resp.config || { };
+            this.zoneNames = this.config.zones = this.config.zones || [];
+            this.config.program = this.config.program || { };
+            this.config.program.cycles = this.config.program.cycles || [];
+            this.updateProgram();
+        }, err => {
+            this.error = format("Garden_ErrorConf", err.message);
         }).finally(() => {
             this.loaded = true;
         });
@@ -117,38 +129,22 @@ export class GardenController {
         this.canSuspendAll = this.config.program.cycles.length > 0 && this.config.program.cycles.some(c => !c.suspended);
     }
 
-    stop() {
-        this.$http.post<IGardenStartStopResponse>("/svc/gardenStop", "").then(resp => {
-            if (resp.status == 200) {
-                if (resp.data.error) {
-                    this.error = format("Error", resp.data.error);
-                } else {
-                    this.message = res["Garden_Stopped"];  
-                    this.immediateStarted = false;
-                }
-            } else {
-                this.error = format("Garden_StopError", '');
-            }
+    public stop() {
+        this.checkXhr(this.$http.post<IGardenStartStopResponse>("/svc/gardenStop", "")).then(() => {
+            this.message = res["Garden_Stopped"];  
+            this.immediateStarted = false;
         }, err => {
-            this.error = format("Garden_StopError", err.statusText);
+            this.error = format("Garden_StopError", err.message);
         });
     }
 
     public startImmediate() {
         var body = this.immediateCycles.map(cycle => ({ zones: cycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(cycle.time) }));
-        this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", JSON.stringify(body)).then(resp => {
-            if (resp.status == 200) {
-                if (resp.data.error) {
-                    this.error = format("Error", resp.data.error);
-                } else {
-                    this.message = res["Garden_StartedImmediate"];  
-                    this.immediateStarted = true;
-                }
-            } else {
-                this.error = format("Garden_ImmediateError", '');
-            }
+        this.checkXhr(this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", body)).then(resp => {
+            this.message = res["Garden_StartedImmediate"];  
+            this.immediateStarted = true;
         }, err => {
-            this.error = format("Garden_ImmediateError", err.statusText);
+            this.error = format("Garden_ImmediateError", err.message);
         });
     }
 
@@ -175,9 +171,12 @@ export class GardenController {
     }
 
     private saveProgram(): ng.IPromise<void> {
-        return this.$http.put("/svc/gardenCfg", this.config).then(() => {
-            this.editProgramMode = false;
+        return this.checkXhr(this.$http.put("/svc/gardenCfg", this.config)).then(() => {
             this.loadConfig();
-        });
+        }, err => {
+            this.error = format("Garden_ErrorSetConf", err.message);
+        }).finally(() => {
+            this.editProgramMode = false;
+        })
     }
 }

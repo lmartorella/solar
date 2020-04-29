@@ -20,14 +20,11 @@ function register(app, privileged) {
             console.log("r/gardenStart: incompatible request: " + JSON.stringify(req.body));
             return;
         }
-    
-        let resp = await procMan.sendMessage("GardenWebRequest", { command: "garden.setImmediate", immediate });
-        res.send(resp);
+        res.send(await procMan.sendMessage("GardenWebRequest", { command: "garden.setImmediate", immediate }));
     });
     
     app.post('/svc/gardenStop', privileged(), async (_req, res) => {
-        let resp = await procMan.sendMessage("GardenWebRequest", { command: "garden.stop" });
-        res.send(resp);
+        res.send(await procMan.sendMessage("GardenWebRequest", { command: "garden.stop" }));
     });
     
     app.get('/svc/gardenCfg', privileged(), async (_req, res) => {
@@ -58,21 +55,7 @@ function register(app, privileged) {
             fs.writeFileSync(gardenCfgFile, req.body);
             res.sendStatus(200);
         } else if ((req.headers["content-type"] || '').indexOf("application/json") === 0) {
-            // Beautify JSON
-            const changeProcessed = procMan.sendMessage("WebRequest", { command: "garden.waitNewConfig" });
-            fs.writeFile(gardenCfgFile, JSON.stringify(req.body, null, 3), err => {
-                if (err) {
-                    res.sendStatus(500);
-                } else {
-                    // Wait some additional time for the .NET process to pick up the changes
-                    changeProcessed.then(() => {
-                        // Changes picked-up
-                        res.sendStatus(200);
-                    }, err => {
-                        res.sendStatus(500);
-                    });
-                }
-            });
+            res.send(await procMan.sendMessage("GardenWebRequest", { command: "garden.setConfig", config: req.body }));
         } else {
             res.sendStatus(500);
         }

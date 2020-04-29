@@ -19,6 +19,7 @@ export const Strings = {
     "Garden_FlowInfo": "Flusso:",
     "Garden_MissingConf": "Non configurato",
     "Garden_ErrorConf": err => `Errore accedendo alla configurazione: ${err}`,
+    "Garden_ErrorSetConf": err => `Configurazione errata: ${err}`,
     "Garden_Suspended": " (sospeso)",
     "Garden_SuspendAll": "Sospendi per pioggia",
     "Garden_ResumeAll": "Ripristina dopo pioggia",

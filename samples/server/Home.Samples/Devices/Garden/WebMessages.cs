@@ -10,6 +10,9 @@ namespace Lucky.Home.Devices.Garden
     {
         [DataMember(Name = "immediate")]
         public ImmediateZone[] ImmediateZones { get; set; }
+
+        [DataMember(Name = "config")]
+        public Configuration Configuration { get; set; }
     }
 
     [DataContract]

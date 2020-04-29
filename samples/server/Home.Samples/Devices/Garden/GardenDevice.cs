@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Json;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Devices.Garden
@@ -34,7 +35,6 @@ namespace Lucky.Home.Devices.Garden
         private readonly MailScheduler _suspendedCyclesMailScheduler;
         private PumpOperationObserver _pumpOpObserver = new PumpOperationObserver();
         private EventHandler<PipeServer.MessageEventArgs> _pipeMessageHandler;
-        private Action _configurationLoaded;
 
         public bool InUse { get; private set; }
 
@@ -140,18 +140,13 @@ namespace Lucky.Home.Devices.Garden
                         }
                         e.Response = Task.FromResult((WebResponse) new GardenWebResponse { Error = error });
                         break;
-                    case "garden.waitNewConfig":
-                        // Wait for a new configuration to be applied
-                        var source = new TaskCompletionSource<bool>();
-                        Action handler = null;
-                        handler = () =>
-                        {
-                            _configurationLoaded -= handler;
-                            source.SetResult(true);
-                        };
-                        _configurationLoaded += handler;
-
-                        e.Response = Task.WhenAny(source.Task, Task.Delay(TimeSpan.FromSeconds(5))).ContinueWith(t => new WebResponse());
+                    case "garden.setConfig":
+                        // Set new config value. Verify it before accepting it.
+                        var config = ((GardenWebRequest)e.Request).Configuration;
+                        // This will raise exception if data is invalid
+                        AcquireConfiguration(config);
+                        // Save back data
+                        e.Response = SaveConfiguration(config).ContinueWith(t => new WebResponse());
                         break;
                 }
             };
@@ -293,41 +288,80 @@ namespace Lucky.Home.Devices.Garden
             return base.OnTerminate();
         }
 
-        private void ReadConfig()
+        private Configuration TryParseConfigurationJson(string context, Stream stream, out string error)
         {
+            error = null;
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(Configuration));
-            Configuration configuration;
             try
             {
-                using (var stream = File.Open(_cfgFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (stream)
                 {
-                    configuration = serializer.ReadObject(stream) as Configuration;
+                    return serializer.ReadObject(stream) as Configuration;
                 }
             }
             catch (Exception exc)
             {
-                Logger.Log("Cannot read garden configuration", "Exc", exc.Message);
-                return;
+                error = exc.Message;
+                Logger.Log("Cannot read garden configuration", "Context", context, "Exc", error);
+                return null;
             }
+        }
 
-            // Apply configuration
-            Logger.Log("New configuration acquired", "cycles#", configuration?.Program?.Cycles?.Length);
+        /// <summary>
+        /// Save back configuration, with file watcher disabled
+        /// </summary>
+        private Task SaveConfiguration(Configuration configuration)
+        {
+            // Disable watcher
+            Task watcher = _fileWatcher.SuspendAndWaitForUpdate();
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(
+                typeof(Configuration), 
+                new DataContractJsonSerializerSettings 
+                { 
+                    
+                }
+            );
 
+            using (var stream = File.Open(_cfgFile.FullName, FileMode.Create, FileAccess.Write, FileShare.Read))
+            {
+                using (var writer = JsonReaderWriterFactory.CreateJsonWriter(stream, Encoding.UTF8, false, true, "   "))
+                {
+                    serializer.WriteObject(writer, configuration);
+                }
+            }
+            // Wait for the watcher to detect the change and re-engage again
+            return watcher;
+        }
+
+        private void ReadConfig()
+        {
+            // Try read and check for errors
+            string error;
+            var configuration = TryParseConfigurationJson("watcher", File.Open(_cfgFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), out error);
+            if (error == null)
+            {
+                AcquireConfiguration(configuration);
+            }
+        }
+
+        private void AcquireConfiguration(Configuration configuration)
+        {
             lock (_timeProgram)
             {
                 try
                 {
                     _timeProgram.SetProgram(configuration.Program);
                     _zoneNames = configuration.ZoneNames ?? new string[0];
+
+                    // Apply configuration
+                    Logger.Log("New configuration acquired", "cycles#", configuration.Program?.Cycles?.Length);
                 }
                 catch (ArgumentException exc)
                 {
                     // Error applying configuration
-                    Logger.Log("CONFIGURATION ERROR", "exc", exc.Message);
+                    Logger.Log("Config Validation Error", "exc", exc.Message);
                 }
             }
-
-            _configurationLoaded?.Invoke();
         }
 
         private string ScheduleCycle(ImmediateProgram program)
