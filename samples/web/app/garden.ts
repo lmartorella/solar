@@ -12,7 +12,11 @@ interface IConfig {
 
 interface ICycle {
     name: string;
+    start: string; // ISO format
+    startTime: string; // HH:mm:ss format
     suspended: boolean;
+    disabled: boolean;
+    zoneTimes: { minutes: number }[];
 }
 
 interface IScheduledCycle extends ICycle {
@@ -157,7 +161,11 @@ export class GardenController {
     }
 
     resumeAll(): void {
-        this.config.program.cycles.forEach(c => c.suspended = false);
+        const now = moment().toISOString(true);
+        this.config.program.cycles.forEach(c => {
+            c.start = now;
+            c.suspended = false;
+        });
         this.saveProgram();
     }
 
