@@ -1,3 +1,4 @@
+using Lucky.Home.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -179,48 +180,58 @@ namespace Lucky.Home.Sinks
             while (true)
             {
                 await Task.Delay(PollPeriod);
+                if (!IsOnline) {
+                    continue;
+                }
 
-                var events = new List<EventReceivedEventArgs>();
-                await Read(async reader =>
+                try
                 {
-                    var resp = await reader.Read<ReadStatusResponse>();
-                    if (resp != null)
+                    var events = new List<EventReceivedEventArgs>();
+                    await Read(async reader =>
                     {
-                        // It is possible to receive no events but data changed compared to the cached copy... In that case creates a changed event
-                        // with the current time.
-                        if (resp.Events.Length == 0 && !resp.CurrentState.State.SequenceEqual(_lastState))
+                        var resp = await reader.Read<ReadStatusResponse>();
+                        if (resp != null)
                         {
-                            resp.CurrentState.Recovered = true;
-                            resp.Events = new[] { resp.CurrentState };
-                        }
-
-                        // Now process events 
-                        foreach (var change in resp.Events)
-                        {
-                            // Calc changed bits and prepare single events
-                            for (int i = Math.Min(_lastState.Length, change.State.Length) - 1; i >= 0; i--)
+                            // It is possible to receive no events but data changed compared to the cached copy... In that case creates a changed event
+                            // with the current time.
+                            if (resp.Events.Length == 0 && !resp.CurrentState.State.SequenceEqual(_lastState))
                             {
-                                if (_lastState[i] != change.State[i])
-                                {
-                                    events.Add(new EventReceivedEventArgs { State = change.State[i], SubIndex = i, Timestamp = change.Timestamp });
-                                }
+                                resp.CurrentState.Recovered = true;
+                                resp.Events = new[] { resp.CurrentState };
                             }
-                            _lastState = change.State;
+
+                            // Now process events 
+                            foreach (var change in resp.Events)
+                            {
+                                // Calc changed bits and prepare single events
+                                for (int i = Math.Min(_lastState.Length, change.State.Length) - 1; i >= 0; i--)
+                                {
+                                    if (_lastState[i] != change.State[i])
+                                    {
+                                        events.Add(new EventReceivedEventArgs { State = change.State[i], SubIndex = i, Timestamp = change.Timestamp });
+                                    }
+                                }
+                                _lastState = change.State;
+                            }
+
+                            // Sync current state
+                            _lastState = resp.CurrentState.State;
                         }
+                    });
 
-                        // Sync current state
-                        _lastState = resp.CurrentState.State;
-                    }
-                });
-
-                // Outside the Read to avoid reenter of other sinks
-                var raise = EventReceived;
-                if (raise != null)
-                {
-                    foreach (var evt in events)
+                    // Outside the Read to avoid reenter of other sinks
+                    var raise = EventReceived;
+                    if (raise != null && events.Count > 0)
                     {
-                        raise(this, evt);
+                        foreach (var evt in events)
+                        {
+                            raise(this, evt);
+                        }
                     }
+                }
+                catch (Exception exc)
+                {
+                    Logger.Exception(exc);
                 }
             }
         }
