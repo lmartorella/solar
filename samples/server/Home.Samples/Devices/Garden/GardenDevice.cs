@@ -35,6 +35,7 @@ namespace Lucky.Home.Devices.Garden
         private readonly MailScheduler _suspendedCyclesMailScheduler;
         private PumpOperationObserver _pumpOpObserver = new PumpOperationObserver();
         private EventHandler<PipeServer.MessageEventArgs> _pipeMessageHandler;
+        private RunningProgram _runningProgram;
 
         public bool InUse { get; private set; }
 
@@ -106,7 +107,8 @@ namespace Lucky.Home.Devices.Garden
                                 Online = GetFirstOnlineSink<GardenSink>() != null,
                                 Configuration = new Configuration { Program = _timeProgram.Program, ZoneNames = _zoneNames },
                                 FlowData = flowData,
-                                NextCycles = nextCycles
+                                NextCycles = nextCycles,
+                                IsRunning = _runningProgram != null
                             };
                         });
                         break;
@@ -195,7 +197,6 @@ namespace Lucky.Home.Devices.Garden
         /// </summary>
         private async Task StartLoop()
         {
-            RunningProgram runningProgram = null;
             int errors = 0;
 
             while (!IsDisposed)
@@ -211,7 +212,7 @@ namespace Lucky.Home.Devices.Garden
                 }
 
                 // Do I need to contact the garden sink?
-                InUse = runningProgram != null || cycleIsWaiting;
+                InUse = _runningProgram != null || cycleIsWaiting;
                 if (InUse)
                 {
                     var gardenSink = GetFirstOnlineSink<GardenSink>();
@@ -224,7 +225,7 @@ namespace Lucky.Home.Devices.Garden
                             // Lost connection with garden programmer!
                             if (errors++ < 5)
                             {
-                                Logger.Log("Cannot contact garden (2)", "cycleIsWaiting", cycleIsWaiting, "inProgress", runningProgram != null);
+                                Logger.Log("Cannot contact garden (2)", "cycleIsWaiting", cycleIsWaiting, "inProgress", _runningProgram != null);
                                 continue;
                             }
                         }
@@ -234,10 +235,10 @@ namespace Lucky.Home.Devices.Garden
                         if (state.IsAvailable)
                         {
                             // Finished?
-                            if (runningProgram != null)
+                            if (_runningProgram != null)
                             {
-                                _ = runningProgram.Stop(now);
-                                runningProgram = null;
+                                _ = _runningProgram.Stop(now);
+                                _runningProgram = null;
                             }
 
                             // New program to load?
@@ -252,16 +253,16 @@ namespace Lucky.Home.Devices.Garden
                                 }
                                 await gardenSink.WriteProgram(zoneTimes);
 
-                                runningProgram = new RunningProgram(cycle, Logger, this);
-                                await runningProgram.Start(now);
+                                _runningProgram = new RunningProgram(cycle, Logger, this);
+                                await _runningProgram.Start(now);
                             }
                         }
                         else
                         {
-                            if (runningProgram != null)
+                            if (_runningProgram != null)
                             {
                                 // The program is running? Log flow
-                                await runningProgram.Step(now, state);
+                                await _runningProgram.Step(now, state);
                             }
                         }
                     }
@@ -270,7 +271,7 @@ namespace Lucky.Home.Devices.Garden
                         // Lost connection with garden programmer!
                         if (errors++ < 5)
                         {
-                            Logger.Log("Cannot contact garden", "cycleIsWaiting", cycleIsWaiting, "inProgress", runningProgram != null);
+                            Logger.Log("Cannot contact garden", "cycleIsWaiting", cycleIsWaiting, "inProgress", _runningProgram != null);
                         }
                     }
                 }

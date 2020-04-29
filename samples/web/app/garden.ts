@@ -31,7 +31,7 @@ interface IGardenResponse {
 interface IGardenStatusResponse extends IGardenResponse {
     config: IConfig;
     online: boolean;
-    configured: boolean;
+    isRunning: boolean;
     flowData: { 
         totalMc: number;
         flowLMin: number;
@@ -72,6 +72,7 @@ export class GardenController {
     public canSuspendAll: boolean;
     public canResumeAll: boolean;
     public editProgramMode: boolean;
+    public isRunning: boolean;
 
     static $inject = ['$http', '$scope'];
     constructor(private $http: ng.IHttpService) { }
@@ -103,6 +104,7 @@ export class GardenController {
         this.checkXhr(this.$http.get<IGardenStatusResponse>("/svc/gardenStatus")).then(resp => {
             this.status =  resp.online ? res["Device_StatusOnline"] : (resp.config ? res["Device_StatusOffline"] : res["Garden_MissingConf"]);
             this.flow = resp.flowData;
+            this.isRunning = resp.isRunning;
 
             let now = moment.now();
             if (resp.nextCycles) {

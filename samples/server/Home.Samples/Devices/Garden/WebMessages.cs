@@ -57,6 +57,12 @@ namespace Lucky.Home.Devices.Garden
         public bool Online { get; set; }
 
         /// <summary>
+        /// Is the program running right now?
+        /// </summary>
+        [DataMember(Name = "isRunning")]
+        public bool IsRunning { get; set; }
+
+        /// <summary>
         /// For gardem
         /// </summary>
         [DataMember(Name = "flowData")]
