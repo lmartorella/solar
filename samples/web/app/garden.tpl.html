@@ -42,7 +42,7 @@
   <!-- Editor to edit program cycle -->
   <div ng-show="ctrl.loaded && ctrl.config.program.cycles.length > 0" class="garden-section">
     <div>
-      <button ng-hide="ctrl.editProgramMode" ng-click="ctrl.editProgramMode = true">{{res["Garden_EditProgram"]}}</button>
+      <button ng-hide="ctrl.editProgramMode" ng-click="ctrl.startEdit()">{{res["Garden_EditProgram"]}}</button>
     </div>
     <h4 ng-if="ctrl.editProgramMode">{{res["Garden_EditProgram"]}}</h4>
     <!-- List program cycles -->

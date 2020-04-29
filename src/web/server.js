@@ -60,7 +60,7 @@ app.set("view engine", "ejs");
 app.set('views', __dirname);
 
 // Redirect to SPA
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
     res.redirect('/app/index.html');
 });
 
@@ -122,6 +122,9 @@ app.post('/login', passport.authenticate('local'), (req, res) => {
 app.get('/logout', (req, res) => {
     req.logout();
     res.sendStatus(401);
+});
+app.get('/checkLogin', ensureLoggedIn(), (_req, res) => {
+    res.sendStatus(200);
 });
 
 app.listen(80, () => {

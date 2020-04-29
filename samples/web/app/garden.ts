@@ -73,9 +73,11 @@ export class GardenController {
     public canResumeAll: boolean;
     public editProgramMode: boolean;
     public isRunning: boolean;
+    // To anticipate login request at beginning of an operation flow
+    private _hasPrivilege: boolean;
 
-    static $inject = ['$http', '$scope'];
-    constructor(private $http: ng.IHttpService) { }
+    static $inject = ['$http', '$q'];
+    constructor(private $http: ng.IHttpService, private $q: ng.IQService) { }
 
     public $onInit() {
         this.status = res["Device_StatusLoading"];
@@ -97,6 +99,16 @@ export class GardenController {
         }, err => {
             throw new Error(err.statusText || err.message);
         });
+    }
+
+    private preCheckPrivilege(): ng.IPromise<void> {
+        if (this._hasPrivilege) {
+            return this.$q.when();
+        } else {
+            return this.checkXhr(this.$http.get("/checkLogin")).then(() => {
+                this._hasPrivilege = true;
+            });
+        }
     }
 
     private loadConfig() {
@@ -151,7 +163,9 @@ export class GardenController {
     }
 
     addImmediateCycle(): void {
-        this.immediateCycles.push(new ImmediateCycle(this.zoneNames, "5"));
+        this.preCheckPrivilege().then(() => {
+            this.immediateCycles.push(new ImmediateCycle(this.zoneNames, "5"));
+        }, () => { });
     }
 
     removeImmediate(index: number): void {
@@ -170,6 +184,12 @@ export class GardenController {
     suspendAll(): void {
         this.config.program.cycles.forEach(c => c.suspended = true);
         this.saveProgram();
+    }
+
+    public startEdit(): void {
+        this.preCheckPrivilege().then(() => {
+            this.editProgramMode = true;
+        }, () => { });
     }
 
     private saveProgram(): ng.IPromise<void> {
