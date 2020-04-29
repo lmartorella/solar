@@ -280,42 +280,54 @@ namespace Lucky.Home.Model
                 now = cycle.Start.Value;
             }
 
-            // Calc the next valid starting day 
-            var nextDay = (now.TimeOfDay >= cycle.StartTime) ? (now.Date + TimeSpan.FromDays(1)) : now.Date;
+            // The date component of the next cycle
             if (cycle.WeekDays != null)
             {
-                // Get the next weekday
-                nextDay = GetNextValidWeekday(cycle.WeekDays, nextDay);
+                // Calc the next valid starting day 
+                DateTime nextDate = now.Date;
+                if (now.TimeOfDay >= cycle.StartTime)
+                {
+                    // Next date
+                    nextDate += TimeSpan.FromDays(1);
+                }
+                return GetNextValidWeekday(cycle.WeekDays, nextDate) + cycle.StartTime;
             }
             else
             {
-                // Get the next periodic day
-                nextDay = GetNextValidPeriodicDay(cycle.DayPeriod, nextDay, cycle.Start.Value);
+                // Get the next periodic day. Use start time (absolute) to create a periodic table in order
+                // to have the closer next start time 
+                return GetNextValidPeriodicDay(cycle.DayPeriod, now, cycle.Start.Value, cycle.StartTime);
+            }
+        }
+
+        private static DateTime GetNextValidPeriodicDay(int dayPeriod, DateTime now, DateTime start, TimeSpan startTime)
+        {
+            // The day 0
+            DateTime adjustedStart;
+            if (start.TimeOfDay > startTime)
+            {
+                adjustedStart = start.Date + TimeSpan.FromDays(1) + startTime;
+            }
+            else
+            {
+                adjustedStart = start.Date + startTime;
             }
 
-            return nextDay + cycle.StartTime;
+            int days = (((int)Math.Floor((now - adjustedStart).TotalDays) + dayPeriod) / dayPeriod) * dayPeriod;
+            return adjustedStart + TimeSpan.FromDays(days);
         }
 
-        private static DateTime GetNextValidPeriodicDay(int dayPeriod, DateTime today, DateTime startDate)
-        {
-            int elapsedDays = (int)Math.Round((today.Subtract(startDate)).TotalDays);
-            // If elapsedDays is multiple of dayPeriod, don't add any day
-            // If elapsedDays is (multiple of dayPeriod + 1), add (dayPeriod - 1), etc.. 
-            int missingDays = (dayPeriod - (elapsedDays % dayPeriod)) % dayPeriod;
-            return today + TimeSpan.FromDays(missingDays);
-        }
-
-        private static DateTime GetNextValidWeekday(DayOfWeek[] weekDays, DateTime today)
+        private static DateTime GetNextValidWeekday(DayOfWeek[] weekDays, DateTime currentDate)
         {
             for (var i = 0; i < 7; i++)
             {
-                if (weekDays.Contains(today.DayOfWeek))
+                if (weekDays.Contains(currentDate.DayOfWeek))
                 {
                     break;
                 }
-                today += TimeSpan.FromDays(1);
+                currentDate += TimeSpan.FromDays(1);
             }
-            return today;
+            return currentDate;
         }
     }
 }
