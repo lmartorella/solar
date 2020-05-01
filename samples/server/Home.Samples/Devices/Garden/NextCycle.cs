@@ -10,20 +10,25 @@ namespace Lucky.Home.Devices.Garden
         public NextCycle()
         { }
 
-        internal NextCycle(ImmediateProgram q)
+        public NextCycle(GardenCycle gardenCycle, Configuration configuration, DateTime? scheduledTime)
         {
-            Name = q.Name;
+            Name = configuration.GetCycleName(gardenCycle);
+            ScheduledTime = scheduledTime;
+            Suspended = gardenCycle.Suspended;
         }
 
-        public NextCycle(GardenCycle cycle, DateTime scheduleddTime)
+        public NextCycle(ZoneTime zoneTime, Configuration configuration, bool running)
         {
-            Name = cycle.Name;
-            ScheduledTime = scheduleddTime;
-            Suspended = cycle.Suspended;
+            Name = configuration.GetCycleName(zoneTime);
+            Suspended = false;
+            Running = running;
         }
 
         [DataMember(Name = "name")]
         public string Name { get; set; }
+
+        [DataMember(Name = "running")]
+        public bool Running { get; set; }
 
         [DataMember(Name = "suspended")]
         public bool Suspended { get; set; }

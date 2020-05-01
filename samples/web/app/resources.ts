@@ -27,6 +27,7 @@ export const Strings = {
     "Garden_StopError": err => `Error stopping: ${err}`,
     "Garden_NextCycles": "Next programmmed cycles:",
     "Garden_ScheduledProgram": (args) => `${args.name} program scheduled for ${args.scheduledTime}`,
+    "Garden_RunningProgram": (args) => `${args.name} program running`,
     "Garden_QueuedProgram": (args) => `${args.name} program in queue`,
     "Garden_FlowInfo": "Flow:",
     "Garden_MissingConf": "Missing configuration",

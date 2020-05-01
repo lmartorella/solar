@@ -17,21 +17,16 @@ namespace Lucky.Home.Devices.Garden
         private class MailData
         {
             public string Name;
-            public ZoneTimeWithQuantity[] ZoneData;
+            public int QuantityL;
+            public int Minutes;
+            public bool Suspended;
 
-            public string ToString(MailScheduler owner)
+            public override string ToString()
             {
-                if (ZoneData != null)
+                if (!Suspended)
                 {
                     // Format with ZoneTimeWithQuantity list
-                    return string.Format("{0} \r\n{1}",
-                        Name,
-                        string.Join(Environment.NewLine,
-                            ZoneData.Select(t =>
-                            {
-                                return string.Format(Resources.gardenMailBody, owner.GetZoneNames(t.Zones), t.Minutes, t.QuantityL);
-                            })
-                        ));
+                    return string.Format(Resources.gardenMailBody, Name, Minutes, QuantityL);
                 }
                 else
                 {
@@ -47,22 +42,31 @@ namespace Lucky.Home.Devices.Garden
             _mailHeader = mailHeader;
         }
 
-        public void ScheduleMail(DateTime now, string name, ZoneTimeWithQuantity[] results = null)
+        public void ScheduleMail(DateTime now, string name, int quantityL, int minutes)
         {
             lock (_mailQueue)
             {
                 _mailQueue.Add(new MailData
                 {
                     Name = name,
-                    ZoneData = results
+                    QuantityL = quantityL,
+                    Minutes = minutes
                 });
             }
             CheckSend(now);
         }
 
-        private string GetZoneNames(int[] index)
+        public void ScheduleSuspendedMail(DateTime now, string name)
         {
-            return string.Join(", ", index.Select(i => _device.GetZoneName(i)));
+            lock (_mailQueue)
+            {
+                _mailQueue.Add(new MailData
+                {
+                    Name = name,
+                    Suspended = true
+                });
+            }
+            CheckSend(now);
         }
 
         private void CheckSend(DateTime now)
@@ -94,7 +98,7 @@ namespace Lucky.Home.Devices.Garden
             {
                 body += string.Join(
                     Environment.NewLine,
-                    _mailQueue.Select(data => data.ToString(this))
+                    _mailQueue.Select(data => data.ToString())
                 );
                 _mailQueue.Clear();
             }

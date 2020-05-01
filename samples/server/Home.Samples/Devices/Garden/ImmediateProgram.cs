@@ -5,7 +5,6 @@ namespace Lucky.Home.Devices.Garden
     internal class ImmediateProgram
     {
         public ZoneTime[] ZoneTimes;
-        public string Name;
 
         public bool IsEmpty
         {

@@ -29,10 +29,6 @@
     </div>
   </div>
 
-  <div ng-show="ctrl.loaded && ctrl.isRunning">
-    <button ng-click="ctrl.stop()">{{res["Garden_Stop"]}}</button>
-  </div>
-
   <!-- Section to suspend/resume for rain -->
   <div ng-show="ctrl.loaded" class="garden-section">
     <button ng-click="ctrl.resumeAll()" ng-show="ctrl.canResumeAll">{{res["Garden_ResumeAll"]}}</button>
@@ -56,7 +52,7 @@
       </div>
       <div>
         <label>{{res["Garden_Duration"]}}</label>
-        <input ng-disabled="cycle.zoneTimes.length !== 1" type="number" ng-model="cycle.zoneTimes[0].minutes">
+        <input type="number" ng-model="cycle.minutes">
       </div>
       <div>
         <label>{{res["Garden_SuspendedCheckbox"]}}</label>
@@ -75,9 +71,10 @@
   <div class="bot" ng-show="ctrl.loaded"> 
     <h3>{{res["Garden_NextCycles"]}}</h3>
       <p ng-repeat="cycle in ctrl.nextCycles">
-        <span ng-class="{ 'suspended': cycle.suspended }">
-          {{format(cycle.scheduledTime ? "Garden_ScheduledProgram" : "Garden_QueuedProgram", cycle)}}
+        <span ng-class="{ 'suspended': cycle.suspended, 'running': cycle.running }">
+          {{format(cycle.scheduledTime ? "Garden_ScheduledProgram" : (cycle.running ? "Garden_RunningProgram" : "Garden_QueuedProgram"), cycle)}}
           <span ng-if="cycle.suspended"> {{format("Garden_Suspended")}}</span>
+          <button ng-show="cycle.running" ng-click="ctrl.stop()">{{res["Garden_Stop"]}}</button>
         </span>
       </p>
     <p> {{res["Garden_FlowInfo"]}} {{ctrl.flow.flowLMin | number : 1 }} <small><sup>Lit</sup>/<sub>min</sub></small>, {{ctrl.flow.totalMc | number : 3 }} <small>M<sup>3</sup></small> </p>

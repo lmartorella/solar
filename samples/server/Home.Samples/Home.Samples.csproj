@@ -52,7 +52,6 @@
     <Compile Include="Devices\Garden\PumpOperationObserver.cs" />
     <Compile Include="Devices\Garden\RunningProgram.cs" />
     <Compile Include="Devices\Garden\ZoneTime.cs" />
-    <Compile Include="Devices\Garden\ZoneTimeWithQuantity.cs" />
     <Compile Include="Devices\Solar\WebMessages.cs" />
     <Compile Include="HomeApp.cs" />
     <Compile Include="Devices\BarometricTesterDevice.cs" />

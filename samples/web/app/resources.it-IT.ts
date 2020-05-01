@@ -15,6 +15,7 @@ export const Strings = {
     "Garden_StopError": err => `Non posso fermare: ${err}`,
     "Garden_NextCycles": "Prossime irrigazioni:",
     "Garden_ScheduledProgram": args => `Programma ${args.name} schedulato ${args.scheduledTime}`,
+    "Garden_RunningProgram": args => `Programma ${args.name} in esecuzione`,
     "Garden_QueuedProgram": args => `Programma ${args.name} in coda`,
     "Garden_FlowInfo": "Flusso:",
     "Garden_MissingConf": "Non configurato",

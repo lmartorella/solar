@@ -17,7 +17,7 @@ interface ICycle {
     startTime: string; // HH:mm:ss format
     suspended: boolean;
     disabled: boolean;
-    zoneTimes: { minutes: number }[];
+    minutes: number;
 }
 
 interface IScheduledCycle extends ICycle {
@@ -82,7 +82,7 @@ export class GardenController {
     public $onInit() {
         this.status = res["Device_StatusLoading"];
         this.loaded = false;
-        this.loadConfig();
+        this.loadConfigAndStatus();
     }
 
     private checkXhr<T extends IGardenResponse>(xhr: ng.IHttpPromise<T>): ng.IPromise<T> {
@@ -111,7 +111,7 @@ export class GardenController {
         }
     }
 
-    private loadConfig() {
+    private loadConfigAndStatus() {
         // Fetch zones
         this.checkXhr(this.$http.get<IGardenStatusResponse>("/svc/gardenStatus")).then(resp => {
             this.status =  resp.online ? res["Device_StatusOnline"] : (resp.config ? res["Device_StatusOffline"] : res["Garden_MissingConf"]);
@@ -154,7 +154,7 @@ export class GardenController {
 
     public startImmediate() {
         var body = this.immediateCycles.map(cycle => ({ zones: cycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(cycle.time) }));
-        this.checkXhr(this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", body)).then(resp => {
+        this.checkXhr(this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", body)).then(() => {
             this.message = res["Garden_StartedImmediate"];  
             this.immediateStarted = true;
         }, err => {
@@ -194,7 +194,7 @@ export class GardenController {
 
     private saveProgram(): ng.IPromise<void> {
         return this.checkXhr(this.$http.put("/svc/gardenCfg", this.config)).then(() => {
-            this.loadConfig();
+            this.loadConfigAndStatus();
         }, err => {
             this.error = format("Garden_ErrorSetConf", err.message);
         }).finally(() => {

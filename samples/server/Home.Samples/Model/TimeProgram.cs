@@ -69,26 +69,25 @@ namespace Lucky.Home.Model
             }
             foreach (var t in program.Cycles.Select((cycle, idx) => new { cycle, idx }))
             {
-                var name = t.cycle.Name ?? t.idx.ToString();
                 if (t.cycle.WeekDays != null && t.cycle.WeekDays.Length == 0)
                 {
                     t.cycle.WeekDays = null;
                 }
                 if (t.cycle.DayPeriod > 0 && t.cycle.WeekDays != null)
                 {
-                    throw new ArgumentOutOfRangeException("cycle " + name, "Both day period and week days specified");
+                    throw new ArgumentOutOfRangeException("cycle " + t.idx, "Both day period and week days specified");
                 }
                 if (t.cycle.DayPeriod <= 0 && t.cycle.WeekDays == null)
                 {
-                    throw new ArgumentOutOfRangeException("cycle " + name, "No day period nor week days specified");
+                    throw new ArgumentOutOfRangeException("cycle " + t.idx, "No day period nor week days specified");
                 }
                 if (t.cycle.DayPeriod > 0 && !t.cycle.Start.HasValue)
                 {
-                    throw new ArgumentOutOfRangeException("cycle " + name, "No start date for periodic table");
+                    throw new ArgumentOutOfRangeException("cycle " + t.idx, "No start date for periodic table");
                 }
                 if (t.cycle.StartTime < TimeSpan.Zero || t.cycle.StartTime > TimeSpan.FromDays(1))
                 {
-                    throw new ArgumentOutOfRangeException("cycle " + name, "Invalid start time");
+                    throw new ArgumentOutOfRangeException("cycle " + t.idx, "Invalid start time");
                 }
             }
         }
@@ -112,12 +111,6 @@ namespace Lucky.Home.Model
         [DataContract]
         public class Cycle
         {
-            /// <summary>
-            /// Friendly name
-            /// </summary>
-            [DataMember(Name = "name")]
-            public string Name { get; set; }
-
             /// <summary>
             /// If disabled, it will never run, nor be displayed in the next cycle list
             /// </summary>
