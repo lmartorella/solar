@@ -2,7 +2,6 @@
 using Lucky.Home.Services;
 using Lucky.Home.Sinks;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,30 +15,23 @@ namespace Lucky.Home.Devices.Garden
     {
         private GardenDevice _device;
         private readonly ILogger _logger;
-        private readonly ImmediateProgram _cycle;
+        private readonly ZoneTime _zoneTimes;
         private readonly FileInfo _csvFile;
+        private string _name;
 
-        private double _startQty = 0;
+        private double _startQtyMc = 0;
         private GardenCsvRecord _data;
-        // Liters when cycle changes
-        private double _partialQty = 0;
-        // Time when cycle changes
-        private DateTime _partialTime = DateTime.Now;
-        private List<ZoneTimeWithQuantity> _results = new List<ZoneTimeWithQuantity>();
+        private double _currentQtyMc = 0;
+        private DateTime _startTime;
+        private DateTime _currentTime;
 
-        private class MailData
-        {
-            public string Name;
-            public ZoneTimeWithQuantity[] ZoneData;
-        }
-        private List<MailData> _mailData = new List<MailData>();
-
-        public RunningProgram(ImmediateProgram cycle, ILogger logger, GardenDevice device)
+        public RunningProgram(ZoneTime zoneTimes, ILogger logger, GardenDevice device, string name)
         {
             _device = device;
             _logger = logger;
-            _cycle = cycle;
-            _logger.Log("Garden", "cycle start", cycle.Name);
+            _name = name;
+            _zoneTimes = zoneTimes;
+            _logger.Log("Garden", "cycle start", name);
 
             // Prepare CSV file
             var dbFolder = new DirectoryInfo(Manager.GetService<PersistenceService>().GetAppFolderPath("Db/GARDEN"));
@@ -52,19 +44,21 @@ namespace Lucky.Home.Devices.Garden
 
         public async Task Start(DateTime now)
         {
+            _currentTime = _startTime = now;
+            
             _data = new GardenCsvRecord
             {
                 Date = now.Date,
                 Time = now.TimeOfDay,
-                Cycle = _cycle.Name,
-                Zones = string.Join(";", _cycle.ZoneTimes.Where(t => t.Minutes > 0).Select(t => ZoneDetailsToString(GardenDevice.ToZoneMask(t.Zones), t.Minutes))),
+                Cycle = _name,
+                Zones = ZoneDetailsToString(GardenDevice.ToZoneMask(_zoneTimes.Zones), _zoneTimes.Minutes),
                 State = 1,
             };
 
             var flowData = await _device.ReadFlow();
             if (flowData != null)
             {
-                _startQty = _data.TotalQtyMc = flowData.TotalMc;
+                _startQtyMc = _data.TotalQtyMc = flowData.TotalMc;
             }
 
             lock (_csvFile)
@@ -79,30 +73,33 @@ namespace Lucky.Home.Devices.Garden
         }
 
         // Return the action to log the stop program
-        public async Task Stop(DateTime now1)
+        public async Task Stop(DateTime now)
         {
-            _logger.Log("Garden", "cycle end", _cycle.Name);
-            if (_startQty > 0)
+            _logger.Log("Garden", "cycle end", _name);
+            if (_startQtyMc > 0)
             {
                 var flowData1 = await _device.ReadFlow();
                 if (flowData1 != null)
                 {
-                    _data.QtyL = (flowData1.TotalMc - _startQty) * 1000.0;
+                    _data.QtyL = (flowData1.TotalMc - _startQtyMc) * 1000.0;
                     _data.TotalQtyMc = flowData1.TotalMc;
                     _data.FlowLMin = flowData1.FlowLMin;
                 }
             }
 
             _data.State = 0;
-            _data.Date = now1.Date;
-            _data.Time = now1.TimeOfDay;
+            _data.Date = now.Date;
+            _data.Time = now.TimeOfDay;
             lock (_csvFile)
             {
                 CsvHelper<GardenCsvRecord>.WriteCsvLine(_csvFile, _data);
             }
 
-            ScheduleMail(now1, _cycle.Name, _results.Where(t => t != null).ToArray());
+            IsStopped = true;
+            _device.ScheduleMail(now, _name, (int)((_currentQtyMc - _startQtyMc) * 1000.0), (int)(_currentTime - _startTime).TotalMinutes);
         }
+
+        public bool IsStopped;
 
         public async Task Step(DateTime now1, GardenSink.TimerState state)
         {
@@ -114,8 +111,7 @@ namespace Lucky.Home.Devices.Garden
                     .First(t => t.Item1 == null || t.Item1.Time > 0).Item2;
 
             // Calc CSV line with total quantity
-            double currentQtyL = -1.0;
-            if (_startQty > 0)
+            if (_startQtyMc > 0)
             {
                 var flowData1 = await _device.ReadFlow();
                 if (flowData1 != null)
@@ -123,7 +119,7 @@ namespace Lucky.Home.Devices.Garden
                     _data.State = 2;
                     _data.Date = now1.Date;
                     _data.Time = now1.TimeOfDay;
-                    currentQtyL = _data.QtyL = (flowData1.TotalMc - _startQty) * 1000.0;
+                    _data.QtyL = (flowData1.TotalMc - _startQtyMc) * 1000.0;
                     _data.TotalQtyMc = flowData1.TotalMc;
                     _data.FlowLMin = flowData1.FlowLMin;
                     _data.Zones = string.Join(";", state.ZoneRemTimes.Select(t => ZoneDetailsToString(t.ZoneMask, t.Time)));
@@ -131,80 +127,16 @@ namespace Lucky.Home.Devices.Garden
                     {
                         CsvHelper<GardenCsvRecord>.WriteCsvLine(_csvFile, _data);
                     }
+                    _currentQtyMc = flowData1.TotalMc;
                 }
             }
 
-            double qtyL = currentQtyL;
-            if (qtyL > 0)
-            {
-                qtyL -= _partialQty;
-            }
-
-            lock (_results)
-            {
-                while (currentCycle > _results.Count && _results.Count < _cycle.ZoneTimes.Length)
-                {
-                    DateTime now2 = DateTime.Now;
-                    var inputData = _cycle.ZoneTimes[_results.Count];
-                    // Ok calc results of previous cycle
-                    if (inputData.Minutes > 0)
-                    {
-                        _results.Add(new ZoneTimeWithQuantity
-                        {
-                            Zones = inputData.Zones,
-                            Minutes = (int)Math.Round((now2 - _partialTime).TotalMinutes),
-                            QuantityL = (int)Math.Round(qtyL)
-                        });
-                    }
-                    else
-                    {
-                        // It was not programmed
-                        _results.Add(null);
-                    }
-
-                    _partialQty = currentQtyL;
-                    _partialTime = now2;
-                }
-            }
+            _currentTime = now1;
         }
 
-        private void ScheduleMail(DateTime now, string name, ZoneTimeWithQuantity[] results)
+        public NextCycle ToNextCycle(Configuration configuration)
         {
-            _mailData.Add(new MailData
-            {
-                Name = name,
-                ZoneData = results
-            });
-
-            // If more programs will follow, don't send the mail now
-            var nextCycle = _device.GetNextCycle(now);
-            if (nextCycle == null || nextCycle.Item2 > (now + TimeSpan.FromMinutes(5)))
-            {
-                // Schedule mail
-                string body = Resources.gardenMailHeader + Environment.NewLine;
-                body += string.Join(
-                    Environment.NewLine,
-                    _mailData.Select(data =>
-                        string.Format("{0} \r\n{1}",
-                            data.Name,
-                            string.Join(Environment.NewLine,
-                                data.ZoneData.Select(t =>
-                                {
-                                    return string.Format(Resources.gardenMailBody, GetZoneNames(t.Zones), t.Minutes, t.QuantityL);
-                                })
-                            )
-                        )
-                    )
-                );
-
-                Manager.GetService<INotificationService>().SendMail(Resources.gardenMailTitle, body, false);
-                _mailData.Clear();
-            }
-        }
-
-        private string GetZoneNames(int[] index)
-        {
-            return string.Join(", ", index.Select(i => _device.GetZoneName(i)));
+            return new NextCycle(_zoneTimes, configuration, true);
         }
     }
 }

@@ -9,7 +9,10 @@ namespace Lucky.Home.Devices.Garden
     public class GardenWebRequest : WebRequest
     {
         [DataMember(Name = "immediate")]
-        public ImmediateZone[] ImmediateZones { get; set; }
+        public ImmediateZone ImmediateZone { get; set; }
+
+        [DataMember(Name = "config")]
+        public Configuration Configuration { get; set; }
     }
 
     [DataContract]
@@ -52,6 +55,12 @@ namespace Lucky.Home.Devices.Garden
         /// </summary>
         [DataMember(Name = "online")]
         public bool Online { get; set; }
+
+        /// <summary>
+        /// Is the program running right now?
+        /// </summary>
+        [DataMember(Name = "isRunning")]
+        public bool IsRunning { get; set; }
 
         /// <summary>
         /// For gardem

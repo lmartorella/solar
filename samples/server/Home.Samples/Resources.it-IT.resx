@@ -126,6 +126,15 @@
   <data name="gardenMailHeader" xml:space="preserve">
     <value>Cicli effettuati:</value>
   </data>
+  <data name="gardenMailSuspendedCycle" xml:space="preserve">
+    <value>{0} (sospeso)</value>
+  </data>
+  <data name="gardenMailSuspendedHeader" xml:space="preserve">
+    <value>Cicli non effettuati:</value>
+  </data>
+  <data name="gardenMailSuspendedTitle" xml:space="preserve">
+    <value>Giardino non irrigato (reminder)</value>
+  </data>
   <data name="gardenMailTitle" xml:space="preserve">
     <value>Giardino irrigato</value>
   </data>

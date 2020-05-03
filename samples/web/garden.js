@@ -13,21 +13,18 @@ function register(app, privileged) {
     
     app.post('/svc/gardenStart', privileged(), async (req, res) => {
         let immediate = req.body;
-        if (!Array.isArray(immediate) || !immediate.every(v => typeof v === "object") || immediate.every(v => v.time <= 0)) {
+        if (typeof immediate !== "object" || immediate.time <= 0) {
             // Do nothing
             res.status(500);
             res.send("Request incompatible");
             console.log("r/gardenStart: incompatible request: " + JSON.stringify(req.body));
             return;
         }
-    
-        let resp = await procMan.sendMessage("GardenWebRequest", { command: "garden.setImmediate", immediate });
-        res.send(resp);
+        res.send(await procMan.sendMessage("GardenWebRequest", { command: "garden.setImmediate", immediate }));
     });
     
     app.post('/svc/gardenStop', privileged(), async (_req, res) => {
-        let resp = await procMan.sendMessage("GardenWebRequest", { command: "garden.stop" });
-        res.send(resp);
+        res.send(await procMan.sendMessage("GardenWebRequest", { command: "garden.stop" }));
     });
     
     app.get('/svc/gardenCfg', privileged(), async (_req, res) => {
@@ -48,15 +45,17 @@ function register(app, privileged) {
             res.setHeader("Content-Type", "text/csv");
             stream.pipe(res);
         } else {
-            res.sendStatus(404);
+            res.sendStatus(404); 
         }
     });
     
     app.put('/svc/gardenCfg', privileged(), async (req, res) => {
         if (req.headers["content-type"] === "application/octect-stream") {
-            // Stream back config file
+            // Stream back config as file
             fs.writeFileSync(gardenCfgFile, req.body);
             res.sendStatus(200);
+        } else if ((req.headers["content-type"] || '').indexOf("application/json") === 0) {
+            res.send(await procMan.sendMessage("GardenWebRequest", { command: "garden.setConfig", config: req.body }));
         } else {
             res.sendStatus(500);
         }

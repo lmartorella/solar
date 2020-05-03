@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lucky.Home.Model
 {
@@ -12,7 +8,9 @@ namespace Lucky.Home.Model
         {
             if (start.HasValue)
             {
-                return start.Value.ToString("o");
+                // Use milliseconds version (3 frames) instead of 6 frames obtained using the standard 'o' format.
+                // This will allow compatibility with JS
+                return start.Value.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffzzz");
             }
             else
             {
@@ -24,7 +22,7 @@ namespace Lucky.Home.Model
         {
             if (str != null)
             {
-                return DateTime.ParseExact(str, "o", null);
+                return DateTime.ParseExact(str, "yyyy-MM-ddTHH\\:mm\\:ss.fffzzz", null);
             }
             else
             {

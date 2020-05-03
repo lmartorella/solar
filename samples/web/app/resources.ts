@@ -17,20 +17,32 @@ export const Strings = {
 
     "Garden_QuickCycle": "Quick cycle",
     "Garden_Minutes": "Minutes: ",
-    "Garden_Add": "Add cycle",
-    "Garden_Remove": "Remove",
-    "Garden_Start": "Start!",
-    "Garden_Started": "Started",
-    "Garden_StartError": err => `Error starting: ${err}`,
+    "Garden_AddImmediate": "Add manual cycle",
+    "Garden_ClearImmediate": "Clear",
+    "Garden_StartImmediate": "Go!",
+    "Garden_StartedImmediate": "Started",
+    "Garden_ImmediateError": err => `Error starting: ${err}`,
     "Garden_Stop": "STOP",
     "Garden_Stopped": "Stopped!",
     "Garden_StopError": err => `Error stopping: ${err}`,
     "Garden_NextCycles": "Next programmmed cycles:",
     "Garden_ScheduledProgram": (args) => `${args.name} program scheduled for ${args.scheduledTime}`,
+    "Garden_RunningProgram": (args) => `${args.name} program running`,
     "Garden_QueuedProgram": (args) => `${args.name} program in queue`,
     "Garden_FlowInfo": "Flow:",
     "Garden_MissingConf": "Missing configuration",
     "Garden_ErrorConf": err => `Cannot fetch configuration: ${err}`,
+    "Garden_ErrorSetConf": err => `Invalid configuration data: ${err}`,
+    "Garden_Suspended": " (suspended)",
+    "Garden_SuspendAll": "Suspend for Rain",
+    "Garden_ResumeAll": "Resume from Rain",
+    "Garden_EditProgram": "Edit program",
+    "Garden_SuspendedCheckbox": "Suspended:",
+    "Garden_DisabledCheckbox": "Disabled:",
+    "Garden_StartAt": "Start at:",
+    "Garden_Duration": "Duration (min):",
+    "Garden_SaveProgram": "Save Program",
+    "Garden_ClearProgram": "Clear",
 
     "Solar_ChartToday": "Chart today",
     "Solar_Chart4days": "Chart last 4 days",
@@ -45,6 +57,6 @@ export const Strings = {
 };
 
 const res = { ...Strings, ...itStrings };
-const format = (str, args) => res[str](args);
+const format = (str, args) => (typeof res[str] === "function") ? res[str](args): res[str];
 
 export { res, format };

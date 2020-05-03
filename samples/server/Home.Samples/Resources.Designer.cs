@@ -88,6 +88,33 @@ namespace Lucky.Home {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} (suspended).
+        /// </summary>
+        internal static string gardenMailSuspendedCycle {
+            get {
+                return ResourceManager.GetString("gardenMailSuspendedCycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not performed cycles:.
+        /// </summary>
+        internal static string gardenMailSuspendedHeader {
+            get {
+                return ResourceManager.GetString("gardenMailSuspendedHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not irrigated garden (reminder).
+        /// </summary>
+        internal static string gardenMailSuspendedTitle {
+            get {
+                return ResourceManager.GetString("gardenMailSuspendedTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Irrigated garden.
         /// </summary>
         internal static string gardenMailTitle {
