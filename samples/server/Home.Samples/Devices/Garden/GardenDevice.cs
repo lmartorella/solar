@@ -58,7 +58,7 @@ namespace Lucky.Home.Devices.Garden
                     }
                     else
                     {
-                        ScheduleCycle(new ImmediateProgram { ZoneTimes = new[] { new ZoneTime { Minutes = e.Item.Minutes, Zones = e.Item.Zones } } });
+                        ScheduleCycle(new ZoneTime { Minutes = e.Item.Minutes, Zones = e.Item.Zones });
                     }
                 };
 
@@ -116,18 +116,15 @@ namespace Lucky.Home.Devices.Garden
                         });
                         break;
                     case "garden.setImmediate":
-                        var zones = ((GardenWebRequest)e.Request).ImmediateZones;
-                        Logger.Log("setImmediate", "msg", string.Join(",", zones.Select(z => z.ToString())));
+                        var zones = ((GardenWebRequest)e.Request).ImmediateZone;
+                        Logger.Log("setImmediate", "msg", zones.ToString());
                         e.Response = Task.FromResult((WebResponse) new GardenWebResponse
                         {
-                            Error = ScheduleCycle(new ImmediateProgram
-                                {
-                                    ZoneTimes = zones.Select(prg => new ZoneTime
+                            Error = ScheduleCycle(new ZoneTime
                                     {
-                                        Minutes = prg.Time,
-                                        Zones = prg.Zones
-                                    }).ToArray()
-                                })
+                                        Minutes = zones.Time,
+                                        Zones = zones.Zones
+                                    })
                         });
                         break;
                     case "garden.stop":
@@ -368,16 +365,13 @@ namespace Lucky.Home.Devices.Garden
             }
         }
 
-        private string ScheduleCycle(ImmediateProgram program)
+        private string ScheduleCycle(ZoneTime program)
         {
-            if (!program.IsEmpty)
+            if (program.Minutes > 0)
             {
                 lock (_immediateQueue)
                 {
-                    foreach (var cycle in program.ZoneTimes)
-                    {
-                        _immediateQueue.Enqueue(cycle);
-                    }
+                    _immediateQueue.Enqueue(program);
                 }
                 return null;
             }

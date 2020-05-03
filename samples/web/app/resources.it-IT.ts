@@ -7,7 +7,7 @@ export const Strings = {
     "Garden_QuickCycle": "Programma veloce:",
     "Garden_Minutes": "Minuti: ",
     "Garden_AddImmediate": "Aggiungi ciclo manuale",
-    "Garden_RemoveImmediate": "Rimuovi",
+    "Garden_ClearImmediate": "Cancella",
     "Garden_StartImmediate": "Vai!",
     "Garden_StartedImmediate": "Avviato",
     "Garden_ImmediateError": err => `Non posso avviare: ${err}`,
@@ -30,6 +30,7 @@ export const Strings = {
     "Garden_StartAt": "Inizio:",
     "Garden_Duration": "Durata (min):",
     "Garden_SaveProgram": "Salva Programma",
+    "Garden_ClearProgram": "Cancella",
 
     "Solar_ChartToday": "Andamento oggi",
     "Solar_Chart4days": "Andamento 4 giorni",

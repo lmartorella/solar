@@ -6,26 +6,26 @@
 
   <!-- Editor to add immediate cycle -->
   <div ng-show="ctrl.loaded && !ctrl.immediateStarted" class="garden-section">
-    <div>
+    <div ng-hide="ctrl.immediateCycle">
       <button ng-click="ctrl.addImmediateCycle()">{{res["Garden_AddImmediate"]}}</button>
     </div>
-    <h4 ng-hide="ctrl.immediateCycles.length === 0">{{res["Garden_QuickCycle"]}}</h4>
+    <h4 ng-hide="!ctrl.immediateCycle">{{res["Garden_QuickCycle"]}}</h4>
     <!-- List immediate program cycles -->
-    <div ng-repeat="cycle in ctrl.immediateCycles" class="program-cycle">
+    <div class="program-cycle" ng-hide="!ctrl.immediateCycle">
       <div class="program-zones">
-          <div ng-repeat="zone in cycle.zones">
+          <div ng-repeat="zone in ctrl.immediateCycle.zones">
              <label>{{zone.name}}</label>
              <input type="checkbox" ng-model="zone.enabled" />
           </div>
       </div>
       <p>
         <span>{{res["Garden_Minutes"]}}</span>
-        <input type="text" ng-model="cycle.time" style="width: 3em" />
+        <input type="text" ng-model="ctrl.immediateCycle.time" style="width: 3em" />
       </p>
-      <button ng-click="ctrl.removeImmediate($index)">{{res["Garden_RemoveImmediate"]}}</button>
     </div>
-    <div>
-      <button ng-click="ctrl.startImmediate()" ng-hide="ctrl.immediateCycles.length === 0">{{res["Garden_StartImmediate"]}}</button>
+    <div ng-hide="!ctrl.immediateCycle">
+      <button ng-click="ctrl.startImmediate()">{{res["Garden_StartImmediate"]}}</button>
+      <button ng-click="ctrl.clearImmediate()">{{res["Garden_ClearImmediate"]}}</button>
     </div>
   </div>
 
@@ -65,6 +65,7 @@
     </div>
     <div ng-if="ctrl.editProgramMode">
       <button ng-click="ctrl.saveProgram()">{{res["Garden_SaveProgram"]}}</button>
+      <button ng-click="ctrl.clearProgram()">{{res["Garden_ClearProgram"]}}</button>
     </div>
   </div>
   

@@ -60,7 +60,7 @@ export class GardenController {
     public message: string;
     public error: string;
     private zoneNames: string[] = [];
-    public immediateCycles: ImmediateCycle[] = [];
+    public immediateCycle: ImmediateCycle;
     public config: IConfig;
     public status: string;
     public flow: { 
@@ -153,10 +153,11 @@ export class GardenController {
     }
 
     public startImmediate() {
-        var body = this.immediateCycles.map(cycle => ({ zones: cycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(cycle.time) }));
+        var body = { zones: this.immediateCycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(this.immediateCycle.time) };
         this.checkXhr(this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", body)).then(() => {
             this.message = res["Garden_StartedImmediate"];  
             this.immediateStarted = true;
+            this.loadConfigAndStatus();
         }, err => {
             this.error = format("Garden_ImmediateError", err.message);
         });
@@ -164,12 +165,14 @@ export class GardenController {
 
     addImmediateCycle(): void {
         this.preCheckPrivilege().then(() => {
-            this.immediateCycles.push(new ImmediateCycle(this.zoneNames, "5"));
+            // Mutually exclusive
+            this.clearProgram();
+            this.immediateCycle = new ImmediateCycle(this.zoneNames, "5");
         }, () => { });
     }
 
-    removeImmediate(index: number): void {
-        this.immediateCycles.splice(index, 1);
+    clearImmediate(): void {
+        this.immediateCycle = null;
     }
 
     resumeAll(): void {
@@ -189,6 +192,7 @@ export class GardenController {
     public startEdit(): void {
         this.preCheckPrivilege().then(() => {
             this.editProgramMode = true;
+            this.clearImmediate();
         }, () => { });
     }
 
@@ -198,7 +202,11 @@ export class GardenController {
         }, err => {
             this.error = format("Garden_ErrorSetConf", err.message);
         }).finally(() => {
-            this.editProgramMode = false;
+            this.clearProgram();
         })
+    }
+
+    private clearProgram(): void {
+        this.editProgramMode = false;
     }
 }

@@ -13,7 +13,7 @@ function register(app, privileged) {
     
     app.post('/svc/gardenStart', privileged(), async (req, res) => {
         let immediate = req.body;
-        if (!Array.isArray(immediate) || !immediate.every(v => typeof v === "object") || immediate.every(v => v.time <= 0)) {
+        if (typeof immediate !== "object" || immediate.time <= 0) {
             // Do nothing
             res.status(500);
             res.send("Request incompatible");

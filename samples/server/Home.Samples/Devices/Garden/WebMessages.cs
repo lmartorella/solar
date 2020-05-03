@@ -9,7 +9,7 @@ namespace Lucky.Home.Devices.Garden
     public class GardenWebRequest : WebRequest
     {
         [DataMember(Name = "immediate")]
-        public ImmediateZone[] ImmediateZones { get; set; }
+        public ImmediateZone ImmediateZone { get; set; }
 
         [DataMember(Name = "config")]
         public Configuration Configuration { get; set; }

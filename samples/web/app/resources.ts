@@ -18,7 +18,7 @@ export const Strings = {
     "Garden_QuickCycle": "Quick cycle",
     "Garden_Minutes": "Minutes: ",
     "Garden_AddImmediate": "Add manual cycle",
-    "Garden_RemoveImmediate": "Remove",
+    "Garden_ClearImmediate": "Clear",
     "Garden_StartImmediate": "Go!",
     "Garden_StartedImmediate": "Started",
     "Garden_ImmediateError": err => `Error starting: ${err}`,
@@ -42,6 +42,7 @@ export const Strings = {
     "Garden_StartAt": "Start at:",
     "Garden_Duration": "Duration (min):",
     "Garden_SaveProgram": "Save Program",
+    "Garden_ClearProgram": "Clear",
 
     "Solar_ChartToday": "Chart today",
     "Solar_Chart4days": "Chart last 4 days",

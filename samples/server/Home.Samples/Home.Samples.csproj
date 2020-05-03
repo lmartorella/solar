@@ -45,7 +45,6 @@
     <Compile Include="Devices\Garden\Configuration.cs" />
     <Compile Include="Devices\Garden\GardenCsvRecord.cs" />
     <Compile Include="Devices\Garden\GardenCycle.cs" />
-    <Compile Include="Devices\Garden\ImmediateProgram.cs" />
     <Compile Include="Devices\Garden\MailScheduler.cs" />
     <Compile Include="Devices\Garden\NextCycle.cs" />
     <Compile Include="Devices\Garden\WebMessages.cs" />
