@@ -53,8 +53,8 @@ namespace Lucky.Home.Devices.Garden
         /// <summary>
         /// For gardem
         /// </summary>
-        [DataMember(Name = "online")]
-        public bool Online { get; set; }
+        [DataMember(Name = "status")]
+        public OnlineStatus Status{ get; set; }
 
         /// <summary>
         /// Is the program running right now?

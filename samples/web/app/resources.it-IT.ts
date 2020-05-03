@@ -1,6 +1,7 @@
 export const Strings = { 
     "Device_StatusLoading": "Caricamento...",
     "Device_StatusError": "ERRORE",
+    "Device_StatusPartiallyOnline": "Parzialmente Online",
 
     "Error": err => `Errore: ${err}`,
 

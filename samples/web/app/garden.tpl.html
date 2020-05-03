@@ -2,7 +2,8 @@
 <div ng-controller="gardenCtrl as ctrl">
   <span class="error" ng-if="ctrl.error"> {{ctrl.error}} </span>
   <span class="message" ng-if="ctrl.message"> {{ctrl.message}} </span>
-  <span class="message"> {{ctrl.status}} </span>
+  <span class="message"> {{ctrl.status1}} </span>
+  <span class="message" ng-if="ctrl.status2"> {{ctrl.status2}} </span>
 
   <!-- Editor to add immediate cycle -->
   <div ng-show="ctrl.loaded && !ctrl.immediateStarted" class="garden-section">

@@ -3,7 +3,7 @@ import { res, format } from "./resources";
 import * as Plotly from "plotly.js";
 
 interface IPvData { 
-    online?: boolean;
+    status: number;
     error?: string;
     mode: number;
     currentW: number;
@@ -28,7 +28,11 @@ export class SolarController {
         this.$http.get<IPvData>('/svc/solarStatus').then(resp => {
             if (resp.status == 200 && resp.data) {
                 this.pvData = resp.data;
-                this.status =  resp.data.online ? res["Device_StatusOnline"] : res["Device_StatusOffline"];
+                switch (resp.data.status) {
+                    case 1: this.status = res["Device_StatusOnline"]; break;
+                    case 2: this.status = res["Device_StatusOffline"]; break;
+                    case 3: this.status = res["Device_StatusPartiallyOnline"]; break;
+                }
                 if (this.pvData.error) {
                     this.firstLine = format("Error", this.pvData.error);
                     this.firstLineClass = 'err';

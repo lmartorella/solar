@@ -117,7 +117,7 @@ namespace Lucky.Home.Devices
             base.OnInitialize();
             _timer = new Timer(async o =>
             {
-                if (IsFullOnline)
+                if (OnlineStatus == OnlineStatus.Online)
                 {
                     var sink = Sinks.OfType<BarometricSink>().FirstOrDefault();
                     if (sink != null)

@@ -17,7 +17,7 @@ namespace Lucky.Home.Devices.Garden
     /// </summary>
     [Device("Garden")]
     [Requires(typeof(GardenSink))]
-    [Requires(typeof(FlowSink))]
+    [Requires(typeof(FlowSink), Optional = true)]
     public class GardenDevice : DeviceBase
     {
         /// <summary>
@@ -107,7 +107,7 @@ namespace Lucky.Home.Devices.Garden
                             }
 
                             return (WebResponse) new GardenWebResponse {
-                                Online = GetFirstOnlineSink<GardenSink>() != null,
+                                Status = OnlineStatus,
                                 Configuration = _configuration,
                                 FlowData = flowData,
                                 NextCycles = nextCycles,

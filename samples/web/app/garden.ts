@@ -30,7 +30,7 @@ interface IGardenResponse {
 
 interface IGardenStatusResponse extends IGardenResponse {
     config: IConfig;
-    online: boolean;
+    status: number;
     isRunning: boolean;
     flowData: { 
         totalMc: number;
@@ -62,7 +62,8 @@ export class GardenController {
     private zoneNames: string[] = [];
     public immediateCycle: ImmediateCycle;
     public config: IConfig;
-    public status: string;
+    public status1: string;
+    public status2: string;
     public flow: { 
         totalMc: number;
         flowLMin: number;
@@ -80,7 +81,7 @@ export class GardenController {
     constructor(private $http: ng.IHttpService, private $q: ng.IQService) { }
 
     public $onInit() {
-        this.status = res["Device_StatusLoading"];
+        this.status1 = res["Device_StatusLoading"];
         this.loaded = false;
         this.loadConfigAndStatus();
     }
@@ -114,7 +115,12 @@ export class GardenController {
     private loadConfigAndStatus() {
         // Fetch zones
         this.checkXhr(this.$http.get<IGardenStatusResponse>("/svc/gardenStatus")).then(resp => {
-            this.status =  resp.online ? res["Device_StatusOnline"] : (resp.config ? res["Device_StatusOffline"] : res["Garden_MissingConf"]);
+            switch (resp.status) {
+                case 1: this.status1 = res["Device_StatusOnline"]; break;
+                case 2: this.status1 = res["Device_StatusOffline"]; break;
+                case 3: this.status1 = res["Device_StatusPartiallyOnline"]; break;
+            }
+            this.status2 = !resp.config && res["Garden_MissingConf"];
             this.flow = resp.flowData;
             this.isRunning = resp.isRunning;
 

@@ -13,6 +13,7 @@ export const Strings = {
 
     "Device_StatusLoading": "Loading...",
     "Device_StatusOnline": "Online",
+    "Device_StatusPartiallyOnline": "Partially Online",
     "Device_StatusOffline": "OFFLINE",
 
     "Garden_QuickCycle": "Quick cycle",

@@ -18,7 +18,7 @@ namespace Lucky.Home.Devices
         {
             _timer = new Timer(async o =>
             {
-                if (IsFullOnline)
+                if (OnlineStatus == OnlineStatus.Online)
                 {
                     var data = await FlowSink.ReadData(5.5);
                     Console.WriteLine("Counter: {0}, Flow: {1}", data.TotalMc, data.FlowLMin);

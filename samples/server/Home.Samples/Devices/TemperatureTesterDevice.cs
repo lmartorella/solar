@@ -17,7 +17,7 @@ namespace Lucky.Home.Devices
         {
             _timer = new Timer(async o =>
             {
-                if (IsFullOnline)
+                if (OnlineStatus == OnlineStatus.Online)
                 {
                     TemperatureReading reading = await ((TemperatureSink)Sinks[0]).Read();
                     if (reading.SinkStatus == TemperatureSinkStatus.Ok)

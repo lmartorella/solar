@@ -21,7 +21,7 @@ namespace Lucky.Home.Devices
         {
             while (!IsDisposed)
             {
-                if (IsFullOnline)
+                if (OnlineStatus == OnlineStatus.Online)
                 {
                     var str = DateTime.Now.ToString("HH:mm:ss");
                     foreach (var sink in Sinks.OfType<DisplaySink>())
