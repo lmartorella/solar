@@ -20,7 +20,7 @@ function start() {
     // Launch process
     let args = ['-wrk', etcDir];
     if (restartMailText) {
-        args.push('-sendMail');
+        args.push('-sendMailErr');
         args.push(restartMailText);
     }
     process = child_process.spawn(path.join(binDir, processName), args, {
