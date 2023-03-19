@@ -57,7 +57,7 @@ function start() {
 async function kill() {
     logger('Home server killing...', true);
     return new Promise((resolve, reject) => {
-        // Aready started
+        // Already started
         if (!process || !process.pid) {
             reject(new Error("Already killed"));
         }
