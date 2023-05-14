@@ -67,21 +67,11 @@ namespace Lucky.Home.Devices.Solar
         private bool _inConnectionMode;
         private CancellationTokenSource _terminating = new CancellationTokenSource();
         private TaskCompletionSource<object> _terminated = new TaskCompletionSource<object>();
-        private EventHandler<PipeServer.MessageEventArgs> _pipeMessageHandler;
 
         public SamilInverterLoggerDevice()
             : base("SAMIL")
         {
-            _pipeMessageHandler = (o, e) =>
-            {
-                switch (e.Request.Command)
-                {
-                    case "solar.getStatus":
-                        e.Response = GetPvData();
-                        break;
-                }
-            };
-            Manager.GetService<PipeServer>().Message += _pipeMessageHandler;
+            Manager.GetService<MqttService>().SubscribeRpc("solar/getStatus", (RpcRequest _) => GetPvData());
         }
 
         public async Task StartLoop(ITimeSeries<PowerData, DayPowerData> database)
@@ -119,7 +109,6 @@ namespace Lucky.Home.Devices.Solar
 
         protected override async Task OnTerminate()
         {
-            Manager.GetService<PipeServer>().Message -= _pipeMessageHandler;
             _terminating.Cancel();
             await _terminated.Task;
             await base.OnTerminate();
@@ -511,9 +500,9 @@ namespace Lucky.Home.Devices.Solar
         /// <summary>
         /// Called by web GUI
         /// </summary>
-        private async Task<WebResponse> GetPvData() 
+        private async Task<SolarRpcResponse> GetPvData() 
         {
-            var ret = new SolarWebResponse
+            var ret = new SolarRpcResponse
             {
                 Status = OnlineStatus
             };

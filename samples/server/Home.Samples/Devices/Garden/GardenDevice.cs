@@ -78,74 +78,72 @@ namespace Lucky.Home.Devices.Garden
 
             // To receive commands from UI
             var mqttClient = Manager.GetService<MqttService>();
-            mqttClient.SubscribeRpc("garden/getStatus", async (GardenWebRequest request) =>
+            mqttClient.SubscribeRpc("garden/getStatus", async (RpcRequest request) =>
             {
-                switch (request.Command)
+                FlowData flowData = await ReadFlow();
+
+                // Tactical
+                if (flowData != null)
                 {
-                    case "garden.getStatus":
-                        FlowData flowData = await ReadFlow();
-                            
-                        // Tactical
-                        if (flowData != null)
-                        {
-                            await (GetFirstOnlineSink<GardenSink>()?.UpdateFlowData((int)flowData.FlowLMin) ?? Task.FromResult<string>(null));
-                        }
-
-                        NextCycle[] nextCycles;
-                        lock (_immediateQueue)
-                        {
-                            lock (_timeProgram)
-                            {
-                                // Concat running program, immediate queue and then scheduled
-                                nextCycles = (_runningProgram != null ? new[] { _runningProgram.ToNextCycle(_configuration) } : new NextCycle[0])
-                                    .Concat(_immediateQueue.Select(cycle => new NextCycle(cycle, _configuration, false)))
-                                    .Concat(_timeProgram?.GetNextCycles(DateTime.Now).Select(c => new NextCycle(c.Item1, _configuration, c.Item2)))
-                                    .Take(4).ToArray();
-                            }
-                        }
-
-                        return new GardenWebResponse {
-                            Status = OnlineStatus,
-                            Configuration = _configuration,
-                            FlowData = flowData,
-                            NextCycles = nextCycles,
-                            IsRunning = _runningProgram != null
-                        };
-                    case "garden.setImmediate":
-                        var zones = request.ImmediateZone;
-                        Logger.Log("setImmediate", "msg", zones.ToString());
-                        return new GardenWebResponse
-                        {
-                            Error = ScheduleCycle(new ZoneTime
-                                    {
-                                        Minutes = zones.Time,
-                                        Zones = zones.Zones
-                                    })
-                        };
-                    case "garden.stop":
-                        bool stopped = false;
-                        foreach (var sink in Sinks.OfType<GardenSink>())
-                        {
-                            sink.ResetNode();
-                            stopped = true;
-                        }
-                        string error = null;
-                        if (!stopped)
-                        {
-                            error = "Cannot stop, no sink";
-                        }
-                        return new GardenWebResponse { Error = error };
-                    case "garden.setConfig":
-                        // Set new config value. Verify it before accepting it.
-                        var config = request.Configuration;
-                        // This will raise exception if data is invalid
-                        AcquireConfiguration(config);
-                        // Save back data
-                        await SaveConfiguration(config);
-                        return new GardenWebResponse();
-                    default:
-                        throw new ArgumentException("Unknown command " + request.Command);
+                    await (GetFirstOnlineSink<GardenSink>()?.UpdateFlowData((int)flowData.FlowLMin) ?? Task.FromResult<string>(null));
                 }
+
+                NextCycle[] nextCycles;
+                lock (_immediateQueue)
+                {
+                    lock (_timeProgram)
+                    {
+                        // Concat running program, immediate queue and then scheduled
+                        nextCycles = (_runningProgram != null ? new[] { _runningProgram.ToNextCycle(_configuration) } : new NextCycle[0])
+                            .Concat(_immediateQueue.Select(cycle => new NextCycle(cycle, _configuration, false)))
+                            .Concat(_timeProgram?.GetNextCycles(DateTime.Now).Select(c => new NextCycle(c.Item1, _configuration, c.Item2)))
+                            .Take(4).ToArray();
+                    }
+                }
+
+                return new GardenStatusRpcResponse
+                {
+                    Status = OnlineStatus,
+                    Configuration = _configuration,
+                    FlowData = flowData,
+                    NextCycles = nextCycles,
+                    IsRunning = _runningProgram != null
+                };
+            });
+            mqttClient.SubscribeRpc("garden/setImmediate", async (GardenSetImmediateRpcRequest request) =>
+            {
+                var zones = request.ImmediateZone;
+                Logger.Log("setImmediate", "msg", zones.ToString());
+                ScheduleCycle(new ZoneTime
+                {
+                    Minutes = zones.Time,
+                    Zones = zones.Zones
+                });
+                return new RpcResponse();
+            });
+            mqttClient.SubscribeRpc("garden/stop", async (RpcRequest request) =>
+            {
+                bool stopped = false;
+                foreach (var sink in Sinks.OfType<GardenSink>())
+                {
+                    sink.ResetNode();
+                    stopped = true;
+                }
+                if (!stopped)
+                {
+                    throw new ArgumentException("Cannot stop, no sink");
+                }
+                return new RpcResponse();
+            });
+            mqttClient.SubscribeRpc("garden/setConfig", async (GardenSetConfigRpcRequest request) =>
+            {
+                // Set new config value. Verify it before accepting it.
+                var config = request.Configuration;
+                // This will raise exception if data is invalid
+                AcquireConfiguration(config);
+                // Save back data
+                await SaveConfiguration(config);
+                return new RpcResponse();
             });
 
             _ = StartLoop();
@@ -359,7 +357,7 @@ namespace Lucky.Home.Devices.Garden
             }
         }
 
-        private string ScheduleCycle(ZoneTime program)
+        private void ScheduleCycle(ZoneTime program)
         {
             if (program.Minutes > 0)
             {
@@ -367,11 +365,10 @@ namespace Lucky.Home.Devices.Garden
                 {
                     _immediateQueue.Enqueue(program);
                 }
-                return null;
             }
             else
             {
-                return "Empty program";
+                throw new ArgumentException("Empty program");
             }
         }
 

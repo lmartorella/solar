@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Lucky.Home.Devices.Solar
 {
     [DataContract]
-    public class SolarWebResponse : WebResponse
+    public class SolarRpcResponse : RpcResponse
     {
         /// <summary>
         /// Is the sink online?

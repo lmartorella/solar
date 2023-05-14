@@ -27,10 +27,6 @@ namespace Lucky.Home.Application
 
         public async Task Start()
         {
-            // Register web messages for pipe service
-            Manager.GetService<PipeServer>().RegisterAdditionalRequestTypes(new[] { typeof(GardenWebRequest) });
-            Manager.GetService<PipeServer>().RegisterAdditionalResponseTypes(new[] { typeof(GardenWebResponse), typeof(SolarWebResponse) });
-
             // Get all registered devices
             var deviceMan = Manager.GetService<IDeviceManager>();
             IDevice[] devices = deviceMan.Devices;
@@ -76,17 +72,12 @@ namespace Lucky.Home.Application
             }
 
             // Implements a IPC pipe with web server
-            Manager.GetService<PipeServer>().Message += (o, e) =>
+            Manager.GetService<MqttService>().SubscribeRpc("kill", async (RpcRequest _) =>
             {
-                if (e.Request.Command == "kill")
-                {
-                    e.CloseServer = true;
-                    Task.Delay(1500).ContinueWith(t =>
-                    {
-                        Manager.Kill(Logger, "killed by parent process");
-                    });
-                }
-            };
+                await Task.Delay(1500);
+                Manager.Kill(Logger, "killed by parent process");
+                return new RpcResponse();
+            });
         }
     }
 }
