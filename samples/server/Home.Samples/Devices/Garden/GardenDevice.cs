@@ -34,7 +34,6 @@ namespace Lucky.Home.Devices.Garden
         private readonly MailScheduler _executedCyclesMailScheduler;
         private readonly MailScheduler _suspendedCyclesMailScheduler;
         private PumpOperationObserver _pumpOpObserver = new PumpOperationObserver();
-        private EventHandler<PipeServer.MessageEventArgs> _pipeMessageHandler;
         private RunningProgram _runningProgram;
 
         public bool InUse { get; private set; }
@@ -78,55 +77,51 @@ namespace Lucky.Home.Devices.Garden
             ReadConfig();
 
             // To receive commands from UI
-            _pipeMessageHandler = (_, e) =>
+            var mqttClient = Manager.GetService<MqttService>();
+            mqttClient.SubscribeRpc("garden/getStatus", async (GardenWebRequest request) =>
             {
-                switch (e.Request.Command)
+                switch (request.Command)
                 {
                     case "garden.getStatus":
-                        e.Response = Task.Run(async () =>
-                        {
-                            FlowData flowData = await ReadFlow();
+                        FlowData flowData = await ReadFlow();
                             
-                            // Tactical
-                            if (flowData != null)
-                            {
-                                await (GetFirstOnlineSink<GardenSink>()?.UpdateFlowData((int)flowData.FlowLMin) ?? Task.FromResult<string>(null));
-                            }
+                        // Tactical
+                        if (flowData != null)
+                        {
+                            await (GetFirstOnlineSink<GardenSink>()?.UpdateFlowData((int)flowData.FlowLMin) ?? Task.FromResult<string>(null));
+                        }
 
-                            NextCycle[] nextCycles;
-                            lock (_immediateQueue)
+                        NextCycle[] nextCycles;
+                        lock (_immediateQueue)
+                        {
+                            lock (_timeProgram)
                             {
-                                lock (_timeProgram)
-                                {
-                                    // Concat running program, immediate queue and then scheduled
-                                    nextCycles = (_runningProgram != null ? new[] { _runningProgram.ToNextCycle(_configuration) } : new NextCycle[0])
-                                        .Concat(_immediateQueue.Select(cycle => new NextCycle(cycle, _configuration, false)))
-                                        .Concat(_timeProgram?.GetNextCycles(DateTime.Now).Select(c => new NextCycle(c.Item1, _configuration, c.Item2)))
-                                        .Take(4).ToArray();
-                                }
+                                // Concat running program, immediate queue and then scheduled
+                                nextCycles = (_runningProgram != null ? new[] { _runningProgram.ToNextCycle(_configuration) } : new NextCycle[0])
+                                    .Concat(_immediateQueue.Select(cycle => new NextCycle(cycle, _configuration, false)))
+                                    .Concat(_timeProgram?.GetNextCycles(DateTime.Now).Select(c => new NextCycle(c.Item1, _configuration, c.Item2)))
+                                    .Take(4).ToArray();
                             }
+                        }
 
-                            return (WebResponse) new GardenWebResponse {
-                                Status = OnlineStatus,
-                                Configuration = _configuration,
-                                FlowData = flowData,
-                                NextCycles = nextCycles,
-                                IsRunning = _runningProgram != null
-                            };
-                        });
-                        break;
+                        return new GardenWebResponse {
+                            Status = OnlineStatus,
+                            Configuration = _configuration,
+                            FlowData = flowData,
+                            NextCycles = nextCycles,
+                            IsRunning = _runningProgram != null
+                        };
                     case "garden.setImmediate":
-                        var zones = ((GardenWebRequest)e.Request).ImmediateZone;
+                        var zones = request.ImmediateZone;
                         Logger.Log("setImmediate", "msg", zones.ToString());
-                        e.Response = Task.FromResult((WebResponse) new GardenWebResponse
+                        return new GardenWebResponse
                         {
                             Error = ScheduleCycle(new ZoneTime
                                     {
                                         Minutes = zones.Time,
                                         Zones = zones.Zones
                                     })
-                        });
-                        break;
+                        };
                     case "garden.stop":
                         bool stopped = false;
                         foreach (var sink in Sinks.OfType<GardenSink>())
@@ -139,19 +134,19 @@ namespace Lucky.Home.Devices.Garden
                         {
                             error = "Cannot stop, no sink";
                         }
-                        e.Response = Task.FromResult((WebResponse) new GardenWebResponse { Error = error });
-                        break;
+                        return new GardenWebResponse { Error = error };
                     case "garden.setConfig":
                         // Set new config value. Verify it before accepting it.
-                        var config = ((GardenWebRequest)e.Request).Configuration;
+                        var config = request.Configuration;
                         // This will raise exception if data is invalid
                         AcquireConfiguration(config);
                         // Save back data
-                        e.Response = SaveConfiguration(config).ContinueWith(t => new WebResponse());
-                        break;
+                        await SaveConfiguration(config);
+                        return new GardenWebResponse();
+                    default:
+                        throw new ArgumentException("Unknown command " + request.Command);
                 }
-            };
-            Manager.GetService<PipeServer>().Message += _pipeMessageHandler;
+            });
 
             _ = StartLoop();
         }
@@ -285,7 +280,6 @@ namespace Lucky.Home.Devices.Garden
                 _timeProgram.Dispose();
             }
             _fileWatcher.Dispose();
-            Manager.GetService<PipeServer>().Message -= _pipeMessageHandler;
             return base.OnTerminate();
         }
 
