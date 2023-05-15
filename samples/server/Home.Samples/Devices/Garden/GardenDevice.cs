@@ -78,7 +78,7 @@ namespace Lucky.Home.Devices.Garden
 
             // To receive commands from UI
             var mqttClient = Manager.GetService<MqttService>();
-            mqttClient.SubscribeRpc("garden/getStatus", async (RpcRequest request) =>
+            mqttClient.SubscribeRpc("garden/getStatus", async (RpcVoid request) =>
             {
                 FlowData flowData = await ReadFlow();
 
@@ -119,9 +119,9 @@ namespace Lucky.Home.Devices.Garden
                     Minutes = zones.Time,
                     Zones = zones.Zones
                 });
-                return new RpcResponse();
+                return new RpcVoid();
             });
-            mqttClient.SubscribeRpc("garden/stop", async (RpcRequest request) =>
+            mqttClient.SubscribeRpc("garden/stop", async (RpcVoid request) =>
             {
                 bool stopped = false;
                 foreach (var sink in Sinks.OfType<GardenSink>())
@@ -133,7 +133,7 @@ namespace Lucky.Home.Devices.Garden
                 {
                     throw new ArgumentException("Cannot stop, no sink");
                 }
-                return new RpcResponse();
+                return new RpcVoid();
             });
             mqttClient.SubscribeRpc("garden/setConfig", async (GardenSetConfigRpcRequest request) =>
             {
@@ -143,7 +143,7 @@ namespace Lucky.Home.Devices.Garden
                 AcquireConfiguration(config);
                 // Save back data
                 await SaveConfiguration(config);
-                return new RpcResponse();
+                return new RpcVoid();
             });
 
             _ = StartLoop();

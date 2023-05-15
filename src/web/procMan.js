@@ -1,7 +1,7 @@
 const child_process = require('child_process');
 const path = require('path');
-const net = require('net');
 const { binDir, etcDir, logger } = require('./settings');
+const { remoteCall } = require('./mqtt');
 
 let restartMailText;
 let process;
@@ -11,8 +11,8 @@ const processName = 'Home.Server.exe';
 /**
  * Manages home server health
  */
-function start() {
-    // Aready started
+const start = () => {
+    // Already started
     if (process && process.pid) {
         throw new Error("Already started");
     }
@@ -52,9 +52,9 @@ function start() {
     });
 
     logger('Home server started.', true);
-}
+};
 
-async function kill() {
+const kill = () => {
     logger('Home server killing...', true);
     return new Promise((resolve, reject) => {
         // Already started
@@ -65,63 +65,16 @@ async function kill() {
         process.once('exit', () => {
             resolve();
         });
-        sendMessage({ command: "kill" });
+        remoteCall("kill");
     });
-}
+};
 
-async function restart() {
+const restart = async () => {
     await kill();
     logger('Home server killed for restarting...', true);
     await new Promise(resolve => setTimeout(resolve, 3500));
     start();
-}
+};
 
-function sendMessage(msgType, data) {
-    if (typeof msgType !== "string") {
-        data = msgType;
-        msgType = null;
-    }
-    if (msgType) {
-        // Polymorphism support for C# DataContractJsonSerializer requires __types to be the first property
-        data = Object.assign({ __type: msgType + ":Net" }, data);
-    }
-    const message = JSON.stringify(data);
-    return new Promise((resolve, reject) => {
-        // Make request to server
-        let pipe = net.connect('\\\\.\\pipe\\NETHOME', () => {
-            // Connected
-            pipe.setNoDelay(true);
-            pipe.setDefaultEncoding('utf8');
-            
-            let resp = '';
-    
-            let respond = () => {
-                pipe.destroy();
-                let obj;
-                try {
-                    obj = JSON.parse(resp);
-                }
-                catch (err) {
-                    obj = { exc: err.message };
-                }
-                resolve(obj);
-            };
-    
-            pipe.on('data', data => {
-                resp += data.toString();
-                if (resp.charCodeAt(resp.length - 1) === 13) {
-                    respond();
-                }
-            });
-            pipe.once('end', () => {
-                respond();
-            });
-            
-            // Send request
-            pipe.write(message + '\r\n');
-        });
-        pipe.on('error', err => reject(err));
-    });
-}
 
-module.exports = { start, restart, sendMessage, kill };
+module.exports = { start, restart, kill };

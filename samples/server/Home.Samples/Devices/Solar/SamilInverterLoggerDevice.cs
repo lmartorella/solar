@@ -71,7 +71,7 @@ namespace Lucky.Home.Devices.Solar
         public SamilInverterLoggerDevice()
             : base("SAMIL")
         {
-            Manager.GetService<MqttService>().SubscribeRpc("solar/getStatus", (RpcRequest _) => GetPvData());
+            Manager.GetService<MqttService>().SubscribeRpc("solar/getStatus", (RpcVoid _) => GetPvData());
         }
 
         public async Task StartLoop(ITimeSeries<PowerData, DayPowerData> database)

@@ -6,14 +6,14 @@ using System.Runtime.Serialization;
 namespace Lucky.Home.Devices.Garden
 {
     [DataContract]
-    public class GardenSetImmediateRpcRequest : RpcRequest
+    public class GardenSetImmediateRpcRequest
     {
         [DataMember(Name = "immediate")]
         public ImmediateZone ImmediateZone { get; set; }
     }
 
     [DataContract]
-    public class GardenSetConfigRpcRequest : RpcRequest
+    public class GardenSetConfigRpcRequest
     {
         [DataMember(Name = "config")]
         public Configuration Configuration { get; set; }
@@ -46,7 +46,7 @@ namespace Lucky.Home.Devices.Garden
     }
 
     [DataContract]
-    public class GardenStatusRpcResponse : RpcResponse
+    public class GardenStatusRpcResponse
     {
         /// <summary>
         /// Configuration

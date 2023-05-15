@@ -3,7 +3,7 @@ const fs = require('fs');
 const moment = require('moment');
 const { setTimeout } = require('timers');
 const { etcDir } = require('../../src/web/settings');
-const procMan = require('../../src/web/procMan');
+const { remoteCall } = require('../../src/web/mqtt');
 
 const csvFolder = path.join(etcDir, 'DB/SAMIL');
 
@@ -131,7 +131,7 @@ function getPvChart(day) {
 
 function register(app) {
     app.get('/svc/solarStatus', async (_req, res) => {
-        res.send(await procMan.sendMessage({ command: "solar.getStatus" }));
+        res.send(await remoteCall("solar/getStatus"));
     });
 
     app.get('/svc/solarPowToday', (req, res) => {
