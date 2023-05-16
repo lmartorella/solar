@@ -14,9 +14,6 @@ namespace Lucky.Home.Devices.Solar
     /// Device that logs solar power immediate readings and stats.
     /// Secondary sink: home power current consumption for Net Metering (NEM)
     /// </summary>
-    [Device("Samil Inverter")]
-    [Requires(typeof(HalfDuplexLineSink))]
-    [Requires(typeof(AnalogIntegratorSink), Optional = true)]
     class SamilInverterLoggerDevice : SamilInverterDeviceBase, ISolarPanelDevice
     {
         private bool _noSink;
@@ -24,6 +21,8 @@ namespace Lucky.Home.Devices.Solar
         private bool _isSummarySent = true;
         private DateTime _lastValidData = DateTime.Now;
         private ITimeSeries<PowerData, DayPowerData> Database { get; set; }
+        private readonly HalfDuplexLineRpc inverterSink;
+        private readonly AnalogIntegratorRpc ammeterSink;
 
         /// <summary>
         /// This will never resets, and keep track of the last sampled grid voltage. Used even during night by home ammeter
@@ -68,9 +67,11 @@ namespace Lucky.Home.Devices.Solar
         private CancellationTokenSource _terminating = new CancellationTokenSource();
         private TaskCompletionSource<object> _terminated = new TaskCompletionSource<object>();
 
-        public SamilInverterLoggerDevice()
+        public SamilInverterLoggerDevice(HalfDuplexLineRpc inverterSink, AnalogIntegratorRpc ammeterSink)
             : base("SAMIL")
         {
+            this.inverterSink = inverterSink;
+            this.ammeterSink = ammeterSink;
             Manager.GetService<MqttService>().SubscribeRpc("solar/getStatus", (RpcVoid _) => GetPvData());
         }
 
@@ -107,11 +108,10 @@ namespace Lucky.Home.Devices.Solar
             _terminated.SetResult(null);
         }
 
-        protected override async Task OnTerminate()
+        public async Task OnTerminate()
         {
             _terminating.Cancel();
             await _terminated.Task;
-            await base.OnTerminate();
         }
 
         private void StartConnectionTimer()
@@ -126,36 +126,10 @@ namespace Lucky.Home.Devices.Solar
 
         public PowerData ImmediateData { get; private set; }
 
-        private HalfDuplexLineSink InverterSink
-        {
-            get
-            {
-                var line = Sinks.OfType<HalfDuplexLineSink>().FirstOrDefault();
-                if (line != null && !line.IsOnline)
-                {
-                    return null;
-                }
-                return line;
-            }
-        }
-
-        private AnalogIntegratorSink AmmeterSink
-        {
-            get
-            {
-                var ammeter = Sinks.OfType<AnalogIntegratorSink>().FirstOrDefault();
-                if (ammeter != null && !ammeter.IsOnline)
-                {
-                    return null;
-                }
-                return ammeter;
-            }
-        }
-
         private async Task CheckConnection()
         {
             // Poll the line
-            var line = InverterSink;
+            var line = inverterSink;
             if (line == null)
             {
                 // No sink
@@ -182,7 +156,7 @@ namespace Lucky.Home.Devices.Solar
                         }
                         catch (Exception exc)
                         {
-                            Logger.Exception(exc);
+                            _logger.Exception(exc);
                         }
                     }
                 }
@@ -219,17 +193,17 @@ namespace Lucky.Home.Devices.Solar
             }
         }
 
-        private bool CheckProtocol(HalfDuplexLineSink line, SamilMsg request, SamilMsg expResponse, string phase, bool checkPayload)
+        private bool CheckProtocol(HalfDuplexLineRpc line, SamilMsg request, SamilMsg expResponse, string phase, bool checkPayload)
         {
             Action<SamilMsg> warn = checkPayload ? (Action<SamilMsg>)(w => ReportWarning("Strange payload " + phase, w)) : null;
-            return (CheckProtocolWRes(line, phase, request, expResponse, (dataError, lineError, bytes, msg) => ReportFault(dataError + " in phase " + phase, bytes, msg, lineError), warn)) != null;
+            return CheckProtocolWRes(line, phase, request, expResponse, (dataError, lineError, bytes, msg) => ReportFault(dataError + " in phase " + phase, bytes, msg, lineError), warn) != null;
         }
 
-        private async Task LogoutInverter(HalfDuplexLineSink line = null)
+        private async Task LogoutInverter(HalfDuplexLineRpc line = null)
         {
             if (line == null)
             {
-                line = InverterSink;
+                line = inverterSink;
             }
             if (line != null)
             {
@@ -243,7 +217,7 @@ namespace Lucky.Home.Devices.Solar
             }
         }
 
-        private async Task<bool> LoginInverter(HalfDuplexLineSink line)
+        private async Task<bool> LoginInverter(HalfDuplexLineRpc line)
         {
             await LogoutInverter(line);
             var res = await CheckProtocolWRes(line, "bcast", BroadcastRequest, BroadcastResponse, (dataError, lineError, bytes, msg) =>
@@ -312,7 +286,7 @@ namespace Lucky.Home.Devices.Solar
 
         private async Task PollData()
         {
-            var line = InverterSink;
+            var line = inverterSink;
             if (line == null)
             {
                 // disconnect
@@ -339,7 +313,7 @@ namespace Lucky.Home.Devices.Solar
             }
 
             // Use the current grid voltage to calculate Net Energy Metering
-            var ammeter = AmmeterSink;
+            var ammeter = ammeterSink;
             if (ammeter != null && data.GridVoltageV > 0)
             {
                 data.HomeUsageCurrentA = await ammeter.ReadData(-1.0);
@@ -414,9 +388,9 @@ namespace Lucky.Home.Devices.Solar
             return ret;
         }
 
-        private void ReportFault(string reason, byte[] msg, SamilMsg message, HalfDuplexLineSink.Error lineError)
+        private void ReportFault(string reason, byte[] msg, SamilMsg message, HalfDuplexLineRpc.Error lineError)
         {
-            if (lineError != HalfDuplexLineSink.Error.Ok)
+            if (lineError != HalfDuplexLineRpc.Error.Ok)
             {
                 _logger.Log(reason, "Err", lineError);
             }
@@ -494,7 +468,24 @@ namespace Lucky.Home.Devices.Solar
                     .Replace("{SunTime}", (day.Last - day.First).ToString(Resources.solar_daylight_format));
 
             Manager.GetService<INotificationService>().SendMail(title, body, false);
-            Logger.Log("DailyMailSent", "Power", day.PowerKWh);
+            _logger.Log("DailyMailSent", "Power", day.PowerKWh);
+        }
+
+        private OnlineStatus OnlineStatus
+        {
+            get
+            {
+                var sinks = new BaseRpc[] { ammeterSink, inverterSink };
+                if (sinks.All(s => s.IsOnline))
+                {
+                    return OnlineStatus.Online;
+                }
+                if (sinks.All(s => !s.IsOnline))
+                {
+                    return OnlineStatus.Offline;
+                }
+                return OnlineStatus.PartiallyOnline;
+            }
         }
 
         /// <summary>
@@ -532,7 +523,7 @@ namespace Lucky.Home.Devices.Solar
 
             // Always use real-time home appliance power usage
             ret.GridV = _lastPanelVoltageV;
-            var ammeter = AmmeterSink;
+            var ammeter = ammeterSink;
             if (ammeter != null)
             {
                 ret.UsageA = await ammeter.ReadData(-1.0);

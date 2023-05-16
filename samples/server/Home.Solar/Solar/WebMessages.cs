@@ -1,5 +1,8 @@
-﻿using Lucky.Home.Services;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
+
+namespace Lucky.Home.Devices
+{
+}
 
 namespace Lucky.Home.Devices.Solar
 {

@@ -117,40 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="gardenImmediate" xml:space="preserve">
-    <value>Manuale: {0}</value>
-  </data>
-  <data name="gardenMailBody" xml:space="preserve">
-    <value>  {0}: {1} minuti ({2} litri)</value>
-  </data>
-  <data name="gardenMailHeader" xml:space="preserve">
-    <value>Cicli effettuati:</value>
-  </data>
-  <data name="gardenMailSuspendedCycle" xml:space="preserve">
-    <value>{0} (sospeso)</value>
-  </data>
-  <data name="gardenMailSuspendedHeader" xml:space="preserve">
-    <value>Cicli non effettuati:</value>
-  </data>
-  <data name="gardenMailSuspendedTitle" xml:space="preserve">
-    <value>Giardino non irrigato (reminder)</value>
-  </data>
-  <data name="gardenMailTitle" xml:space="preserve">
-    <value>Giardino irrigato</value>
-  </data>
-  <data name="immediateToString" xml:space="preserve">
-    <value>{0}: {1} minuti</value>
-  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="solar_daily_summary" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>ui\solar_daily_summary.it-it.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="solar_daily_summary_title" xml:space="preserve">
-    <value>Energia solare oggi: {0:0.0} kWh</value>
-  </data>
-  <data name="solar_daylight_format" xml:space="preserve">
-    <value>h' ore e 'mm' minuti'</value>
-  </data>
   <data name="startupMessage" xml:space="preserve">
     <value>Riavvio del server</value>
   </data>

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Lucky.Home {
+namespace Lucky.Home.Devices {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Lucky.Home {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Lucky.Home.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Lucky.Home.Devices.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,11 +61,33 @@ namespace Lucky.Home {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Server Restarted.
+        ///   Looks up a localized string similar to Total Energy: {PowerKWh} kWh
+        ///Peak of {PeakPowerW}W at {PeakTimestamp}.
+        ///
+        ///Daylight time: {SunTime}
+        ///	.
         /// </summary>
-        internal static string startupMessage {
+        internal static string solar_daily_summary {
             get {
-                return ResourceManager.GetString("startupMessage", resourceCulture);
+                return ResourceManager.GetString("solar_daily_summary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Solar Power Today: {0:0.0} kWh.
+        /// </summary>
+        internal static string solar_daily_summary_title {
+            get {
+                return ResourceManager.GetString("solar_daily_summary_title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to h&apos; hours and &apos;mm&apos; minutes&apos;.
+        /// </summary>
+        internal static string solar_daylight_format {
+            get {
+                return ResourceManager.GetString("solar_daylight_format", resourceCulture);
             }
         }
     }

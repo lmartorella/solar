@@ -49,52 +49,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Devices\AmmeterTesterDevice.cs" />
-    <Compile Include="Devices\DigitalInputLoggerDevice.cs" />
-    <Compile Include="Devices\Garden\Configuration.cs" />
-    <Compile Include="Devices\Garden\GardenCsvRecord.cs" />
-    <Compile Include="Devices\Garden\GardenCycle.cs" />
-    <Compile Include="Devices\Garden\MailScheduler.cs" />
-    <Compile Include="Devices\Garden\NextCycle.cs" />
-    <Compile Include="Devices\Garden\WebMessages.cs" />
-    <Compile Include="Devices\Garden\PumpOperationObserver.cs" />
-    <Compile Include="Devices\Garden\RunningProgram.cs" />
-    <Compile Include="Devices\Garden\ZoneTime.cs" />
-    <Compile Include="Devices\Solar\WebMessages.cs" />
     <Compile Include="HomeApp.cs" />
-    <Compile Include="Devices\BarometricTesterDevice.cs" />
-    <Compile Include="Devices\FlowTesterDevice.cs" />
-    <Compile Include="Devices\Garden\GardenDevice.cs" />
-    <Compile Include="Devices\ClockDevice.cs" />
-    <Compile Include="Devices\Solar\ISolarPanelDevice.cs" />
-    <Compile Include="Devices\Solar\SamilInverterLoggerDevice.cs" />
-    <Compile Include="Devices\Solar\SamilInverterTesterDevice.cs" />
-    <Compile Include="Model\DateTimeExtension.cs" />
-    <Compile Include="Model\TimeProgram.cs" />
-    <Compile Include="Power\DayPowerData.cs" />
-    <Compile Include="Power\PowerData.cs" />
-    <Compile Include="Devices\Solar\SamilInverterDeviceBase.cs" />
-    <Compile Include="Devices\TemperatureTesterDevice.cs" />
-    <Compile Include="Resources.it-IT.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.it-IT.resx</DependentUpon>
-    </Compile>
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Resources.it-IT.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.it-IT.resx</DependentUpon>
+    </Compile>
     <Compile Include="Sinks\AnalogIntegratorSink.cs" />
-    <Compile Include="Sinks\BarometricSink.cs" />
     <Compile Include="Sinks\DigitalInputArraySink.cs" />
-    <Compile Include="Sinks\DigitalOutputArraySink.cs" />
-    <Compile Include="Sinks\DisplaySink.cs" />
     <Compile Include="Sinks\FlowSink.cs" />
     <Compile Include="Sinks\GardenSink.cs" />
     <Compile Include="Sinks\HalfDuplexLineSink.cs" />
-    <Compile Include="Sinks\MockCommandSink.cs" />
-    <Compile Include="Sinks\TemperatureSink.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -107,15 +77,13 @@
     <EmbeddedResource Include="Resources.it-IT.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.it-IT.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="UI\solar_daily_summary.it-IT.txt" />
-    <Content Include="UI\solar_daily_summary.txt" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

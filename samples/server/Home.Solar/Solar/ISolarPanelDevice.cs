@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Lucky.Home.Devices.Solar
 {
-    interface ISolarPanelDevice : IDevice
+    interface ISolarPanelDevice
     {
         /// <summary>
         /// Friendly name for db, etc..

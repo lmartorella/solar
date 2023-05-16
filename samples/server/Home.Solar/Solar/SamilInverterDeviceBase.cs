@@ -2,7 +2,6 @@
 using System.Linq;
 using Lucky.Home.Services;
 using System.Collections.Generic;
-using Lucky.Home.Sinks;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Devices.Solar
@@ -10,7 +9,7 @@ namespace Lucky.Home.Devices.Solar
     /// <summary>
     /// Base device class for solar logger
     /// </summary>
-    class SamilInverterDeviceBase : DeviceBase
+    class SamilInverterDeviceBase
     {
         protected ILogger _logger;
 
@@ -165,13 +164,13 @@ namespace Lucky.Home.Devices.Solar
             _logger = Manager.GetService<ILoggerFactory>().Create("Samil_" + Name);
         }
 
-        protected async Task<SamilMsg> CheckProtocolWRes(HalfDuplexLineSink line, string opName, SamilMsg request, SamilMsg expResponse, Action<string, HalfDuplexLineSink.Error, byte[], SamilMsg> reportFault, Action<SamilMsg> reportWarning = null, bool echo = false)
+        protected async Task<SamilMsg> CheckProtocolWRes(HalfDuplexLineRpc line, string opName, SamilMsg request, SamilMsg expResponse, Action<string, HalfDuplexLineRpc.Error, byte[], SamilMsg> reportFault, Action<SamilMsg> reportWarning = null, bool echo = false)
         {
             // Broadcast hello message
-            var ret = await (line.SendReceive(request.ToBytes(), true, echo, opName));
+            var ret = await line.SendReceive(request.ToBytes(), true, echo, opName);
             var rcvBytes = ret.Item1 ?? new byte[0];
-            HalfDuplexLineSink.Error err = ret.Item2;
-            if (err != HalfDuplexLineSink.Error.Ok)
+            HalfDuplexLineRpc.Error err = ret.Item2;
+            if (err != HalfDuplexLineRpc.Error.Ok)
             {
                 reportFault(null, err, rcvBytes, null);
                 return null;
