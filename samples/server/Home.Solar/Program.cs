@@ -1,4 +1,5 @@
-﻿using Lucky.Home.Db;
+﻿using Lucky.Home;
+using Lucky.Home.Db;
 using Lucky.Home.Devices.Solar;
 using Lucky.Home.Power;
 using System;
@@ -14,13 +15,10 @@ namespace Home.Solar
         private static readonly TimeSpan PeriodLenght = TimeSpan.FromDays(1);
         private static Timer _timerMinute;
 
-        static void Main()
+        public static async Task Main(string[] arguments)
         {
-            _ = Start();
-        }
+            await Bootstrap.Start(arguments, "garden");
 
-        private static async Task Start()
-        {
             var inverter = new HalfDuplexLineRpc();
             var ammeter = new AnalogIntegratorRpc();
             var device = new SamilInverterLoggerDevice(inverter, ammeter);

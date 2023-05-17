@@ -5,7 +5,7 @@ const passport = require('passport');
 const compression = require('compression');
 const passportLocal = require('passport-local');
 const { logsFile, settings } = require('./settings');
-const procMan = require('./procMan');
+const { ManagedProcess } = require('./procMan.mjs');
 const samples = require('../../samples/web');
 
 passport.use(new passportLocal.Strategy((username, password, done) => { 
@@ -79,7 +79,7 @@ app.get('/svc/logs', ensureLoggedIn(), (_req, res) => {
 
 app.get('/svc/halt', ensureLoggedIn(), async (_req, res) => {
     try {
-        await procMan.kill();
+        await mainProcess.kill();
     } catch (err) {
         res.send("ERR: " + err.message);
         return;
@@ -89,7 +89,7 @@ app.get('/svc/halt', ensureLoggedIn(), async (_req, res) => {
 
 app.get('/svc/start', ensureLoggedIn(), async (_req, res) => {
     try {
-        await procMan.start();
+        await mainProcess.start();
     } catch (err) {
         res.send("ERR: " + err.message);
         return;
@@ -99,7 +99,7 @@ app.get('/svc/start', ensureLoggedIn(), async (_req, res) => {
 
 app.get('/svc/restart', ensureLoggedIn(), async (_req, res) => {
     try {
-        await procMan.restart();
+        await mainProcess.restart();
     } catch (err) {
         res.send("ERR: " + err.message);
         return;
@@ -131,4 +131,7 @@ app.listen(80, () => {
   console.log('Webserver started at port 80');
 })
 
-procMan.start();
+const mainProcess = new ManagedProcess('Home.Server.exe');
+const solarProcess = new ManagedProcess('Home.Solar.exe');
+const gardenProcess = new ManagedProcess('Home.Garden.exe');
+mainProcess.start();
