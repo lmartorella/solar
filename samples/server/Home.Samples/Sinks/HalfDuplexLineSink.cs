@@ -1,4 +1,5 @@
 ﻿using Lucky.Home.Serialization;
+using Lucky.Home.Services;
 using System;
 using System.Threading.Tasks;
 
@@ -41,21 +42,50 @@ namespace Lucky.Home.Sinks
             public Error Error;
         }
 
-        public async Task<Tuple<byte[], Error>> SendReceive(byte[] txData, bool wantsResponse, bool echo, string opName)
+        public HalfDuplexLineSink()
+        {
+            Subscribe();
+        }
+
+        private async void Subscribe()
+        { 
+            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("solar/send", async payload =>
+            {
+                var response = await SendReceive(payload, true);
+                if (response.Item2 == Error.Ok)
+                {
+                    return response.Item1;
+                }
+                else
+                {
+                    throw new MqttRemoveCallError(response.Item2.ToString());
+                }
+            });
+            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("solar/post", async payload =>
+            {
+                var response = await SendReceive(payload, false);
+                if (response.Item2 == Error.Ok)
+                {
+                    return response.Item1;
+                }
+                else
+                {
+                    throw new MqttRemoveCallError(response.Item2.ToString());
+                }
+            });
+        }
+
+        private async Task<Tuple<byte[], Error>> SendReceive(byte[] txData, bool wantsResponse)
         {
             byte mode = 0;
-            if (echo)
-            {
-                mode = 0xff;
-            }
-            else if (!wantsResponse)
+            if (!wantsResponse)
             {
                 mode = 0xfe;
             }
             await Write(async writer =>
             {
                 await writer.Write(new Message { TxData = txData, Mode = mode });
-            }, opName + ":WR");
+            }, "WR");
 
             byte[] data = null;
             Error err = Error.Ok;
@@ -74,7 +104,7 @@ namespace Lucky.Home.Sinks
                     data = msg.Data ?? new byte[0];
                     err = msg.Error;
                 }
-            }, 0, opName + ":RD");
+            }, 0, "RD");
             return Tuple.Create(data, err);
         }
     }

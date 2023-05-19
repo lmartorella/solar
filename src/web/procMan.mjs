@@ -1,7 +1,7 @@
 import child_process from 'child_process';
 import path from 'path';
-import { binDir, etcDir, logger } from './settings';
-import { remoteCall } from './mqtt';
+import { binDir, etcDir, logger } from './settings.js';
+import { remoteCall } from './mqtt.js';
 
 /**
  * Manages process health
@@ -14,7 +14,7 @@ export class ManagedProcess {
     start() {
         // Already started
         if (this.process && this.process.pid) {
-            throw new Error("Already started");
+            throw new Error(`Server process ${this.processName} Already started`);
         }
 
         // Launch process
@@ -34,32 +34,33 @@ export class ManagedProcess {
                 code = ".NetException";
             }
             if (!this.killing) {
-                logger('Server process closed with code ' + code + ", signal " + signal, true);
+                const msg = `Server process ${this.processName} closed with code ${code}, signal ${signal}`;
+                logger(msg, true);
 
                 // Store fail reason to send mail after restart
-                this.restartMailText = 'Server process closed with code ' + code + ", signal " + signal + '. Restarting';
+                this.restartMailText = `${msg}. Restarting`;
                 await new Promise(resolve => setTimeout(resolve, 3500));
                 this.start();
             } else {
-                logger('Server killed.', true);
+                logger(`Server process ${this.processName} killed`, true);
             }
             this.killing = false;
         });
 
         this.process.on('err', err => {
-            logger('Server process FAIL TO START: ' + err.message, true);
+            logger(`Server process ${this.processName} FAIL TO START: ${err.message}`, true);
             this.process = null;
         });
 
-        logger('Home server started.', true);
+        logger(`Home server ${this.processName} started`, true);
     }
 
     kill() {
-        logger('Home server killing...', true);
+        logger(`Server process ${this.processName} killing...`, true);
         return new Promise(resolve => {
             // Already started
             if (!this.process || !this.process.pid) {
-                throw new Error("Already killed");
+                throw new Error(`Server process ${this.processName} killed`);
             }
             this.killing = true;
             this.process.once('exit', () => {
@@ -71,7 +72,7 @@ export class ManagedProcess {
 
     async restart() {
         await this.kill();
-        logger('Home server killed for restarting...', true);
+        logger(`Server process ${this.processName} killed for restarting...`, true);
         await new Promise(resolve => setTimeout(resolve, 3500));
         this.start();
     };

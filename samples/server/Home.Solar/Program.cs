@@ -17,7 +17,7 @@ namespace Home.Solar
 
         public static async Task Main(string[] arguments)
         {
-            await Bootstrap.Start(arguments, "garden");
+            await Bootstrap.Start(arguments, "solar");
 
             var inverter = new HalfDuplexLineRpc();
             var ammeter = new AnalogIntegratorRpc();

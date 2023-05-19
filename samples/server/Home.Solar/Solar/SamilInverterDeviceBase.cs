@@ -164,13 +164,13 @@ namespace Lucky.Home.Devices.Solar
             _logger = Manager.GetService<ILoggerFactory>().Create("Samil_" + Name);
         }
 
-        protected async Task<SamilMsg> CheckProtocolWRes(HalfDuplexLineRpc line, string opName, SamilMsg request, SamilMsg expResponse, Action<string, HalfDuplexLineRpc.Error, byte[], SamilMsg> reportFault, Action<SamilMsg> reportWarning = null, bool echo = false)
+        protected async Task<SamilMsg> CheckProtocolWRes(HalfDuplexLineRpc line, string opName, SamilMsg request, SamilMsg expResponse, Action<string, string, byte[], SamilMsg> reportFault, Action<SamilMsg> reportWarning = null)
         {
             // Broadcast hello message
-            var ret = await line.SendReceive(request.ToBytes(), true, echo, opName);
+            var ret = await line.SendReceive(request.ToBytes(), true, opName);
             var rcvBytes = ret.Item1 ?? new byte[0];
-            HalfDuplexLineRpc.Error err = ret.Item2;
-            if (err != HalfDuplexLineRpc.Error.Ok)
+            string err = ret.Item2;
+            if (err != null)
             {
                 reportFault(null, err, rcvBytes, null);
                 return null;

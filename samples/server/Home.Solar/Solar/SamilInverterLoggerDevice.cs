@@ -72,7 +72,7 @@ namespace Lucky.Home.Devices.Solar
         {
             this.inverterSink = inverterSink;
             this.ammeterSink = ammeterSink;
-            Manager.GetService<MqttService>().SubscribeRpc("solar/getStatus", (RpcVoid _) => GetPvData());
+            Manager.GetService<MqttService>().SubscribeJsonRpc("solar/getStatus", (RpcVoid _) => GetPvData());
         }
 
         public async Task StartLoop(ITimeSeries<PowerData, DayPowerData> database)
@@ -210,7 +210,7 @@ namespace Lucky.Home.Devices.Solar
                 // Send 3 logout messages
                 for (int i = 0; i < 3; i++)
                 {
-                    await line.SendReceive(LogoutMessage.ToBytes(), false, false, "logout");
+                    await line.SendReceive(LogoutMessage.ToBytes(), false, "logout");
                     // Ignore errors
                     await Task.Delay(500);
                 }
@@ -388,15 +388,15 @@ namespace Lucky.Home.Devices.Solar
             return ret;
         }
 
-        private void ReportFault(string reason, byte[] msg, SamilMsg message, HalfDuplexLineRpc.Error lineError)
+        private void ReportFault(string reason, byte[] msg, SamilMsg message, string lineError)
         {
-            if (lineError != HalfDuplexLineRpc.Error.Ok)
+            if (lineError != null)
             {
                 _logger.Log(reason, "Err", lineError);
             }
             else if (message != null)
             {
-                _logger.Log(reason, "Msg", message.ToString());
+                _logger.Log(reason, "Msg", message);
             }
             else
             {

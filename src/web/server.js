@@ -5,7 +5,6 @@ const passport = require('passport');
 const compression = require('compression');
 const passportLocal = require('passport-local');
 const { logsFile, settings } = require('./settings');
-const { ManagedProcess } = require('./procMan.mjs');
 const samples = require('../../samples/web');
 
 passport.use(new passportLocal.Strategy((username, password, done) => { 
@@ -131,7 +130,13 @@ app.listen(80, () => {
   console.log('Webserver started at port 80');
 })
 
-const mainProcess = new ManagedProcess('Home.Server.exe');
-const solarProcess = new ManagedProcess('Home.Solar.exe');
-const gardenProcess = new ManagedProcess('Home.Garden.exe');
-mainProcess.start();
+const runProcesses = async () => {
+    const { ManagedProcess } = await import('./procMan.mjs');
+    const mainProcess = new ManagedProcess('Home.Server.exe');
+    const solarProcess = new ManagedProcess('Home.Solar.exe');
+    const gardenProcess = new ManagedProcess('Home.Garden.exe');
+    mainProcess.start();
+    //solarProcess.start();
+    gardenProcess.start();
+};
+void runProcesses();
