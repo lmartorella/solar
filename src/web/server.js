@@ -132,6 +132,7 @@ app.listen(80, () => {
 
 const runProcesses = async () => {
     const { ManagedProcess } = await import('./procMan.mjs');
+    ManagedProcess.enableMail = false;
     const mainProcess = new ManagedProcess('Home.Server.exe');
     const solarProcess = new ManagedProcess('Home.Solar.exe');
     const gardenProcess = new ManagedProcess('Home.Garden.exe');

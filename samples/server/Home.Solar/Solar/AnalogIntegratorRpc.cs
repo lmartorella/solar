@@ -7,7 +7,7 @@ namespace Lucky.Home.Devices.Solar
     {
         public async Task<double> ReadData(double defaultValue)
         {
-            throw new NotImplementedException();
+            return 0;
         }
     }
 }

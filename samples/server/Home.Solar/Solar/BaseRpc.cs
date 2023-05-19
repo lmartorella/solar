@@ -8,7 +8,7 @@ namespace Lucky.Home.Devices.Solar
         {
             get
             {
-                throw new NotImplementedException();
+                return true;
             }
         }
     }

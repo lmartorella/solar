@@ -25,6 +25,11 @@ namespace Lucky.Home.Devices.Solar
             {
                 return Tuple.Create<byte[], string>(null, err.Message);
             }
+            catch (TimeoutException)
+            {
+                // No data
+                return Tuple.Create<byte[], string>(null, null);
+            }
         }
     }
 }

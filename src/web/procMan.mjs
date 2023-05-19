@@ -19,7 +19,7 @@ export class ManagedProcess {
 
         // Launch process
         const args = ['-wrk', etcDir];
-        if (this.restartMailText) {
+        if (this.restartMailText && ManagedProcess.enableMail) {
             args.push('-sendMailErr');
             args.push(this.restartMailText);
         }
