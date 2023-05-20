@@ -11,23 +11,26 @@ namespace Lucky.Home.Devices.Solar
         public HalfDuplexLineRpc()
         {
             mqttService = Manager.GetService<MqttService>();
-            _ = mqttService.RegisterRemoteCalls(new[] { "solar/send", "solar/post" });
+            _ = mqttService.RegisterRemoteCalls(new[] { "samil/send", "samil/post" });
         }
 
-        public async Task<Tuple<byte[], string>> SendReceive(byte[] txData, bool wantsResponse, string _opName)
+        public async Task<Tuple<byte[], string>> SendReceive(byte[] txData, bool wantsResponse)
         {
             try
             {
-                var response = await Manager.GetService<MqttService>().RemoteCall(wantsResponse ? "solar/send" : "solar/post", txData);
+                var response = await Manager.GetService<MqttService>().RemoteCall(wantsResponse ? "samil/send" : "samil/post", txData);
+                IsOnline = true;
                 return Tuple.Create(response, null as string);
             }
-            catch (MqttRemoveCallError err)
+            catch (MqttRemoteCallError err)
             {
+                IsOnline = true;
                 return Tuple.Create<byte[], string>(null, err.Message);
             }
-            catch (TimeoutException)
+            catch (TaskCanceledException)
             {
                 // No data
+                IsOnline = false;
                 return Tuple.Create<byte[], string>(null, null);
             }
         }

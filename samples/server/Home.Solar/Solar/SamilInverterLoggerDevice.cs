@@ -196,7 +196,7 @@ namespace Lucky.Home.Devices.Solar
         private bool CheckProtocol(HalfDuplexLineRpc line, SamilMsg request, SamilMsg expResponse, string phase, bool checkPayload)
         {
             Action<SamilMsg> warn = checkPayload ? (Action<SamilMsg>)(w => ReportWarning("Strange payload " + phase, w)) : null;
-            return CheckProtocolWRes(line, phase, request, expResponse, (dataError, lineError, bytes, msg) => ReportFault(dataError + " in phase " + phase, bytes, msg, lineError), warn) != null;
+            return CheckProtocolWRes(line, request, expResponse, (dataError, lineError, bytes, msg) => ReportFault(dataError + " in phase " + phase, bytes, msg, lineError), warn) != null;
         }
 
         private async Task LogoutInverter(HalfDuplexLineRpc line = null)
@@ -210,7 +210,7 @@ namespace Lucky.Home.Devices.Solar
                 // Send 3 logout messages
                 for (int i = 0; i < 3; i++)
                 {
-                    await line.SendReceive(LogoutMessage.ToBytes(), false, "logout");
+                    await line.SendReceive(LogoutMessage.ToBytes(), false);
                     // Ignore errors
                     await Task.Delay(500);
                 }
@@ -220,7 +220,7 @@ namespace Lucky.Home.Devices.Solar
         private async Task<bool> LoginInverter(HalfDuplexLineRpc line)
         {
             await LogoutInverter(line);
-            var res = await CheckProtocolWRes(line, "bcast", BroadcastRequest, BroadcastResponse, (dataError, lineError, bytes, msg) =>
+            var res = await CheckProtocolWRes(line, BroadcastRequest, BroadcastResponse, (dataError, lineError, bytes, msg) =>
                 {
                     if (!InNightMode)
                     {
@@ -295,7 +295,7 @@ namespace Lucky.Home.Devices.Solar
             }
 
             // Fetch solar power data from inverter
-            var res = await CheckProtocolWRes(line, "pv", GetPvDataMessage, GetPvDataResponse, (dataError, lineError, bytes, msg) => ReportFault("Unexpected PV data: " + dataError, bytes, msg, lineError));
+            var res = await CheckProtocolWRes(line, GetPvDataMessage, GetPvDataResponse, (dataError, lineError, bytes, msg) => ReportFault("Unexpected PV data: " + dataError, bytes, msg, lineError));
             if (res == null)
             {
                 // Relogin!
@@ -316,7 +316,7 @@ namespace Lucky.Home.Devices.Solar
             var ammeter = ammeterSink;
             if (ammeter != null && data.GridVoltageV > 0)
             {
-                data.HomeUsageCurrentA = await ammeter.ReadData(-1.0);
+                data.HomeUsageCurrentA = (await ammeter.ReadData()) ?? -1;
             }
 
             var db = Database;
@@ -526,7 +526,7 @@ namespace Lucky.Home.Devices.Solar
             var ammeter = ammeterSink;
             if (ammeter != null)
             {
-                ret.UsageA = await ammeter.ReadData(-1.0);
+                ret.UsageA = (await ammeter.ReadData()) ?? -1.0;
             }
 
             return ret;

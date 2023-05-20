@@ -44,12 +44,12 @@ namespace Lucky.Home.Sinks
 
         public HalfDuplexLineSink()
         {
-            Subscribe();
+            _ = Subscribe();
         }
 
-        private async void Subscribe()
+        private async Task Subscribe()
         { 
-            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("solar/send", async payload =>
+            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("samil/send", async payload =>
             {
                 var response = await SendReceive(payload, true);
                 if (response.Item2 == Error.Ok)
@@ -58,10 +58,10 @@ namespace Lucky.Home.Sinks
                 }
                 else
                 {
-                    throw new MqttRemoveCallError(response.Item2.ToString());
+                    throw new MqttRemoteCallError(response.Item2.ToString());
                 }
             });
-            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("solar/post", async payload =>
+            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("samil/post", async payload =>
             {
                 var response = await SendReceive(payload, false);
                 if (response.Item2 == Error.Ok)
@@ -70,7 +70,7 @@ namespace Lucky.Home.Sinks
                 }
                 else
                 {
-                    throw new MqttRemoveCallError(response.Item2.ToString());
+                    throw new MqttRemoteCallError(response.Item2.ToString());
                 }
             });
         }

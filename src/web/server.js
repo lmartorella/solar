@@ -137,7 +137,7 @@ const runProcesses = async () => {
     const solarProcess = new ManagedProcess('Home.Solar.exe');
     const gardenProcess = new ManagedProcess('Home.Garden.exe');
     mainProcess.start();
-    //solarProcess.start();
+    solarProcess.start();
     gardenProcess.start();
 };
 void runProcesses();

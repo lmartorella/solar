@@ -1,13 +1,39 @@
-﻿using System;
+﻿using Lucky.Home.Services;
+using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Devices.Solar
 {
     class AnalogIntegratorRpc : BaseRpc
     {
-        public async Task<double> ReadData(double defaultValue)
+        private MqttService mqttService;
+
+        public AnalogIntegratorRpc()
         {
-            return 0;
+            mqttService = Manager.GetService<MqttService>();
+            _ = mqttService.RegisterRemoteCalls(new[] { "power_line_amm/value" });
+        }
+
+        public async Task<double?> ReadData()
+        {
+            try
+            {
+                var response = await Manager.GetService<MqttService>().RemoteCall("ammeter_0/value");
+                if (response == null || response.Length == 0)
+                {
+                    IsOnline = false;
+                    return null;
+                }
+                IsOnline = true;
+                return double.Parse(Encoding.UTF8.GetString(response));
+            }
+            catch (TaskCanceledException)
+            {
+                // No data
+                IsOnline = false;
+                return null;
+            }
         }
     }
 }
