@@ -1,30 +1,9 @@
-﻿using System.Runtime.Serialization;
+﻿using Lucky.Home.Services;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Sinks
 {
-    /// <summary>
-    /// A flow sample
-    /// </summary>
-    [DataContract]
-    public class FlowData
-    {
-        /// <summary>
-        /// Total counter in m3
-        /// </summary>
-        [DataMember(Name = "totalMc")]
-        public double TotalMc;
-
-        /// <summary>
-        /// Current flow in liters/minute
-        /// </summary>
-        [DataMember(Name = "flowLMin")]
-        public double FlowLMin;
-    }
-
-// Unused class members
-#pragma warning disable 649
-
     /// <summary>
     /// Sink for water flow device. Each tick count is a nominal quantity of water (e.g. 5.5 ticks/seconds means 1 liter/minute).
     /// The sink sends both current flow and total amount of water counted.
@@ -32,6 +11,28 @@ namespace Lucky.Home.Sinks
     [SinkId("FLOW")]
     class FlowSink : SinkBase
     {
+        /// <summary>
+        /// A flow sample
+        /// </summary>
+        [DataContract]
+        public class FlowData
+        {
+            /// <summary>
+            /// Total counter in m3
+            /// </summary>
+            [DataMember(Name = "totalMc")]
+            public double TotalMc;
+
+            /// <summary>
+            /// Current flow in liters/minute
+            /// </summary>
+            [DataMember(Name = "flowLMin")]
+            public double FlowLMin;
+
+            [DataMember(Name = "offline")]
+            public bool Offline;
+        }
+
         /// <summary>
         /// A flow sample
         /// </summary>
@@ -48,13 +49,32 @@ namespace Lucky.Home.Sinks
             public ushort Frequency;
         }
 
-// Unused class members
-#pragma warning restore 649
+        public FlowSink()
+        {
+            _ = Subscribe();
+        }
+
+        private async Task Subscribe()
+        {
+            await Manager.GetService<MqttService>().SubscribeJsonRpc<RpcVoid, FlowData>("flow_meter_0/value", async payload =>
+            {
+                FlowData data;
+                if (!IsOnline)
+                {
+                    data = new FlowData { Offline = true };
+                }
+                else
+                {
+                    data = await ReadData();
+                }
+                return data;
+            });
+        }
 
         /// <summary>
         /// fq is frequency / L/min (5.5 on sample counter)
         /// </summary>
-        public async Task<FlowData> ReadData(double fq, int timeout = 3000)
+        private async Task<FlowData> ReadData(double fq = 5.5, int timeout = 3000)
         {
             // F(tick/sec) = fq * flow(L / Min)
             // flow(L/min) = F(tick/sec) / fq

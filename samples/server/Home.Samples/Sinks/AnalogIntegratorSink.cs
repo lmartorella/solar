@@ -49,15 +49,18 @@ namespace Lucky.Home.Sinks
         private async Task<double?> ReadData()
         {
             double? retValue = null;
-            await Read(async reader =>
+            if (IsOnline)
             {
-                var msg = (await reader.Read<DataMessage>());
-                if (msg != null)
+                await Read(async reader =>
                 {
-                    retValue = ((double)msg.Value / msg.Count) * msg.Factor;
-                }
-            });
-            return retValue;
+                    var msg = (await reader.Read<DataMessage>());
+                    if (msg != null)
+                    {
+                        retValue = ((double)msg.Value / msg.Count) * msg.Factor;
+                    }
+                });
+            }
+                return retValue;
         }
     }
 }

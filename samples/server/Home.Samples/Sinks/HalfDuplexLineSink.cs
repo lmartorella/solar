@@ -49,7 +49,7 @@ namespace Lucky.Home.Sinks
 
         private async Task Subscribe()
         { 
-            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("samil/send", async payload =>
+            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("samil_0/send", async payload =>
             {
                 var response = await SendReceive(payload, true);
                 if (response.Item2 == Error.Ok)
@@ -61,7 +61,7 @@ namespace Lucky.Home.Sinks
                     throw new MqttRemoteCallError(response.Item2.ToString());
                 }
             });
-            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("samil/post", async payload =>
+            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("samil_0/post", async payload =>
             {
                 var response = await SendReceive(payload, false);
                 if (response.Item2 == Error.Ok)
@@ -77,6 +77,10 @@ namespace Lucky.Home.Sinks
 
         private async Task<Tuple<byte[], Error>> SendReceive(byte[] txData, bool wantsResponse)
         {
+            if (!IsOnline)
+            {
+                return Tuple.Create(null as byte[], Error.Ok);
+            }
             byte mode = 0;
             if (!wantsResponse)
             {

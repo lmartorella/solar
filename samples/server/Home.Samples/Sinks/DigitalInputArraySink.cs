@@ -2,6 +2,7 @@ using Lucky.Home.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Sinks
@@ -42,22 +43,28 @@ namespace Lucky.Home.Sinks
         /// <summary>
         /// A single input (sub-sink) changed in a moment in time (past)
         /// </summary>
-        public class EventReceivedEventArgs : EventArgs
+        [DataContract]
+        public class StateValue
         {
             /// <summary>
             /// Event timestamp
             /// </summary>
+            [DataMember(Name = "timestamp")]
             public DateTime Timestamp;
 
             /// <summary>
             /// Single switch state (sub-sink)
             /// </summary>
+            [DataMember(Name = "state")]
             public bool State;
 
-            /// <summary>
-            /// SubSink index
-            /// </summary>
-            public int SubIndex;
+            [DataMember(Name = "offline")]
+            public bool Offline;
+        }
+
+        public DigitalInputArraySink()
+        {
+            mqttService = Manager.GetService<MqttService>();
         }
 
         public bool GetStatus(int subIndex)
@@ -66,6 +73,7 @@ namespace Lucky.Home.Sinks
         }
 
         private bool[] _lastState;
+        private MqttService mqttService;
 
         protected async override Task OnInitialize()
         {
@@ -181,12 +189,13 @@ namespace Lucky.Home.Sinks
             {
                 await Task.Delay(PollPeriod);
                 if (!IsOnline) {
+                    await mqttService.JsonPublish("pump_switch_0/value", new StateValue { Offline = true });
                     continue;
                 }
 
                 try
                 {
-                    var events = new List<EventReceivedEventArgs>();
+                    var events = new List<StateValue>();
                     await Read(async reader =>
                     {
                         var resp = await reader.Read<ReadStatusResponse>();
@@ -208,7 +217,7 @@ namespace Lucky.Home.Sinks
                                 {
                                     if (_lastState[i] != change.State[i])
                                     {
-                                        events.Add(new EventReceivedEventArgs { State = change.State[i], SubIndex = i, Timestamp = change.Timestamp });
+                                        events.Add(new StateValue { State = change.State[i], Timestamp = change.Timestamp });
                                     }
                                 }
                                 _lastState = change.State;
@@ -220,13 +229,9 @@ namespace Lucky.Home.Sinks
                     });
 
                     // Outside the Read to avoid reenter of other sinks
-                    var raise = EventReceived;
-                    if (raise != null && events.Count > 0)
+                    foreach (var evt in events)
                     {
-                        foreach (var evt in events)
-                        {
-                            raise(this, evt);
-                        }
+                        await mqttService.JsonPublish("pump_switch_0/value", evt);
                     }
                 }
                 catch (Exception exc)
@@ -235,10 +240,5 @@ namespace Lucky.Home.Sinks
                 }
             }
         }
-
-        /// <summary>
-        /// Event raised when one sub changed (with timestamp)
-        /// </summary>
-        public event EventHandler<EventReceivedEventArgs> EventReceived;
     }
 }

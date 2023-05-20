@@ -12,14 +12,14 @@ namespace Lucky.Home.Devices.Solar
         public AnalogIntegratorRpc()
         {
             mqttService = Manager.GetService<MqttService>();
-            _ = mqttService.RegisterRemoteCalls(new[] { "power_line_amm/value" });
+            _ = mqttService.RegisterRemoteCalls(new[] { "ammeter_0/value" });
         }
 
         public async Task<double?> ReadData()
         {
             try
             {
-                var response = await Manager.GetService<MqttService>().RemoteCall("ammeter_0/value");
+                var response = await Manager.GetService<MqttService>().RawRemoteCall("ammeter_0/value");
                 if (response == null || response.Length == 0)
                 {
                     IsOnline = false;
