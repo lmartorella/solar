@@ -5,17 +5,15 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-#pragma warning disable 649
-
 namespace Lucky.Home.Sinks
 {
     /// <summary>
     /// Interface for garden programmer sink
     /// </summary>
     [SinkId("GARD")]
-    class GardenSink : SinkBase
+    public class GardenSink : SinkBase
     {
-        private enum DeviceState : byte
+        public enum DeviceState : byte
         {
             Off = 0,
             // Immediate program mode
@@ -28,7 +26,7 @@ namespace Lucky.Home.Sinks
             WaitForImmediate
         }
 
-        private class ReadStatusMessageResponse
+        public class ReadStatusMessageResponse
         {
             public DeviceState State;
 
@@ -86,10 +84,10 @@ namespace Lucky.Home.Sinks
 
         private async Task Subscribe()
         {
-            await mqqtService.SubscribeRawRpc("garden_timer_0/reset", async req =>
+            await mqqtService.SubscribeRawRpc("garden_timer_0/reset", req =>
             {
                 ResetNode();
-                return null;
+                return Task.FromResult(null as byte[]);
             });
             await mqqtService.SubscribeJsonRpc<RpcVoid, TimerState>("garden_timer_0/state", async req =>
             {

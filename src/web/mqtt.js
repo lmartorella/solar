@@ -18,8 +18,12 @@ const sendRpc = (topic, msg) => {
         // Make request to server
         const correlationData = Buffer.from(`C${Math.random()}`);
         const onMessage = (topic, payload, packet) => {
-            if (topic === "ui/resp" && packet?.properties?.correlationData.toString() === correlationData.toString()) {
-                resolve(payload.toString());
+            if (topic === "ui/resp" && packet.properties?.correlationData.toString() === correlationData.toString()) {
+                if (packet.properties?.contentType === "application/net_err+text") {
+                    reject(new Error(payload.toString()));
+                } else {
+                    resolve(payload.toString());
+                }
                 unsub();
             }
         };
@@ -40,7 +44,12 @@ const remoteCall = async (topic, msg) => {
     if (client.disconnected) {
         throw new Error("Broker disconnected");
     }
-    return JSON.parse(await sendRpc(topic, JSON.stringify(msg)));
+    try {
+        const ret = await sendRpc(topic, JSON.stringify(msg));
+        return JSON.parse(ret);
+    } catch (err) {
+        return { err: err.message };
+    }
 };
 
 module.exports = { remoteCall };

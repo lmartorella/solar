@@ -9,7 +9,7 @@ namespace Lucky.Home.Sinks
     /// The sink sends both current flow and total amount of water counted.
     /// </summary>
     [SinkId("FLOW")]
-    class FlowSink : SinkBase
+    public class FlowSink : SinkBase
     {
         /// <summary>
         /// A flow sample
@@ -36,7 +36,7 @@ namespace Lucky.Home.Sinks
         /// <summary>
         /// A flow sample
         /// </summary>
-        private class GetDataMessage
+        public class GetDataMessage
         {
             /// <summary>
             /// Total counter

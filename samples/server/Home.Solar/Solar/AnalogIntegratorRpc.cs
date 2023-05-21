@@ -8,18 +8,19 @@ namespace Lucky.Home.Devices.Solar
     class AnalogIntegratorRpc : BaseRpc
     {
         private MqttService mqttService;
+        private Task<MqttService.RpcOriginator> rpc;
 
         public AnalogIntegratorRpc()
         {
             mqttService = Manager.GetService<MqttService>();
-            _ = mqttService.RegisterRemoteCalls(new[] { "ammeter_0/value" });
+            rpc = mqttService.RegisterRpcOriginator("ammeter_0/value");
         }
 
         public async Task<double?> ReadData()
         {
             try
             {
-                var response = await Manager.GetService<MqttService>().RawRemoteCall("ammeter_0/value");
+                var response = await (await rpc).RawRemoteCall();
                 if (response == null || response.Length == 0)
                 {
                     IsOnline = false;
