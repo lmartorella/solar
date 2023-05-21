@@ -1,6 +1,8 @@
 ﻿using Lucky.Home.Serialization;
 using Lucky.Home.Services;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
 using System.Threading.Tasks;
 
 #pragma warning disable 649
@@ -34,10 +36,14 @@ namespace Lucky.Home.Sinks
             public ImmediateZoneTime[] ZoneTimes;
         }
 
+        [DataContract]
         public class ImmediateZoneTime
         {
-            public byte Time;
-            public byte ZoneMask;
+            [DataMember(Name = "minutes")]
+            public int Minutes;
+
+            [DataMember(Name = "zoneMask")]
+            public int ZoneMask;
         }
 
         private class WriteProgramMessageRequest
@@ -53,14 +59,55 @@ namespace Lucky.Home.Sinks
         }
 
         private int _lastFlow = -1;
+        private MqttService mqqtService;
 
+        [DataContract]
         public class TimerState
         {
+            [DataMember(Name = "isAvailable")]
             public bool IsAvailable;
+
+            [DataMember(Name = "zoneRemTimes")]
             public ImmediateZoneTime[] ZoneRemTimes;
         }
 
-        public async Task<TimerState> Read(bool log, int timeout = 3000)
+        [DataContract]
+        public class Program
+        {
+            [DataMember(Name = "times")]
+            public ImmediateZoneTime[] Times;
+        }
+
+        public GardenSink()
+        {
+            mqqtService = Manager.GetService<MqttService>();
+            _ = Subscribe();
+        }
+
+        private async Task Subscribe()
+        {
+            await mqqtService.SubscribeRawRpc("garden_timer_0/reset", async req =>
+            {
+                ResetNode();
+                return null;
+            });
+            await mqqtService.SubscribeJsonRpc<RpcVoid, TimerState>("garden_timer_0/state", async req =>
+            {
+                return await Read(false);
+            });
+            await mqqtService.SubscribeJsonRpc<Program, RpcVoid>("garden_timer_0/program", async req =>
+            {
+                await WriteProgram(req.Times);
+                return new RpcVoid();
+            });
+            await mqqtService.SubscribeRawRpc("garden_timer_0/setFlow", async req =>
+            {
+                await UpdateFlowData(int.Parse(Encoding.UTF8.GetString(req)));
+                return null;
+            });
+        }
+
+        private async Task<TimerState> Read(bool log)
         {
             TimerState state = null;
             await Read(async reader =>
@@ -70,7 +117,7 @@ namespace Lucky.Home.Sinks
                 {
                     if (log)
                     {
-                        Logger.Log("GardenMd", "State", md.State, "Times", string.Join(", ", md.ZoneTimes.Select(t => t.Time.ToString())));
+                        Logger.Log("GardenMd", "State", md.State, "Times", string.Join(", ", md.ZoneTimes.Select(t => t.Minutes.ToString())));
                     }
                     state = new TimerState { IsAvailable = md.State == DeviceState.Off, ZoneRemTimes = md.ZoneTimes };
                 }
@@ -78,13 +125,13 @@ namespace Lucky.Home.Sinks
                 {
                     Logger.Log("GardenMd NO DATA");
                 }
-            }, timeout);
+            }, 3000);
             return state;
         }
 
-        public async Task WriteProgram(ImmediateZoneTime[] zoneTimes)
+        private async Task WriteProgram(ImmediateZoneTime[] zoneTimes)
         {
-            if (zoneTimes.All(z => z.Time <= 0))
+            if (zoneTimes.All(z => z.Minutes <= 0))
             {
                 return;
             }
@@ -100,7 +147,7 @@ namespace Lucky.Home.Sinks
             await Read(true);
         }
 
-        public async Task UpdateFlowData(int flow)
+        private async Task UpdateFlowData(int flow)
         {
             if (flow != _lastFlow)
             {

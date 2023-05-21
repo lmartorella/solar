@@ -32,7 +32,7 @@ namespace Lucky.Home.Sinks
 
         private async Task Subscribe()
         {
-            await Manager.GetService<MqttService>().SubscribeRawRpcRequest("ammeter_0/value", async payload =>
+            await Manager.GetService<MqttService>().SubscribeRawRpc("ammeter_0/value", async payload =>
             {
                 double? value = await ReadData();
                 if (value != null)
