@@ -1,14 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-const { etcDir } = require('../../src/web/settings');
-const { remoteCall } = require('../../src/web/mqtt');
+import fs from 'fs';
+import path from 'path';
+import { etcDir } from '../../src/web/settings.mjs';
+import { expressRemoteCall } from '../../src/web/mqtt.mjs';
 
 const gardenCfgFile = path.join(etcDir, 'server/gardenCfg.json');
 const gardenCsvFile = path.join(etcDir, 'DB/GARDEN/garden.csv');
 
-function register(app, privileged) {
+export function register(app, privileged) {
     app.get('/svc/gardenStatus', async (_req, res) => {
-        res.send(await remoteCall("garden/getStatus"));
+        expressRemoteCall(res, "garden/getStatus");
     });
     
     app.post('/svc/gardenStart', privileged(), async (req, res) => {
@@ -20,11 +20,11 @@ function register(app, privileged) {
             console.log("r/gardenStart: incompatible request: " + JSON.stringify(req.body));
             return;
         }
-        res.send(await remoteCall("garden/setImmediate", { immediate }));
+        expressRemoteCall(res, "garden/setImmediate", { immediate });
     });
     
     app.post('/svc/gardenStop', privileged(), async (_req, res) => {
-        res.send(await remoteCall("garden/stop"));
+        expressRemoteCall(res, "garden/stop");
     });
     
     app.get('/svc/gardenCfg', privileged(), async (_req, res) => {
@@ -55,7 +55,7 @@ function register(app, privileged) {
             fs.writeFileSync(gardenCfgFile, req.body);
             res.sendStatus(200);
         } else if ((req.headers["content-type"] || '').indexOf("application/json") === 0) {
-            res.send(await remoteCall("garden/setConfig", { config: req.body }));
+            expressRemoteCall(res, "garden/setConfig", { config: req.body });
         } else {
             res.sendStatus(500);
         }
@@ -69,5 +69,3 @@ function register(app, privileged) {
         }, null, 3));
     } 
 }
-
-module.exports = { register };

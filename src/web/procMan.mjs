@@ -1,7 +1,7 @@
 import child_process from 'child_process';
 import path from 'path';
-import { binDir, etcDir, logger } from './settings.js';
-import { remoteCall } from './mqtt.js';
+import { binDir, etcDir, logger } from './settings.mjs';
+import { rawRemoteCall } from './mqtt.mjs';
 
 /**
  * Manages process health
@@ -66,7 +66,7 @@ export class ManagedProcess {
             this.process.once('exit', () => {
                 resolve();
             });
-            remoteCall("kill");
+            rawRemoteCall("kill");
         });
     };
 

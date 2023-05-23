@@ -20,7 +20,7 @@ export class MainController {
             // LOgged in
             this.showLogin = false;
         }).catch(err => {
-            alert(err.message || err.statusText ||  err);
+            alert(err.message || err.data || err.statusText || err);
         });
     }
 

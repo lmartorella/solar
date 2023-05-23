@@ -1,11 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-const express = require('express');
-const passport = require('passport');
-const compression = require('compression');
-const passportLocal = require('passport-local');
-const { logsFile, settings } = require('./settings');
-const samples = require('../../samples/web');
+import fs from 'fs';
+import path from 'path';
+import express from 'express';
+import passport from 'passport';
+import compression from 'compression';
+import passportLocal from 'passport-local';
+import cookieParser from 'cookie-parser';
+import bodyParser from 'body-parser';
+import expressSession from 'express-session';
+import { logsFile, settings, __dirname } from './settings.mjs';
+import * as samples from '../../samples/web/index.mjs';
 
 passport.use(new passportLocal.Strategy((username, password, done) => { 
     if (username !== settings.username || password !== settings.password) {
@@ -47,13 +50,13 @@ function ensureLoggedIn() {
     }
 }
 
-var app = express();
+const app = express();
 app.use(express.json());
 app.use(compression());
-app.use(require('cookie-parser')());
-app.use(require('body-parser').urlencoded({ extended: true }));
-app.use(require('body-parser').raw({ type: "application/octect-stream" }));
-app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.raw({ type: "application/octect-stream" }));
+app.use(expressSession({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
 
 app.set("view engine", "ejs");
 app.set('views', __dirname);
@@ -140,4 +143,4 @@ const runProcesses = async () => {
     solarProcess.start();
     gardenProcess.start();
 };
-void runProcesses();
+//void runProcesses();

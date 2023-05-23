@@ -1,9 +1,9 @@
-const path = require('path');
-const fs = require('fs');
-const moment = require('moment');
-const { setTimeout } = require('timers');
-const { etcDir } = require('../../src/web/settings');
-const { remoteCall } = require('../../src/web/mqtt');
+import path from 'path';
+import fs from 'fs';
+import moment from 'moment';
+import { setTimeout } from 'timers';
+import { etcDir } from '../../src/web/settings.mjs';
+import { expressRemoteCall } from '../../src/web/mqtt.mjs';
 
 const csvFolder = path.join(etcDir, 'DB/SAMIL');
 
@@ -129,9 +129,9 @@ function getPvChart(day) {
     }
 }
 
-function register(app) {
+export function register(app) {
     app.get('/svc/solarStatus', async (_req, res) => {
-        res.send(await remoteCall("solar/getStatus"));
+        expressRemoteCall(res, "solar/getStatus");
     });
 
     app.get('/svc/solarPowToday', (req, res) => {
@@ -140,5 +140,3 @@ function register(app) {
         }, 1000);
     });
 }
-
-module.exports = { register };
