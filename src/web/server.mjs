@@ -143,4 +143,4 @@ const runProcesses = async () => {
     solarProcess.start();
     gardenProcess.start();
 };
-//void runProcesses();
+void runProcesses();
