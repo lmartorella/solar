@@ -7,8 +7,9 @@ import { rawRemoteCall } from './mqtt.mjs';
  * Manages process health
  */
 export class ManagedProcess {
-    constructor(processName) {
+    constructor(processName, topic) {
         this.processName = processName;
+        this.topic = topic;
     }
 
     start() {
@@ -26,7 +27,6 @@ export class ManagedProcess {
         this.process = child_process.spawn(path.join(binDir, this.processName), args, {
             stdio: 'ignore'
         });
-        this.restartMailText = null;
 
         this.process.once('exit', async (code, signal) => {
             this.process = null;
@@ -66,7 +66,7 @@ export class ManagedProcess {
             this.process.once('exit', () => {
                 resolve();
             });
-            rawRemoteCall("kill");
+            rawRemoteCall(`${this.topic}/kill`);
         });
     };
 

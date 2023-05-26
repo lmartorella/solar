@@ -79,35 +79,50 @@ app.get('/svc/logs', ensureLoggedIn(), (_req, res) => {
     }
 });
 
-app.get('/svc/halt', ensureLoggedIn(), async (_req, res) => {
+let mainProcess;
+let solarProcess;
+let gardenProcess;
+
+app.get('/svc/haltMain', ensureLoggedIn(), async (_req, res) => {
     try {
         await mainProcess.kill();
     } catch (err) {
         res.send("ERR: " + err.message);
         return;
     }
-    res.send("Halted");
+    res.send("Main Halted");
 });
 
-app.get('/svc/start', ensureLoggedIn(), async (_req, res) => {
+app.get('/svc/startMain', ensureLoggedIn(), async (_req, res) => {
     try {
         await mainProcess.start();
     } catch (err) {
         res.send("ERR: " + err.message);
         return;
     }
-    res.send("Started");
+    res.send("Main Started");
 });
 
-app.get('/svc/restart', ensureLoggedIn(), async (_req, res) => {
+app.get('/svc/restartGarden', ensureLoggedIn(), async (_req, res) => {
     try {
-        await mainProcess.restart();
+        await gardenProcess.restart();
     } catch (err) {
         res.send("ERR: " + err.message);
         return;
     }
-    res.send("Restarted");
+    res.send("Garden Restarted");
 });
+
+app.get('/svc/restartSolar', ensureLoggedIn(), async (_req, res) => {
+    try {
+        await solarProcess.restart();
+    } catch (err) {
+        res.send("ERR: " + err.message);
+        return;
+    }
+    res.send("Solar Restarted");
+});
+
 
 app.use('/app', express.static(path.join(__dirname, '../../samples/web/app')));
 app.use('/lib/angular', express.static(path.join(__dirname, '../../node_modules/angular')));
@@ -136,9 +151,9 @@ app.listen(80, () => {
 const runProcesses = async () => {
     const { ManagedProcess } = await import('./procMan.mjs');
     ManagedProcess.enableMail = false;
-    const mainProcess = new ManagedProcess('Home.Server.exe');
-    const solarProcess = new ManagedProcess('Home.Solar.exe');
-    const gardenProcess = new ManagedProcess('Home.Garden.exe');
+    mainProcess = new ManagedProcess('Home.Server.exe', 'server');
+    solarProcess = new ManagedProcess('Home.Solar.exe', 'solar');
+    gardenProcess = new ManagedProcess('Home.Garden.exe', 'garden');
     mainProcess.start();
     solarProcess.start();
     gardenProcess.start();

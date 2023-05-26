@@ -9,7 +9,7 @@
     </p>
     <p class="total-pw" ng-if="ctrl.pvData.totalDayWh"> {{res["Solar_EnergyToday"]}} <b>{{ctrl.pvData.totalDayWh / 1000}} kWh</b> </p>
     <p class="peak-pw" ng-if="ctrl.pvData.peakW"> {{res["Solar_Peak1"]}}<b>{{ctrl.pvData.peakW}}W</b> {{format("Solar_Peak2", { ts: ctrl.pvData.peakTsTime})}}</p>
-    <p class="usage-pw" ng-if="ctrl.pvData.usageA && ctrl.pvData.gridV"> {{res["Solar_CurrentUsage"]}}<b>{{ctrl.pvData.gridV * ctrl.pvData.usageA | number:0}}W</b></p>
+    <p class="usage-pw" ng-if="ctrl.pvData.usageA >= 0 && ctrl.pvData.gridV"> {{res["Solar_CurrentUsage"]}}<b>{{ctrl.pvData.gridV * ctrl.pvData.usageA | number:0}}W</b></p>
     <br/>
     <br/>
     <br/>
