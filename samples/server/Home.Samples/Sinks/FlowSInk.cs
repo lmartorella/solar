@@ -74,7 +74,7 @@ namespace Lucky.Home.Sinks
         /// <summary>
         /// fq is frequency / L/min (5.5 on sample counter)
         /// </summary>
-        private async Task<FlowData> ReadData(double fq = 5.5, int timeout = 3000)
+        private async Task<FlowData> ReadData(double fq = 5.5, int timeout = 1500)
         {
             // F(tick/sec) = fq * flow(L / Min)
             // flow(L/min) = F(tick/sec) / fq

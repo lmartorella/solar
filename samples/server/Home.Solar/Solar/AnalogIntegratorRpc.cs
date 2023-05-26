@@ -9,11 +9,12 @@ namespace Lucky.Home.Devices.Solar
     {
         private MqttService mqttService;
         private Task<MqttService.RpcOriginator> rpc;
+        public static TimeSpan Timeout = TimeSpan.FromSeconds(2);
 
         public AnalogIntegratorRpc()
         {
             mqttService = Manager.GetService<MqttService>();
-            rpc = mqttService.RegisterRpcOriginator("ammeter_0/value");
+            rpc = mqttService.RegisterRpcOriginator("ammeter_0/value", Timeout);
         }
 
         public async Task<double?> ReadData()

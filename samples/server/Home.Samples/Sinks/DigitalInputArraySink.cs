@@ -50,13 +50,13 @@ namespace Lucky.Home.Sinks
             /// Event timestamp
             /// </summary>
             [DataMember(Name = "timestamp")]
-            public DateTime Timestamp;
+            public DateTime? Timestamp;
 
             /// <summary>
             /// Single switch state (sub-sink)
             /// </summary>
             [DataMember(Name = "state")]
-            public bool State;
+            public bool? State;
 
             [DataMember(Name = "offline")]
             public bool Offline;
@@ -185,11 +185,16 @@ namespace Lucky.Home.Sinks
 
         private async void RunLoop()
         {
+            bool isOffline = true;
             while (true)
             {
                 await Task.Delay(PollPeriod);
                 if (!IsOnline) {
-                    await mqttService.JsonPublish("pump_switch_0/value", new StateValue { Offline = true });
+                    if (!isOffline)
+                    {
+                        await mqttService.JsonPublish("pump_switch_0/value", new StateValue { Offline = true });
+                    }
+                    isOffline = true;
                     continue;
                 }
 
@@ -217,7 +222,7 @@ namespace Lucky.Home.Sinks
                                 {
                                     if (_lastState[i] != change.State[i])
                                     {
-                                        events.Add(new StateValue { State = change.State[i], Timestamp = change.Timestamp });
+                                        events.Add(new StateValue { State = change.State[i], Timestamp = change.Timestamp, Offline = false });
                                     }
                                 }
                                 _lastState = change.State;
@@ -229,9 +234,17 @@ namespace Lucky.Home.Sinks
                     });
 
                     // Outside the Read to avoid reenter of other sinks
-                    foreach (var evt in events)
+                    if (events.Count > 0)
                     {
-                        await mqttService.JsonPublish("pump_switch_0/value", evt);
+                        foreach (var evt in events)
+                        {
+                            await mqttService.JsonPublish("pump_switch_0/value", evt);
+                        }
+                    }
+                    else if (isOffline)
+                    {
+                        isOffline = false;
+                        await mqttService.JsonPublish("pump_switch_0/value", new StateValue { Offline = false });
                     }
                 }
                 catch (Exception exc)

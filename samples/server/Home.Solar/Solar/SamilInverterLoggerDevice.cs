@@ -1,6 +1,5 @@
 ﻿using Lucky.Db;
 using Lucky.Home.Power;
-using Lucky.Home.Sinks;
 using Lucky.Home.Services;
 using System;
 using System.Linq;
@@ -313,10 +312,9 @@ namespace Lucky.Home.Devices.Solar
             }
 
             // Use the current grid voltage to calculate Net Energy Metering
-            var ammeter = ammeterSink;
-            if (ammeter != null && data.GridVoltageV > 0)
+            if (data.GridVoltageV > 0)
             {
-                data.HomeUsageCurrentA = (await ammeter.ReadData()) ?? -1;
+                data.HomeUsageCurrentA = (await ammeterSink.ReadData()) ?? -1;
             }
 
             var db = Database;
@@ -521,12 +519,21 @@ namespace Lucky.Home.Devices.Solar
                 }
             }
 
-            // Always use real-time home appliance power usage
-            ret.GridV = _lastPanelVoltageV;
-            var ammeter = ammeterSink;
-            if (ammeter != null)
+            if (lastSample.GridVoltageV > 0)
             {
-                ret.UsageA = (await ammeter.ReadData()) ?? -1.0;
+                ret.GridV = lastSample.GridVoltageV;
+                ret.UsageA = lastSample.HomeUsageCurrentA;
+            }
+            else if (_lastPanelVoltageV > 0)
+            {
+                // APPROX: Use last panel voltage with up-to-date home power usage
+                ret.GridV = _lastPanelVoltageV;
+                ret.UsageA = (await ammeterSink.ReadData()) ?? -1.0;
+            }
+            else
+            {
+                ret.GridV = -1;
+                ret.UsageA = -1.0;
             }
 
             return ret;

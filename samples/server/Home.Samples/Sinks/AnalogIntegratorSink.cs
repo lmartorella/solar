@@ -1,5 +1,6 @@
 ﻿using Lucky.Home.Services;
 using System;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,15 +14,19 @@ namespace Lucky.Home.Sinks
     [SinkId("ANIN")]
     class AnalogIntegratorSink : SinkBase
     {
+        [DataContract]
         public class DataMessage
         {
             /// <summary>
             /// This is the factor of an unit, compared to a full lecture (2^10 - 1)
             /// </summary>
+            [DataMember]
             public float Factor;
 
+            [DataMember]
             public UInt32 Value;
 
+            [DataMember]
             public UInt16 Count;
         }
 
@@ -35,11 +40,14 @@ namespace Lucky.Home.Sinks
             await Manager.GetService<MqttService>().SubscribeRawRpc("ammeter_0/value", async payload =>
             {
                 double? value = await ReadData();
-                if (value != null)
+                if (value.HasValue)
+                {
+                    return Encoding.UTF8.GetBytes(value.ToString());
+                }
+                else
                 {
                     return null;
                 }
-                return Encoding.UTF8.GetBytes(value.ToString());
             });
         }
 
@@ -60,7 +68,7 @@ namespace Lucky.Home.Sinks
                     }
                 });
             }
-                return retValue;
+            return retValue;
         }
     }
 }

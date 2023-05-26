@@ -13,8 +13,8 @@ namespace Lucky.Home.Devices.Solar
         public HalfDuplexLineRpc()
         {
             mqttService = Manager.GetService<MqttService>();
-            rpcSend = mqttService.RegisterRpcOriginator("samil_0/send");
-            rpcPost = mqttService.RegisterRpcOriginator("samil_0/post");
+            rpcSend = mqttService.RegisterRpcOriginator("samil_0/send", AnalogIntegratorRpc.Timeout + TimeSpan.FromSeconds(1));
+            rpcPost = mqttService.RegisterRpcOriginator("samil_0/post", AnalogIntegratorRpc.Timeout + TimeSpan.FromSeconds(1));
         }
 
         public async Task<Tuple<byte[], string>> SendReceive(byte[] txData, bool wantsResponse)
