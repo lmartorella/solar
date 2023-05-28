@@ -4,7 +4,7 @@ export class AdminController {
     }
 
     haltMain() {
-        this.$http.get('/svc/haltMain').then(resp => {
+        this.$http.get('/svc/halt/server').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -12,7 +12,7 @@ export class AdminController {
     }
 
     startMain() {
-        this.$http.get('/svc/startMain').then(resp => {
+        this.$http.get('/svc/start/server').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -20,7 +20,7 @@ export class AdminController {
     }
 
     restartSolar() {
-        this.$http.get('/svc/restartSolar').then(resp => {
+        this.$http.get('/svc/restart/solar').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -28,7 +28,7 @@ export class AdminController {
     }
 
     restartGarden() {
-        this.$http.get('/svc/restartGarden').then(resp => {
+        this.$http.get('/svc/restart/garden').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));

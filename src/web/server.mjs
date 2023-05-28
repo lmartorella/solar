@@ -7,7 +7,7 @@ import passportLocal from 'passport-local';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import expressSession from 'express-session';
-import { logsFile, settings, __dirname } from './settings.mjs';
+import { webLogsFile, settings, __dirname, logger } from './settings.mjs';
 import * as samples from '../../samples/web/index.mjs';
 
 passport.use(new passportLocal.Strategy((username, password, done) => { 
@@ -69,58 +69,97 @@ app.get('/', (_req, res) => {
 // Register custom endpoints
 samples.register(app, ensureLoggedIn);
 
-app.get('/svc/logs', ensureLoggedIn(), (_req, res) => {
-    // Stream log file
-    res.setHeader("Content-Type", "text/plain");
-    if (fs.existsSync(logsFile)) {
-        fs.createReadStream(logsFile).pipe(res);
+let serverProcess;
+let solarProcess;
+let gardenProcess;
+
+app.get('/svc/logs/:id', ensureLoggedIn(), (req, res) => {
+    let file;
+    switch (req.params.id) {
+        case "web": file = webLogsFile; break; 
+        case "server": file = serverProcess.logFile; break; 
+        case "solar": file = solarProcess.logFile; break; 
+        case "garden": file = gardenProcess.logFile; break; 
+    }
+    if (file && fs.existsSync(file)) {
+        // Stream log file
+        res.setHeader("Content-Type", "text/plain");
+        fs.createReadStream(file).pipe(res);
     } else {
         res.sendStatus(404);
     }
 });
 
-let mainProcess;
-let solarProcess;
-let gardenProcess;
-
-app.get('/svc/haltMain', ensureLoggedIn(), async (_req, res) => {
-    try {
-        await mainProcess.kill();
-    } catch (err) {
-        res.send("ERR: " + err.message);
-        return;
+const getProcess = id => {
+    switch (id) {
+        case "server": return serverProcess; 
+        case "solar": return solarProcess; 
+        case "garden": return gardenProcess; 
     }
-    res.send("Main Halted");
+}
+
+app.get('/svc/halt/:id', ensureLoggedIn(), async (req, res) => {
+    const id = req.params.id;
+    const process = getProcess(id);
+    if (process) {
+        try {
+            await process.kill();
+        } catch (err) {
+            res.send("ERR: " + err.message);
+            return;
+        }
+        res.send(`${id} halted`);
+    } else {
+        res.sendStatus(404);
+    }
 });
 
-app.get('/svc/startMain', ensureLoggedIn(), async (_req, res) => {
-    try {
-        await mainProcess.start();
-    } catch (err) {
-        res.send("ERR: " + err.message);
-        return;
+app.get('/svc/start/:id', ensureLoggedIn(), async (req, res) => {
+    const id = req.params.id;
+    const process = getProcess(id);
+    if (process) {
+        try {
+            await process.start();
+        } catch (err) {
+            res.send("ERR: " + err.message);
+            return;
+        }
+        res.send(`${id} started`);
+    } else {
+        res.sendStatus(404);
     }
-    res.send("Main Started");
 });
 
-app.get('/svc/restartGarden', ensureLoggedIn(), async (_req, res) => {
-    try {
-        await gardenProcess.restart();
-    } catch (err) {
-        res.send("ERR: " + err.message);
-        return;
+app.get('/svc/restart/:id', ensureLoggedIn(), async (req, res) => {
+    const id = req.params.id;
+    const process = getProcess(id);
+    if (process) {
+        try {
+            await process.restart();
+        } catch (err) {
+            res.send("ERR: " + err.message);
+            return;
+        }
+        res.send(`${id} restarted`);
+    } else {
+        res.sendStatus(404);
     }
-    res.send("Garden Restarted");
 });
 
-app.get('/svc/restartSolar', ensureLoggedIn(), async (_req, res) => {
-    try {
-        await solarProcess.restart();
-    } catch (err) {
-        res.send("ERR: " + err.message);
-        return;
+app.get('/svc/restart/:id', ensureLoggedIn(), async (req, res) => {
+    const id = req.params.id;
+    const process = getProcess(id);
+    if (process) {
+        try {
+            await process.restart();
+        } catch (err) {
+            res.send("ERR: " + err.message);
+            return;
+        }
+        res.send(`${id} restarted`);
+    } else {
+        res.sendStatus(404);
     }
-    res.send("Solar Restarted");
 });
 
 
@@ -145,16 +184,16 @@ app.get('/checkLogin', ensureLoggedIn(), (_req, res) => {
 });
 
 app.listen(80, () => {
-  console.log('Webserver started at port 80');
+  logger('Webserver started at port 80');
 })
 
 const runProcesses = async () => {
     const { ManagedProcess } = await import('./procMan.mjs');
     ManagedProcess.enableMail = false;
-    mainProcess = new ManagedProcess('Home.Server.exe', 'server');
-    solarProcess = new ManagedProcess('Home.Solar.exe', 'solar');
-    gardenProcess = new ManagedProcess('Home.Garden.exe', 'garden');
-    mainProcess.start();
+    serverProcess = new ManagedProcess('Home.Server', 'server');
+    solarProcess = new ManagedProcess('Home.Solar', 'solar');
+    gardenProcess = new ManagedProcess('Home.Garden', 'garden');
+    serverProcess.start();
     solarProcess.start();
     gardenProcess.start();
 };

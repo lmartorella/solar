@@ -10,12 +10,13 @@ export class ManagedProcess {
     constructor(processName, topic) {
         this.processName = processName;
         this.topic = topic;
+        this.logFile = path.join(etcDir, `${this.processName}.log`)
     }
 
     start() {
         // Already started
         if (this.process && this.process.pid) {
-            throw new Error(`Server process ${this.processName} Already started`);
+            throw new Error(`Server process ${this.processName} already started`);
         }
 
         // Launch process
@@ -24,7 +25,7 @@ export class ManagedProcess {
             args.push('-sendMailErr');
             args.push(this.restartMailText);
         }
-        this.process = child_process.spawn(path.join(binDir, this.processName), args, {
+        this.process = child_process.spawn(path.join(binDir, `${this.processName}.exe`), args, {
             stdio: 'ignore'
         });
 
@@ -42,21 +43,21 @@ export class ManagedProcess {
                 await new Promise(resolve => setTimeout(resolve, 3500));
                 this.start();
             } else {
-                logger(`Server process ${this.processName} killed`, true);
+                logger(`Server process ${this.processName} killed`);
             }
             this.killing = false;
         });
 
         this.process.on('err', err => {
-            logger(`Server process ${this.processName} FAIL TO START: ${err.message}`, true);
+            logger(`Server process ${this.processName} FAIL TO START: ${err.message}`);
             this.process = null;
         });
 
-        logger(`Home server ${this.processName} started`, true);
+        logger(`Home server ${this.processName} started`);
     }
 
     kill() {
-        logger(`Server process ${this.processName} killing...`, true);
+        logger(`Server process ${this.processName} killing...`);
         return new Promise(resolve => {
             // Already started
             if (!this.process || !this.process.pid) {
@@ -72,7 +73,7 @@ export class ManagedProcess {
 
     async restart() {
         await this.kill();
-        logger(`Server process ${this.processName} killed for restarting...`, true);
+        logger(`Server process ${this.processName} killed for restarting...`);
         await new Promise(resolve => setTimeout(resolve, 3500));
         this.start();
     };

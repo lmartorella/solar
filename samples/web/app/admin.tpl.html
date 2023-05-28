@@ -1,9 +1,14 @@
 <div ng-controller="adminController as ctrl" >  
-    <p><a href="/svc/logs" download>{{res["Menu_Logs"]}}</a></p>
+    <p><a href="/svc/logs/web" download>Web logs</a></p>
+    <p><a href="/svc/logs/server" download>Net server logs</a></p>
+    <p><a href="/svc/logs/garden" download>Garden logs</a></p>
+    <p><a href="/svc/logs/solar" download>Solar logs</a></p>
+
     <p><a href="" ng-click="ctrl.haltMain()" >{{res["Admin_Halt"]}}</a></p>
     <p><a href="" ng-click="ctrl.startMain()">{{res["Admin_Start"]}}</a></p>
     <p><a href="" ng-click="ctrl.restartGarden()">{{res["Admin_Restart_Garden"]}}</a></p>
     <p><a href="" ng-click="ctrl.restartSolar()">{{res["Admin_Restart_Solar"]}}</a></p>
+
     <p><a href="/svc/gardenCsv" download="garden.csv">{{res["Admin_DownloadGardenCsv"]}}</a></p>
     <p><a href="/svc/gardenCfg" download="gardenCfg.json">{{res["Admin_DownloadGardenConfig"]}}</a></p>
 

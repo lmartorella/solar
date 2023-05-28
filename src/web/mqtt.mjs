@@ -1,10 +1,11 @@
 import mqtt from 'mqtt';
+import { logger } from './settings.mjs';
 
-console.log("Connecting to MQTT...");
+logger("Connecting to MQTT...");
 const client  = mqtt.connect({ clientId: "webserver", protocolVersion: 5 });
 
 client.on('connect', () => {
-    console.log("Connected to MQTT");
+    logger("Connected to MQTT");
     client.subscribe('ui/resp', err => {
         if (err) {
             console.error("Can't subscribe: " + err.message);
@@ -14,7 +15,7 @@ client.on('connect', () => {
 });
 
 client.on('disconnect', () => {
-    console.log("Disconnected from MQTT, reconnecting...");
+    logger("Disconnected from MQTT, reconnecting...");
     setTimeout(() => {
         client.reconnect();
     }, 4000);

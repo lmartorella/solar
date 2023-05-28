@@ -1,7 +1,6 @@
 import { Strings as itStrings } from './resources.it-IT';
 
 export const Strings = {
-    "Menu_Logs": "Logs",
     "Admin_Halt": "Halt Net Server",
     "Admin_Start": "Start Net Server",
     "Admin_Restart_Garden": "Restart Garden Server",

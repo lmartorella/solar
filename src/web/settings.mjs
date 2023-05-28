@@ -7,7 +7,7 @@ export const __dirname = path.dirname(__filename);
 export const binDir = path.join(__dirname, '../../target/bin');
 export const etcDir = path.join(__dirname, '../../target/etc');
 
-export const logsFile = path.join(etcDir, 'log.txt');
+export const webLogsFile = path.join(etcDir, 'webLog.txt');
 let serverCfgFile = path.join(etcDir, 'server/webCfg.json');
 
 if (!fs.existsSync(serverCfgFile)) {
@@ -19,10 +19,7 @@ if (!fs.existsSync(serverCfgFile)) {
 
 export const settings = JSON.parse(fs.readFileSync(serverCfgFile, 'utf8'));
 
-export const logger = (msg, echo) => {
+export const logger = (msg) => {
     msg = new Date().toISOString() + " " + msg;
-    fs.appendFileSync(logsFile, msg + '\n');
-    if (echo) {
-        console.log(msg);
-    }
+    fs.appendFileSync(webLogsFile, msg + '\n');
 }

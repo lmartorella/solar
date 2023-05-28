@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { etcDir } from '../../src/web/settings.mjs';
+import { etcDir, logger } from '../../src/web/settings.mjs';
 import { expressRemoteCall } from '../../src/web/mqtt.mjs';
 
 const gardenCfgFile = path.join(etcDir, 'server/gardenCfg.json');
@@ -17,7 +17,7 @@ export function register(app, privileged) {
             // Do nothing
             res.status(500);
             res.send("Request incompatible");
-            console.log("r/gardenStart: incompatible request: " + JSON.stringify(req.body));
+            logger("r/gardenStart: incompatible request: " + JSON.stringify(req.body));
             return;
         }
         expressRemoteCall(res, "garden/setImmediate", { immediate });
