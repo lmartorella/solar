@@ -3,24 +3,32 @@ export class AdminController {
     constructor(private $http: ng.IHttpService) {
     }
 
-    halt() {
-        this.$http.get('/svc/halt').then(resp => {
+    haltMain() {
+        this.$http.get('/svc/halt/server').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));
         });
     }
 
-    start() {
-        this.$http.get('/svc/start').then(resp => {
+    startMain() {
+        this.$http.get('/svc/start/server').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));
         });
     }
 
-    restart() {
-        this.$http.get('/svc/restart').then(resp => {
+    restartSolar() {
+        this.$http.get('/svc/restart/solar').then(resp => {
+            alert(resp.data);
+        }).catch(err => {
+            alert(JSON.stringify(err));
+        });
+    }
+
+    restartGarden() {
+        this.$http.get('/svc/restart/garden').then(resp => {
             alert(resp.data);
         }).catch(err => {
             alert(JSON.stringify(err));

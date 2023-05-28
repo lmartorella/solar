@@ -57,11 +57,11 @@ export class SolarController {
                     }
                 }
             } else {
-                this.firstLine = format("Error", resp.statusText);
+                this.firstLine = format("Error", resp.data || resp.statusText);
                 this.firstLineClass = 'err';
             }
         }, err => {
-            this.firstLine = format("Error", err.statusText);
+            this.firstLine = format("Error", err.data || err.statusText);
             this.firstLineClass = 'err';
         }).finally(() => {
             this.loaded = true;

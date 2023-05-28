@@ -95,10 +95,10 @@ export class GardenController {
                     return resp.data;
                 }
             } else {
-                throw new Error(resp.statusText);
+                throw new Error(resp.data.toString() || resp.statusText);
             }
         }, err => {
-            throw new Error(err.statusText || err.message);
+            throw new Error(err.data || err.statusText || err.message);
         });
     }
 

@@ -1,10 +1,10 @@
 import { Strings as itStrings } from './resources.it-IT';
 
 export const Strings = {
-    "Menu_Logs": "Logs",
-    "Admin_Halt": "Halt Server",
-    "Admin_Start": "Start Server",
-    "Admin_Restart": "Restart Server",
+    "Admin_Halt": "Halt Net Server",
+    "Admin_Start": "Start Net Server",
+    "Admin_Restart_Garden": "Restart Garden Server",
+    "Admin_Restart_Solar": "Restart Solar Server",
     "Admin_DownloadGardenCsv": "Download garden.csv",
     "Admin_DownloadGardenConfig": "Download garden configuration",
     "Admin_UploadGardenConfig": "Upload garden configuration",
