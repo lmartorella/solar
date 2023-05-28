@@ -1,5 +1,6 @@
 ﻿using Lucky.Home.Serialization;
 using Lucky.Home.Services;
+using System;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -31,7 +32,7 @@ namespace Lucky.Home.Sinks
             public DeviceState State;
 
             [SerializeAsDynArray]
-            public ImmediateZoneTime[] ZoneTimes;
+            public ImmediateZoneTimeB[] ZoneTimes;
         }
 
         [DataContract]
@@ -42,12 +43,32 @@ namespace Lucky.Home.Sinks
 
             [DataMember(Name = "zoneMask")]
             public int ZoneMask;
+
+            internal ImmediateZoneTimeB ToB()
+            {
+                return new ImmediateZoneTimeB { Minutes = (byte)Minutes, ZoneMask = (byte)ZoneMask };
+            }
+        }
+
+        [DataContract]
+        public class ImmediateZoneTimeB
+        {
+            [DataMember]
+            public byte Minutes;
+
+            [DataMember]
+            public byte ZoneMask;
+
+            internal ImmediateZoneTime ToI()
+            {
+                return new ImmediateZoneTime { Minutes = Minutes, ZoneMask = ZoneMask };
+            }
         }
 
         private class WriteProgramMessageRequest
         {
             [SerializeAsDynArray]
-            public ImmediateZoneTime[] ZoneTimes;
+            public ImmediateZoneTimeB[] ZoneTimes;
         }
 
         private class UpdateFlowMessageRequest
@@ -117,7 +138,7 @@ namespace Lucky.Home.Sinks
                     {
                         Logger.Log("GardenMd", "State", md.State, "Times", string.Join(", ", md.ZoneTimes.Select(t => t.Minutes.ToString())));
                     }
-                    state = new TimerState { IsAvailable = md.State == DeviceState.Off, ZoneRemTimes = md.ZoneTimes };
+                    state = new TimerState { IsAvailable = md.State == DeviceState.Off, ZoneRemTimes = md.ZoneTimes.Select(t => t.ToI()).ToArray() };
                 }
                 else
                 {
@@ -138,7 +159,7 @@ namespace Lucky.Home.Sinks
             {
                 await writer.Write(new WriteProgramMessageRequest
                 {
-                    ZoneTimes = zoneTimes
+                    ZoneTimes = zoneTimes.Select(t => t.ToB()).ToArray()
                 });
             });
             // Log aloud new state
