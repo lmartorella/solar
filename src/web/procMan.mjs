@@ -13,7 +13,7 @@ export class ManagedProcess {
         this.logFile = path.join(etcDir, `${this.processName}.log`)
     }
 
-    start() {
+    _start() {
         // Already started
         if (this.process && this.process.pid) {
             throw new Error(`Server process ${this.processName} already started`);
@@ -41,7 +41,7 @@ export class ManagedProcess {
                 // Store fail reason to send mail after restart
                 this.restartMailText = `${msg}. Restarting`;
                 await new Promise(resolve => setTimeout(resolve, 3500));
-                this.start();
+                this._start();
             } else {
                 logger(`Server process ${this.processName} killed`);
             }
@@ -56,9 +56,18 @@ export class ManagedProcess {
         logger(`Home server ${this.processName} started`);
     }
 
-    kill() {
+    start(res) {
+        try {
+            this._start();
+            res.send(`${this.processName} started`);
+        } catch (err) {
+            res.status(500).send(err.message);
+        }
+    }
+
+    async _kill() {
         logger(`Server process ${this.processName} killing...`);
-        return new Promise(resolve => {
+        await new Promise((resolve, reject) => {
             // Already started
             if (!this.process || !this.process.pid) {
                 throw new Error(`Server process ${this.processName} killed`);
@@ -67,14 +76,32 @@ export class ManagedProcess {
             this.process.once('exit', () => {
                 resolve();
             });
-            rawRemoteCall(`${this.topic}/kill`);
+            rawRemoteCall(`${this.topic}/kill`).catch(err => reject(err));
         });
     };
 
-    async restart() {
-        await this.kill();
+    async kill(res) {
+        try {
+            await this._kill();
+            res.send(`${this.processName} killed`);
+        } catch (err) {
+            res.status(500).send(err.message);
+        }
+    }
+
+    async _restart() {
+        await this.kill(res);
         logger(`Server process ${this.processName} killed for restarting...`);
         await new Promise(resolve => setTimeout(resolve, 3500));
-        this.start();
+        this._start();
     };
+
+    async restart(res) {
+        try {
+            await this._restart();
+            res.send(`${this.processName} restarted`);
+        } catch (err) {
+            res.status(500).send(err.message);
+        }
+    }
 }

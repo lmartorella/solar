@@ -3,7 +3,7 @@ import fs from 'fs';
 import moment from 'moment';
 import { setTimeout } from 'timers';
 import { etcDir } from '../../src/web/settings.mjs';
-import { expressRemoteCall } from '../../src/web/mqtt.mjs';
+import { jsonRemoteCall } from '../../src/web/mqtt.mjs';
 
 const csvFolder = path.join(etcDir, 'DB/SAMIL');
 
@@ -131,7 +131,7 @@ function getPvChart(day) {
 
 export function register(app) {
     app.get('/svc/solarStatus', async (_req, res) => {
-        expressRemoteCall(res, "solar/getStatus");
+        jsonRemoteCall(res, "solar/getStatus");
     });
 
     app.get('/svc/solarPowToday', (req, res) => {

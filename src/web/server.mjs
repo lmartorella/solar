@@ -102,13 +102,7 @@ app.get('/svc/halt/:id', ensureLoggedIn(), async (req, res) => {
     const id = req.params.id;
     const process = getProcess(id);
     if (process) {
-        try {
-            await process.kill();
-        } catch (err) {
-            res.send("ERR: " + err.message);
-            return;
-        }
-        res.send(`${id} halted`);
+        process.kill(res);
     } else {
         res.sendStatus(404);
     }
@@ -118,13 +112,7 @@ app.get('/svc/start/:id', ensureLoggedIn(), async (req, res) => {
     const id = req.params.id;
     const process = getProcess(id);
     if (process) {
-        try {
-            await process.start();
-        } catch (err) {
-            res.send("ERR: " + err.message);
-            return;
-        }
-        res.send(`${id} started`);
+        process.start(res);
     } else {
         res.sendStatus(404);
     }
@@ -134,34 +122,11 @@ app.get('/svc/restart/:id', ensureLoggedIn(), async (req, res) => {
     const id = req.params.id;
     const process = getProcess(id);
     if (process) {
-        try {
-            await process.restart();
-        } catch (err) {
-            res.send("ERR: " + err.message);
-            return;
-        }
-        res.send(`${id} restarted`);
+        process.restart(res);
     } else {
         res.sendStatus(404);
     }
 });
-
-app.get('/svc/restart/:id', ensureLoggedIn(), async (req, res) => {
-    const id = req.params.id;
-    const process = getProcess(id);
-    if (process) {
-        try {
-            await process.restart();
-        } catch (err) {
-            res.send("ERR: " + err.message);
-            return;
-        }
-        res.send(`${id} restarted`);
-    } else {
-        res.sendStatus(404);
-    }
-});
-
 
 app.use('/app', express.static(path.join(__dirname, '../../samples/web/app')));
 app.use('/lib/angular', express.static(path.join(__dirname, '../../node_modules/angular')));
@@ -193,8 +158,8 @@ const runProcesses = async () => {
     serverProcess = new ManagedProcess('Home.Server', 'server');
     solarProcess = new ManagedProcess('Home.Solar', 'solar');
     gardenProcess = new ManagedProcess('Home.Garden', 'garden');
-    serverProcess.start();
-    solarProcess.start();
-    gardenProcess.start();
+    serverProcess._start();
+    solarProcess._start();
+    gardenProcess._start();
 };
 void runProcesses();

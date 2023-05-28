@@ -39,7 +39,7 @@ client.on('message', (topic, payload, packet) => {
     }
 });
 
-export const rawRemoteCall = async (topic, payload) => {
+export const rawRemoteCall = (topic, payload) => {
     if (!client.connected) {
         throw new Error("Broker disconnected");
     }
@@ -61,10 +61,10 @@ export const rawRemoteCall = async (topic, payload) => {
         setTimeout(() => reject(new Error("Timeout contacting the remote process")), 3500);
     });
 
-    return await Promise.race([promise, timeout]);
+    return Promise.race([promise, timeout]);
 };
 
-export const expressRemoteCall = async (res, topic, json) => {
+export const jsonRemoteCall = async (res, topic, json) => {
     try {
         const resp = JSON.parse(await rawRemoteCall(topic, JSON.stringify(json)));
         res.send(resp);
