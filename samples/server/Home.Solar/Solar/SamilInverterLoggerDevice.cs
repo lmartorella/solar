@@ -519,7 +519,7 @@ namespace Lucky.Home.Devices.Solar
                 }
             }
 
-            if (lastSample.GridVoltageV > 0)
+            if (lastSample?.GridVoltageV > 0)
             {
                 ret.GridV = lastSample.GridVoltageV;
                 ret.UsageA = lastSample.HomeUsageCurrentA;
