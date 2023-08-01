@@ -12,7 +12,7 @@ start 0100000 stop  0x02   -> Illegal Data Address, if error would be 0x83...
 start 0000000 stop  0x00   -> missing CRC!
 start 0000000 stop  0x00
 
-
+<01><90><02><00><00>
 Definitively, not MODBUS
 
 
