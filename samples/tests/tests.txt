@@ -1,0 +1,31 @@
+// Trying to poll register 1
+[01][03][00][01][00][02][95][CB]
+
+// Is giving
+// Analyzed with a scope, since missing trailing sync
+start = 0
+stop = 1
+
+start 1000000 stop  0x01
+start 0001001 stop  0x90   -> Strange, it seems to respond to 0x10
+start 0100000 stop  0x02   -> Illegal Data Address, if error would be 0x83...
+start 0000000 stop  0x00   -> missing CRC!
+start 0000000 stop  0x00
+
+
+Definitively, not MODBUS
+
+
+
+Instead reading 0x400
+[01][03][04][00][00][02][C5][3B]
+
+Gives result!!!
+<01><03><04><00><03><FF><C0><4B><93>
+[1025]:         3
+[1026]:         65472 (-64)
+
+However, often it has a lot of <zero> on front, due to missing sync
+<00> <00>... we need to get rid of these
+
+
