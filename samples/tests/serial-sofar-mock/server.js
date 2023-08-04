@@ -40,6 +40,11 @@ const toHex = buffer => {
         port.set({ rts: false });
         await new Promise(resolve => setTimeout(resolve, 1));
         port.write(resp);
+        await new Promise((resolve, reject) => {
+            port.drain(err => {
+                if (err) reject(err); else resolve();
+            });
+        })
         // Wait for complete flush + 1ms
         await new Promise(resolve => setTimeout(resolve, 1 + (10 * resp.length) / 9600 * 1000));
         port.set({ rts: true });
@@ -88,15 +93,15 @@ const toHex = buffer => {
         }
 
         // Ok, valid range, respond
-        const resp = new Uint8Array(regCount * 2 + 4 + 2);
+        const resp = new Uint8Array(2 + 1 + regCount * 2 + 2);
         resp[0] = 1;
         resp[1] = 3;
-        resp[2] = data[2];
-        resp[3] = data[3];
-        let idx = 4;
+        resp[2] = regCount * 2;
+        let idx = 3;
         for (let i = 0; i < regCount; i++) {
-            resp[idx++] = inverterData.data[i + inverterData.start] >> 8;
-            resp[idx++] = inverterData.data[i + inverterData.start] & 0xff;
+            const regData = inverterData.data[i + regAddr - inverterData.start];
+            resp[idx++] = regData >> 8;
+            resp[idx++] = regData & 0xff;
         }
         const respCrc = crc16modbus(resp.slice(0, idx));
         resp[idx++] = respCrc & 0xff;
