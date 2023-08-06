@@ -1,12 +1,12 @@
 Using lmartorella/mbpoll fork
 
 -r 0x400 -c 16
-[1024]:         3           state? fault (A/C disconnected)
+[1024]:         3           ?
 [1025]:         65472 (-64)
 [1026]:         1409
 [1027]:         65535 (-1)
-[1028]:         4           -> becomes 0 when connected to A/C (with reconnecting timer), then "1" when? then "2" when OK
-[1029]:         6           -> becomes 0 when connected to A/C (with reconnecting timer)
+[1028]:         4           -> becomes 0 when reconnected to A/C (with reconnecting timer), then "1" when? then "2" when OK
+[1029]:         6           -> becomes 0 when reconnected to A/C (with reconnecting timer)
 [1030]:         0
 [1031]:         0
 [1032]:         0
@@ -27,9 +27,9 @@ Using lmartorella/mbpoll fork
 [1045]:         0
 [1046]:         0
 [1047]:         300     -> Count down time: start ticking to zero when A/C connected, then goes back to 300
-[1048]:         38      -> 37 when A/C connected and timer ticking -> then 39 when OK
+[1048]:         38      -> 37 when A/C connected and little changing.... current of PV?
 [1049]:         0
-[1050]:         29       -> then 32 when OK
+[1050]:         29       -> then 32 when OK... current of PV?
 [1051]:         0
 [1052]:         0
 [1053]:         0
@@ -45,18 +45,18 @@ Using lmartorella/mbpoll fork
 [1061]:         0
 [1062]:         0   -> 1 when connected to A/C, then '2'... to 18... production today?
 [1063]:         0
-[1064]:         1051   -> slowly rise to 1054... then 1070
+[1064]:         1051   -> slowly rise to 1054... then 1070 / 1117 another day ?? when daily prod was 1.13kWh... production week?
 [1065]:         0
-[1066]:         1385   -> slowly rise to 1399... then 1416
+[1066]:         1385   -> slowly rise to 1399... then 1416 / 1469 another day ?? when total prod was 36.04kWh... production month?
 [1067]:         0   -> 829 when connected to A/C
-[1068]:         23 
-[1069]:         7
-[1070]:         30
-[1071]:         18  -> slowly rise to 19
+[1068]:         23  -> year
+[1069]:         7   -> month
+[1070]:         30  -> day
+[1071]:         18  -> hour
 
 0x430
-[1072]:         46  -> 1 after A/C connected, then 17? minutes up time?
-[1073]:         0   -> 17 after A/C connected, ticking up at seconds, seconds up time?
+[1072]:         46  => minutes
+[1073]:         0   -> seconds
 [1074]:         0
 [1075]:         0
 [1076]:         0
@@ -72,7 +72,7 @@ Using lmartorella/mbpoll fork
 [1086]:         0
 [1087]:         0
 
-0x440: seems fixed, ASCII?
+0x440: seems fixed, ASCII. Serial number
 [1088]:         65408 (-128)
 [1089]:         0
 [1090]:         2047
@@ -90,7 +90,7 @@ Using lmartorella/mbpoll fork
 [1102]:         12336
 [1103]:         12359
 
-0x450: seems fixed, ASCII?
+0x450: seems fixed, ASCII? Serial number?
 [1104]:         12340
 [1105]:         12336
 [1106]:         12343
@@ -150,10 +150,10 @@ Using lmartorella/mbpoll fork
 [1154]:         12
 [1155]:         24895
 [1156]:         0     -> 5003  -> 5000 -> 4999 -> 5000.... -> GRID frequency
-[1157]:         0     -> 80 -> slowly decreasing (sunset, under 0.8kW) -> 71 -> -> PRODUCTION?
+[1157]:         0     -> 80 -> slowly decreasing (sunset, under 0.8kW) -> 71 -> -> PRODUCTION! * 100 kW
 [1158]:         0
 [1159]:         0     -> 8   -> 7 
-[1160]:         0     -> 80  -> 78 -> 77  -> 74 -> 71   -> PRODUCTION?
+[1160]:         0     -> 80  -> 78 -> 77  -> 74 -> 71   -> PRODUCTION! clones $1157
 [1161]:         0
 [1162]:         0
 [1163]:         0
@@ -166,7 +166,7 @@ Using lmartorella/mbpoll fork
 [1168]:         0
 [1169]:         0
 [1170]:         0
-[1171]:         0   -> 69 after A/C ok  -> slowly decreasing  -> 60 . PRODUCTION?
+[1171]:         0   -> 69 after A/C ok  -> slowly decreasing  -> 60 . PRODUCTION! clones $1157
 [1172]:         0
 [1173]:         0
 [1174]:         0
