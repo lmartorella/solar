@@ -3,9 +3,9 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lucky.Home.Devices.Solar
+namespace Lucky.Home.Solar
 {
-    class AnalogIntegratorRpc : BaseRpc
+    class AnalogIntegratorRpc : BaseDevice
     {
         private MqttService mqttService;
         private Task<MqttService.RpcOriginator> rpc;

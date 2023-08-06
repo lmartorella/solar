@@ -1,8 +1,7 @@
 ﻿using Lucky.Home;
 using Lucky.Home.Db;
-using Lucky.Home.Devices.Solar;
 using Lucky.Home.Power;
-using Lucky.Home.Services;
+using Lucky.Home.Solar;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,9 +19,8 @@ namespace Home.Solar
         {
             await Bootstrap.Start(arguments, "solar");
 
-            var inverter = new HalfDuplexLineRpc();
             var ammeter = new AnalogIntegratorRpc();
-            var device = new SamilInverterLoggerDevice(inverter, ammeter);
+            var device = new DataLogger(ammeter);
 
             var db = new FsTimeSeries<PowerData, DayPowerData>(device.Name);
             await db.Init(DateTime.Now);
@@ -46,8 +44,7 @@ namespace Home.Solar
                 }
             }, null, 0, 30 * 1000);
 
-            Manager.Killed += (o, e) => device.OnTerminate();
-            await device.StartLoop(db);
+            await device.Init(db);
         }
     }
 }

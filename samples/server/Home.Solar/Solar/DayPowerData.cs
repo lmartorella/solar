@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Lucky.Home.Power
+namespace Lucky.Home.Solar
 {
     /// <summary>
     /// CSV for daily power summary

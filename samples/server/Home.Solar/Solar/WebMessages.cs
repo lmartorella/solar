@@ -1,10 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Lucky.Home.Devices
-{
-}
-
-namespace Lucky.Home.Devices.Solar
+namespace Lucky.Home.Solar
 {
     [DataContract]
     public class SolarRpcResponse

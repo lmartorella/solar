@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Lucky.Home.Devices
+namespace Lucky.Home.Solar
 {
     [DataContract]
     public enum OnlineStatus

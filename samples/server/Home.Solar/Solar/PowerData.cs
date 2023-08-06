@@ -1,8 +1,7 @@
 ﻿using Lucky.Db;
 
-namespace Lucky.Home.Power
+namespace Lucky.Home.Solar
 {
-
     /// <summary>
     /// CSV for tick-by-tick power data
     /// </summary>
