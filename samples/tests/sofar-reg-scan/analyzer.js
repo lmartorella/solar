@@ -50,7 +50,7 @@ validRanges.forEach(range => {
             if (samples.every(v => v === firstSample)) {
                 fixedValues[toHex(startAddress + i)] = firstSample;
             } else {
-                movingValues[toHex(startAddress + i)] = samples;
+                movingValues[toHex(startAddress + i)] = data.map(sample => ({ v: sample.data[i], ts: sample.ts }));
             }
         }
     }
