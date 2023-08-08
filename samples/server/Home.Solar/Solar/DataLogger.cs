@@ -17,7 +17,7 @@ namespace Lucky.Home.Solar
         private ITimeSeries<PowerData, DayPowerData> Database { get; set; }
         private readonly AnalogIntegratorRpc ammeterSink;
         private readonly InverterDevice inverterDevice;
-        private ushort _lastFault = 0;
+        private string _lastFault = null;
         private IStatusUpdate _lastFaultMessage;
         private readonly ILogger Logger;
 
@@ -52,7 +52,7 @@ namespace Lucky.Home.Solar
                     _isSummarySent = false;
                 }
 
-                CheckFault(data.Fault);
+                CheckFault(data.InverterState);
             }
 
             if (data.GridVoltageV > 0)
@@ -83,15 +83,16 @@ namespace Lucky.Home.Solar
 
         public PowerData ImmediateData { get; private set; }
 
-        private void CheckFault(ushort fault)
+        private void CheckFault(string inverterState)
         {
+            var fault = InverterStates.ToFault(inverterState);
             if (_lastFault != fault)
             {
                 var notification = Manager.GetService<INotificationService>();
                 DateTime ts = DateTime.Now;
-                if (fault != 0)
+                if (fault != null)
                 {
-                    _lastFaultMessage = notification.EnqueueStatusUpdate("Errori Inverter", "Errore: " + Zcs6000TlmV3.ToFaultDescription(fault));
+                    _lastFaultMessage = notification.EnqueueStatusUpdate("Errori Inverter", "Errore: " + fault);
                 }
                 else
                 {
@@ -161,8 +162,7 @@ namespace Lucky.Home.Solar
                 ret.CurrentTs = lastSample.FromInvariantTime(lastSample.TimeStamp).ToString("F");
                 ret.TotalDayWh = lastSample.EnergyTodayWh;
                 ret.TotalKwh = lastSample.TotalEnergyKWh; 
-                ret.Mode = lastSample.Mode;
-                ret.Fault = lastSample.Fault;
+                ret.InverterState = lastSample.InverterState;
 
                 // From a recover boot 
                 if (_lastPanelVoltageV <= 0 && lastSample.GridVoltageV > 0)

@@ -43,7 +43,5 @@ export const Strings = {
     "Solar_CurrentUsage": "Assorbimento attuale di ",
     "Solar_On": args => `Potenza: ${args.power}W`,
     "Solar_UnknownMode": args => `Errore: modalità sconosciuta: ${args.mode}`,
-    "Solar_FaultNoGrid": "Mancanza rete",
-    "Solar_FaultLowFreq": "Frequenza rete troppo bassa",
-    "Solar_FaultHighFreq": "Frequenza rete troppo alta"
+    "Solar_FaultNoGrid": "Mancanza rete"
 };

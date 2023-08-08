@@ -5,9 +5,8 @@ import * as Plotly from "plotly.js";
 interface IPvData { 
     status: number;
     error?: string;
-    mode: number;
     currentW: number;
-    fault: number;
+    inverterState: string;
 }
 
 export class SolarController {
@@ -37,22 +36,18 @@ export class SolarController {
                     this.firstLine = format("Error", this.pvData.error);
                     this.firstLineClass = 'err';
                 } else {
-                    switch (this.pvData.mode) {
-                        case undefined:
-                        case 0:
+                    switch (this.pvData.inverterState) {
+                        case "OFF":
                             this.firstLine = res["Solar_Off"];
                             this.firstLineClass = 'gray';
                             break;
-                        case 1:
+                        case undefined:
+                        case "":
                             this.firstLine = format("Solar_On", { power: this.pvData.currentW });
                             break;
-                        case 2:
-                            this.firstLine = format("Error", this.decodeFault(this.pvData.fault));
-                            this.firstLineClass = 'err';
-                            break;
                         default:
-                            this.firstLine = format("Solar_UnknownMode", { mode: this.pvData.mode });
-                            this.firstLineClass = 'unknown';
+                            this.firstLine = format("Error", this.decodeFault(this.pvData.inverterState));
+                            this.firstLineClass = 'err';
                             break;
                     }
                 }
@@ -110,16 +105,13 @@ export class SolarController {
         });
     }
 
-    private decodeFault(fault: number) {
+    private decodeFault(fault: string) {
         switch (fault) { 
-            case 0x800:
+            case "NOGRID":
                 return res["Solar_FaultNoGrid"];
-            case 0x1000:
-                return res["Solar_FaultLowFreq"];
-            case 0x2000:
-                return res["Solar_FaultHighFreq"];
+            default:
+                return fault;
         }
-        return fault && ('0x' + fault.toString(16));
     }
 }
 

@@ -1,6 +1,5 @@
 ﻿using Lucky.Home;
 using Lucky.Home.Db;
-using Lucky.Home.Power;
 using Lucky.Home.Solar;
 using System;
 using System.Threading;
@@ -22,7 +21,7 @@ namespace Home.Solar
             var ammeter = new AnalogIntegratorRpc();
             var device = new DataLogger(ammeter);
 
-            var db = new FsTimeSeries<PowerData, DayPowerData>(device.Name);
+            var db = new FsTimeSeries<PowerData, DayPowerData>("SOLAR");
             await db.Init(DateTime.Now);
             _dayRotation += async () => await db.Rotate(DateTime.Now);
 
@@ -44,7 +43,7 @@ namespace Home.Solar
                 }
             }, null, 0, 30 * 1000);
 
-            await device.Init(db);
+            device.Init(db);
         }
     }
 }

@@ -59,7 +59,7 @@ namespace Lucky.Home.Solar
                 // Have a sun range
                 First = first.Value.TimeOfDay;
                 Last = last.Value.TimeOfDay;
-                Fault = data.Any(t => t.Fault != 0) ? 1 : 0;
+                Fault = data.Any(t => InverterStates.IsFault(t.InverterState)) ? 1 : 0;
 
                 // Now take total power.
                 // Typically this is stored in the EnergyTodayWh that is progressively stored, so ideally the last sample is OK

@@ -23,11 +23,8 @@ namespace Lucky.Home.Solar
         [DataMember(Name = "totalKwh")]
         public double TotalKwh { get; set; }
 
-        [DataMember(Name = "mode")]
-        public int Mode { get; set; }
-
-        [DataMember(Name = "fault")]
-        public int Fault { get; set; }
+        [DataMember(Name = "inverterState")]
+        public string InverterState { get; set; }
 
         [DataMember(Name = "peakW")]
         public double PeakW { get; set; }

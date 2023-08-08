@@ -20,9 +20,9 @@
         "!0x430": "minutes",
         "!0x431": "seconds",
 
-        "!0x484": "grid frequency",
-        "!0x485": "Power",
-        "!0x487": "Current in grid?",
+        "!0x484": "grid frequency * 100",
+        "!0x485": "Power /10",
+        "!0x487": "Current in grid *100",
         "!0x488": "Power again",
 
         "0x48d": "Grid voltage, V*10",

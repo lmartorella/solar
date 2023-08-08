@@ -1,4 +1,5 @@
 ﻿using Lucky.Db;
+using System;
 
 namespace Lucky.Home.Solar
 {
@@ -11,26 +12,46 @@ namespace Lucky.Home.Solar
         public double PowerW;
         [Csv("0")]
         public double TotalEnergyKWh;
-        // Mode: 1: ON, 0: OFF, 2: Fault
-        [Csv("0")]
-        public int Mode;
+        [Csv(InverterStates.Normal)]
+        public string InverterState;
         [Csv("0")]
         public double EnergyTodayWh;
         [Csv("0.00")]
         public double GridCurrentA;
-        [Csv("0.00")]
-        public double PanelCurrentA;
         [Csv("0.0")]
         public double GridVoltageV;
-        [Csv("0.0")]
-        public double PanelVoltageV;
         [Csv("0.00")]
         public double GridFrequencyHz;
-        // Bitwise? 0x800 = no grid power
-        [Csv("0")]
-        public ushort Fault;
+        [Csv("0.00")]
+        public double String1CurrentA;
+        [Csv("0.00")]
+        public double String1VoltageV;
+        [Csv("0.00")]
+        public double String2CurrentA;
+        [Csv("0.00")]
+        public double String2VoltageV;
         // Home usage current, to calculate Net Energy Metering
         [Csv("0.00")]
         public double HomeUsageCurrentA;
+    }
+
+    /// <summary>
+    /// Known inverter states. Unknown state will be logged with original flags
+    /// </summary>
+    static public class InverterStates
+    {
+        public const string Normal = "";
+        public const string Off = "OFF";
+        public const string NoGrid = "NOGRID";
+
+        internal static bool IsFault(string state)
+        {
+            return state != Normal && state != Off;
+        }
+
+        internal static string ToFault(string state)
+        {
+            return IsFault(state) ? state : null;
+        }
     }
 }

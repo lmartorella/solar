@@ -55,9 +55,7 @@ export const Strings = {
     "Solar_CurrentUsage": "Current usage of ",
     "Solar_Off": "OFF",
     "Solar_On": args => `Power: ${args.power}W`,
-    "Solar_FaultNoGrid": "No grid power",
-    "Solar_FaultLowFreq": "Grid frequency too low",
-    "Solar_FaultHighFreq": "Grid frequency too high"
+    "Solar_FaultNoGrid": "No grid power"
 };
 
 const res = { ...Strings, ...itStrings };
