@@ -1,5 +1,7 @@
 ﻿using Lucky.Home;
 using Lucky.Home.Db;
+using Lucky.Home.Device.Sofar;
+using Lucky.Home.Services;
 using Lucky.Home.Solar;
 using System;
 using System.Threading;
@@ -14,12 +16,17 @@ namespace Home.Solar
         private static readonly TimeSpan PeriodLenght = TimeSpan.FromDays(1);
         private static Timer _timerMinute;
 
+        //private const string DeviceHostName = "esp32.";
+        private const string DeviceHostName = "localhost";
+
         public static async Task Main(string[] arguments)
         {
             await Bootstrap.Start(arguments, "solar");
 
             var ammeter = new AnalogIntegratorRpc();
-            var device = new DataLogger(ammeter);
+            var inverter = new InverterDevice();
+            var dataLogger = new DataLogger(inverter, ammeter);
+            var userInterface = new UserInterface(dataLogger, inverter, ammeter);
 
             var db = new FsTimeSeries<PowerData, DayPowerData>("SOLAR");
             await db.Init(DateTime.Now);
@@ -43,7 +50,12 @@ namespace Home.Solar
                 }
             }, null, 0, 30 * 1000);
 
-            device.Init(db);
+            dataLogger.Init(db);
+
+            new Zcs6000TlmV3(DeviceHostName);
+
+            var pollStrategyManager = Manager.GetService<PollStrategyManager>();
+            await pollStrategyManager.StartLoop();
         }
     }
 }

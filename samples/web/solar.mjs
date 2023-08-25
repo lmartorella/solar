@@ -5,7 +5,7 @@ import { setTimeout } from 'timers';
 import { etcDir } from '../../src/web/settings.mjs';
 import { jsonRemoteCall } from '../../src/web/mqtt.mjs';
 
-const csvFolder = path.join(etcDir, 'DB/SAMIL');
+const csvFolder = path.join(etcDir, 'DB/SOLAR');
 
 function parseCsv(path) {
     var content = fs.readFileSync(path, 'utf8');

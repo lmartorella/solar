@@ -56,9 +56,6 @@ setInterval(() => {
         writeReg(addresses.power, power / 10);
     };
 
-    const updateTotalPower = (power, voltage) => {
-    };
-
     updatePower(addresses.grid, totalPower, gridVoltage);
     updatePower(addresses.string1, stringPowers[0], 290 + Math.random() * 20);
     updatePower(addresses.string2, stringPowers[1], 190 + Math.random() * 20);

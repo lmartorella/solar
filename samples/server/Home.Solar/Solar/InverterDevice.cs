@@ -7,11 +7,18 @@ using System.Threading.Tasks;
 namespace Lucky.Home.Solar
 {
     /// <summary>
-    /// Encapsulate a MQTT topic source
+    /// Subscribe the inverter device's MQTT topics and exposes C# events for the loggers.
     /// </summary>
-    class InverterDevice : BaseDevice
+    class InverterDevice
     {
+        /// <summary>
+        /// JSON data published by the inverter, <see cref="PowerData"/>
+        /// </summary>
         public const string SolarDataTopicId = "solar/data";
+
+        /// <summary>
+        /// String enum published by the inverter, <see cref="PollStrategyManager.StateEnum"/>
+        /// </summary>
         public const string SolarStateTopicId = "solar/state";
 
         public InverterDevice()
@@ -21,6 +28,7 @@ namespace Lucky.Home.Solar
 
         private async Task Subscribe()
         {
+            // Send inverter data to the data logger and notification server
             await Manager.GetService<MqttService>().SubscribeJsonTopic(SolarDataTopicId, (PowerData data) =>
             {
                 NewData?.Invoke(this, data);
@@ -29,15 +37,24 @@ namespace Lucky.Home.Solar
             {
                 if (Enum.TryParse(Encoding.UTF8.GetString(data), out State))
                 {
-                    IsStateChanged?.Invoke(this, EventArgs.Empty);
+                    StateChanged?.Invoke(this, EventArgs.Empty);
                 }
             });
         }
 
+        /// <summary>
+        /// Event raised when new data comes from the inverter
+        /// </summary>
         public event EventHandler<PowerData> NewData;
 
-        public event EventHandler IsStateChanged;
+        /// <summary>
+        /// Event raised when <see cref="State"/> changes.
+        /// </summary>
+        public event EventHandler StateChanged;
 
+        /// <summary>
+        /// The low-level inverter state
+        /// </summary>
         public PollStrategyManager.StateEnum State;
     }
 }

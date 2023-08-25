@@ -4,11 +4,10 @@ using System.Threading.Tasks;
 
 namespace Lucky.Home.Device.Sofar
 {
-    class PollStrategyManager
+    class PollStrategyManager : ServiceBase
     {
         private StateEnum state = StateEnum.NightMode;
         private DateTime _lastValidData = DateTime.Now;
-        private readonly ILogger Logger;
 
         public enum StateEnum
         {
@@ -47,13 +46,7 @@ namespace Lucky.Home.Device.Sofar
         /// </summary>
         private static readonly TimeSpan PollDataPeriod = TimeSpan.FromSeconds(15);
 
-        public PollStrategyManager()
-        {
-            Logger = Manager.GetService<ILoggerFactory>().Create("PollMgr");
-            _ = StartLoop();
-        }
-
-        private async Task StartLoop()
+        public async Task StartLoop()
         {
             // Start wait loop
             while (true)

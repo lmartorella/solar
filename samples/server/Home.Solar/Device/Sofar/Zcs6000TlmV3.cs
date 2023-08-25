@@ -2,6 +2,7 @@
 using Lucky.Home.Services;
 using Lucky.Home.Solar;
 using System;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,19 +14,20 @@ namespace Lucky.Home.Device.Sofar
     /// </summary>
     class Zcs6000TlmV3
     {
-        private readonly PollStrategyManager _pollStrategyManager = new PollStrategyManager();
         private MqttService mqttService;
         private readonly ModbusTcpClient modbusClient = new ModbusTcpClient();
         private bool _connecting;
+        private readonly string _deviceHostName;
         private readonly ILogger Logger;
 
-        private const string DeviceHostName = "esp32.";
         private const int ModbusNodeId = 1;
 
-        public Zcs6000TlmV3()
+        public Zcs6000TlmV3(string deviceHostName)
         {
+            _deviceHostName = deviceHostName;
             Logger = Manager.GetService<ILoggerFactory>().Create("Zcs6000TlmV3");
-            _pollStrategyManager.PullData += (o, e) =>
+            var pollStrategyManager = Manager.GetService<PollStrategyManager>();
+            pollStrategyManager.PullData += (o, e) =>
             {
                 e.Task = PullData(e);
             };
@@ -40,40 +42,41 @@ namespace Lucky.Home.Device.Sofar
             }
             _connecting = true;
 
-            IPAddress address = null;
             try
             {
-                var list = (await Dns.GetHostEntryAsync(DeviceHostName)).AddressList;
-                if (list.Length > 0)
+                IPAddress address = null;
+                try
                 {
-                    address = list[0];
+                    address = (await Dns.GetHostEntryAsync(_deviceHostName)).AddressList.Where(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).FirstOrDefault();
+                }
+                catch (Exception err)
+                {
+                    Logger.Log("DnsErr", "resolving", _deviceHostName, "err", err.Message);
+                    return;
+                }
+
+                if (address == null)
+                {
+                    Logger.Log("DnsErr", "resolving", _deviceHostName, "err", "no result");
+                    return;
+                }
+
+                modbusClient.ConnectTimeout = (int)connectTimeout.TotalMilliseconds;
+
+                try
+                {
+                    modbusClient.Connect(address, ModbusEndianness.BigEndian);
+                }
+                catch (Exception err)
+                {
+                    Logger.Log("ModbusConnect", "connectingTo", address, "err", err.Message);
+                    return;
                 }
             }
-            catch (Exception err)
+            finally
             {
-                Logger.Log("DnsErr", "resolving", DeviceHostName, "err", err.Message);
-                return;
+                _connecting = false;
             }
-
-            if (address == null)
-            {
-                Logger.Log("DnsErr", "resolving", DeviceHostName, "err", "no result");
-                return;
-            }
-
-            modbusClient.ConnectTimeout = (int)connectTimeout.TotalMilliseconds;
-
-            try
-            {
-                modbusClient.Connect(address, ModbusEndianness.BigEndian);
-            }
-            catch (Exception err)
-            {
-                Logger.Log("ModbusConnect", "connectingTo", address, "err", err.Message);
-                return;
-            }
-
-            _connecting = false;
         }
 
         private async Task PullData(PollStrategyManager.PullDataEventArgs args)
@@ -93,6 +96,17 @@ namespace Lucky.Home.Device.Sofar
                 _connecting = false;
                 var data = await GetData();
                 args.DataValid = data != null;
+                args.IsConnected = true;
+
+                await PublishData(data);
+            }
+        }
+
+        private async Task PublishData(PowerData data)
+        {
+            if (data != null)
+            {
+                await mqttService.JsonPublish(InverterDevice.SolarDataTopicId, data);
             }
         }
 

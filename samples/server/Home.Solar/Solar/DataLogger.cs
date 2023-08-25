@@ -2,7 +2,6 @@
 using Lucky.Home.Device.Sofar;
 using Lucky.Home.Services;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Solar
@@ -16,27 +15,25 @@ namespace Lucky.Home.Solar
         private bool _isSummarySent = true;
         private ITimeSeries<PowerData, DayPowerData> Database { get; set; }
         private readonly AnalogIntegratorRpc ammeterSink;
-        private readonly InverterDevice inverterDevice;
         private string _lastFault = null;
         private IStatusUpdate _lastFaultMessage;
         private readonly ILogger Logger;
 
-        /// <summary>
-        /// This will never resets, and keep track of the last sampled grid voltage. Used even during night by home ammeter
-        /// </summary>
-        private double _lastPanelVoltageV = -1.0;
-
-        public DataLogger(AnalogIntegratorRpc ammeterSink)
+        public DataLogger(InverterDevice inverterDevice, AnalogIntegratorRpc ammeterSink)
         {
             Logger = Manager.GetService<ILoggerFactory>().Create("DataLogger");
             this.ammeterSink = ammeterSink;
-            inverterDevice = new InverterDevice();
             inverterDevice.NewData += (o, e) => _ = HandleNewData(e);
-            inverterDevice.IsStateChanged += (o, e) => HandleStateChanged(inverterDevice.State);
+            inverterDevice.StateChanged += (o, e) => HandleStateChanged(inverterDevice.State);
         }
 
         private async Task HandleNewData(PowerData data)
         {
+            // Don't log OFF states
+            if (data.InverterState == InverterStates.Off)
+            {
+                return;
+            }
             // Use the current grid voltage to calculate Net Energy Metering
             if (data.GridVoltageV > 0)
             {
@@ -53,11 +50,6 @@ namespace Lucky.Home.Solar
                 }
 
                 CheckFault(data.InverterState);
-            }
-
-            if (data.GridVoltageV > 0)
-            {
-                _lastPanelVoltageV = data.GridVoltageV;
             }
         }
 
@@ -130,73 +122,14 @@ namespace Lucky.Home.Solar
             Logger.Log("DailyMailSent", "Power", day.PowerKWh);
         }
 
-        private OnlineStatus OnlineStatus
+        public PowerData GetLastSample()
         {
-            get
-            {
-                var sinks = new BaseDevice[] { ammeterSink, inverterDevice };
-                if (sinks.All(s => s.IsOnline))
-                {
-                    return OnlineStatus.Online;
-                }
-                if (sinks.All(s => !s.IsOnline))
-                {
-                    return OnlineStatus.Offline;
-                }
-                return OnlineStatus.PartiallyOnline;
-            }
+            return Database?.GetLastSample();
         }
 
-        /// <summary>
-        /// Called by web GUI
-        /// </summary>
-        private async Task<SolarRpcResponse> GetPvData() 
+        public DayPowerData GetAggregatedData()
         {
-            var ret = new SolarRpcResponse
-            {
-                Status = OnlineStatus
-            };
-            var lastSample = Database?.GetLastSample();
-            if (lastSample != null) {
-                ret.CurrentW = lastSample.PowerW;
-                ret.CurrentTs = lastSample.FromInvariantTime(lastSample.TimeStamp).ToString("F");
-                ret.TotalDayWh = lastSample.EnergyTodayWh;
-                ret.TotalKwh = lastSample.TotalEnergyKWh; 
-                ret.InverterState = lastSample.InverterState;
-
-                // From a recover boot 
-                if (_lastPanelVoltageV <= 0 && lastSample.GridVoltageV > 0)
-                {
-                    _lastPanelVoltageV = lastSample.GridVoltageV;
-                }
-
-                // Find the peak power
-                var dayData = Database.GetAggregatedData();
-                if (dayData != null)
-                {
-                    ret.PeakW = dayData.PeakPowerW;
-                    ret.PeakTsTime = dayData.FromInvariantTime(dayData.PeakTimestamp).ToString("hh\\:mm\\:ss");
-                }
-            }
-
-            if (lastSample?.GridVoltageV > 0)
-            {
-                ret.GridV = lastSample.GridVoltageV;
-                ret.UsageA = lastSample.HomeUsageCurrentA;
-            }
-            else if (_lastPanelVoltageV > 0)
-            {
-                // APPROX: Use last panel voltage with up-to-date home power usage
-                ret.GridV = _lastPanelVoltageV;
-                ret.UsageA = (await ammeterSink.ReadData()) ?? -1.0;
-            }
-            else
-            {
-                ret.GridV = -1;
-                ret.UsageA = -1.0;
-            }
-
-            return ret;
+            return Database?.GetAggregatedData();
         }
     }
 }

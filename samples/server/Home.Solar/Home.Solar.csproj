@@ -65,6 +65,7 @@
     <Compile Include="Solar\InverterDevice.cs" />
     <Compile Include="Solar\OnlineStatus.cs" />
     <Compile Include="Solar\DataLogger.cs" />
+    <Compile Include="Solar\UserInterface.cs" />
     <Compile Include="Solar\WebMessages.cs" />
   </ItemGroup>
   <ItemGroup>
