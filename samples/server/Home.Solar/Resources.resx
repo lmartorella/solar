@@ -127,4 +127,16 @@
   <data name="solar_daylight_format" xml:space="preserve">
     <value>h' hours and 'mm' minutes'</value>
   </data>
+  <data name="solar_error_mail_error" xml:space="preserve">
+    <value>Errore: {0}</value>
+  </data>
+  <data name="solar_error_mail_error_solved" xml:space="preserve">
+    <value>, risolto dopo {0} secondi.</value>
+  </data>
+  <data name="solar_error_mail_normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="solar_error_mail_title" xml:space="preserve">
+    <value>Inverter Errors</value>
+  </data>
 </root>

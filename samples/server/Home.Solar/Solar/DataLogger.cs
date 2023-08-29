@@ -84,7 +84,7 @@ namespace Lucky.Home.Solar
                 DateTime ts = DateTime.Now;
                 if (fault != null)
                 {
-                    _lastFaultMessage = notification.EnqueueStatusUpdate("Errori Inverter", "Errore: " + fault);
+                    _lastFaultMessage = notification.EnqueueStatusUpdate(Resources.solar_error_mail_title, string.Format(Resources.solar_error_mail_error, fault));
                 }
                 else
                 {
@@ -94,7 +94,7 @@ namespace Lucky.Home.Solar
                     {
                         if (_lastFaultMessage.Update(() =>
                         {
-                            _lastFaultMessage.Text += ", risolto dopo " + (int)(DateTime.Now - _lastFaultMessage.TimeStamp).TotalSeconds + " secondi.";
+                            _lastFaultMessage.Text += string.Format(Resources.solar_error_mail_error_solved, (int)(DateTime.Now - _lastFaultMessage.TimeStamp).TotalSeconds);
                         }))
                         {
                             notify = false;
@@ -102,7 +102,7 @@ namespace Lucky.Home.Solar
                     }
                     if (notify)
                     {
-                        notification.EnqueueStatusUpdate("Errori Inverter", "Normale");
+                        notification.EnqueueStatusUpdate(Resources.solar_error_mail_title, Resources.solar_error_mail_normal);
                     }
                 }
                 _lastFault = fault;

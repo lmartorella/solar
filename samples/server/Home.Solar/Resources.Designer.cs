@@ -90,5 +90,41 @@ namespace Lucky.Home {
                 return ResourceManager.GetString("solar_daylight_format", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Errore: {0}.
+        /// </summary>
+        internal static string solar_error_mail_error {
+            get {
+                return ResourceManager.GetString("solar_error_mail_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to , risolto dopo {0} secondi..
+        /// </summary>
+        internal static string solar_error_mail_error_solved {
+            get {
+                return ResourceManager.GetString("solar_error_mail_error_solved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normal.
+        /// </summary>
+        internal static string solar_error_mail_normal {
+            get {
+                return ResourceManager.GetString("solar_error_mail_normal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inverter Errors.
+        /// </summary>
+        internal static string solar_error_mail_title {
+            get {
+                return ResourceManager.GetString("solar_error_mail_title", resourceCulture);
+            }
+        }
     }
 }
