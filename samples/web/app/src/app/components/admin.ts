@@ -1,7 +1,7 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Component, ViewChild } from '@angular/core';
-import { catchError, of } from 'rxjs';
 import { res } from '../services/resources';
+import { checkXhr } from '../services/xhr';
 
 @Component({
   selector: 'app-admin',
@@ -15,19 +15,8 @@ export class AdminComponent {
         this.res = res as unknown as { [key: string]: string };
     }
 
-    private get<T>(url: string) {
-        return new Promise((resolve, reject) => {
-            this.http.get<T>(url).pipe(catchError((err: HttpErrorResponse) => {
-                reject(err.error);
-                return of(null);
-            })).subscribe(data => {
-                resolve(data);
-            });
-        })
-    }
-
     public haltMain() {
-        this.get<unknown>('/svc/halt/server').then(data => {
+        checkXhr<unknown>(this.http.get('/svc/halt/server')).then(data => {
             alert(data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -35,7 +24,7 @@ export class AdminComponent {
     }
 
     public startMain() {
-        this.get<unknown>('/svc/start/server').then(data => {
+        checkXhr<unknown>(this.http.get('/svc/start/server')).then(data => {
             alert(data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -43,7 +32,7 @@ export class AdminComponent {
     }
 
     public restartSolar() {
-        this.get<unknown>('/svc/restart/solar').then(data => {
+        checkXhr<unknown>(this.http.get('/svc/restart/solar')).then(data => {
             alert(data);
         }).catch(err => {
             alert(JSON.stringify(err));
@@ -51,7 +40,7 @@ export class AdminComponent {
     }
 
     public restartGarden() {
-        this.get<unknown>('/svc/restart/garden').then(data => {
+        checkXhr<unknown>(this.http.get('/svc/restart/garden')).then(data => {
             alert(data);
         }).catch(err => {
             alert(JSON.stringify(err));

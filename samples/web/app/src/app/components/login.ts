@@ -1,16 +1,6 @@
-export class MainController {
-    static $inject = ["$http", "$rootScope"];
-
-    pageUrl: string;
-    showLogin: boolean;
-
-    username: string;
-    password: string;
-
-    constructor(private $http: ng.IHttpService, $rootScope: { main: MainController }) {
-        $rootScope.main = this;
-        this.goSolar();
-    }
+export class LoginComponent {
+    public username: string;
+    public password: string;
 
     login(): void {
         this.$http.post("/login", { 
@@ -23,4 +13,5 @@ export class MainController {
             alert(err.message || err.data || err.statusText || err);
         });
     }
+
 }

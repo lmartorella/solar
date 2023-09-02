@@ -1,0 +1,23 @@
+<div>
+  <span class="message"> {{status}} </span>
+  <div *ngShow="loaded">
+    <p><span class="header" [ngClass]="firstLineClass"> {{firstLine}} </span> 
+      <a (click)="drawDays(1)" href="javascript:void(0)">{{res["Solar_ChartToday"]}}</a>
+      &nbsp;
+      <a (click)="drawDays(4)" href="javascript:void(0)">{{res["Solar_Chart4days"]}}</a>
+    </p>
+    <p class="total-pw" *ngIf="pvData.totalDayWh"> {{res["Solar_EnergyToday"]}} <b>{{pvData.totalDayWh / 1000}} kWh</b> </p>
+    <p class="peak-pw" *ngIf="pvData.peakW"> {{res["Solar_Peak1"]}}<b>{{pvData.peakW}}W</b> {{format("Solar_Peak2", { ts: pvData.peakTsTime})}}</p>
+    <p class="usage-pw" *ngIf="pvData.usageA >= 0 && pvData.gridV"> {{res["Solar_CurrentUsage"]}}<b>{{pvData.gridV * pvData.usageA | number:'0'}}W</b></p>
+    <br/>
+    <br/>
+    <br/>
+    <p class="total-pw" *ngIf="pvData.totalKwh"> {{res["Solar_EnergyTotal"]}} <b>{{pvData.totalKwh}} kWh</b> </p>
+
+    <div #chart></div>
+
+    <p class="bot muted"> 
+      <span *ngIf="pvData.currentTs"> {{format("Solar_Updated", pvData)}} </span> 
+    </p>
+  </div>
+</div>

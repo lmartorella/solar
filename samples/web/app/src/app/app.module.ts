@@ -6,12 +6,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AdminComponent } from './components/admin';
 import { HttpClientModule } from '@angular/common/http';
+import { SolarComponent } from './components/solar';
 import { GardenComponent } from './components/garden';
 
 @NgModule({
   declarations: [
     AppComponent,
     AdminComponent,
+    SolarComponent,
     GardenComponent
   ],
   imports: [

@@ -1,11 +1,10 @@
+@import url(./common.css);
+
 .muted {
     color: gray;
     font-size: 0.8rem;
 }
-.unknown  { 
-    color: darkred;
-}
-.off {
+.gray {
     color: gray;
 }
 
@@ -20,9 +19,5 @@
 }
 .total-pw { 
     font-size: x-large;
-}
-
-.home-body > div { 
-    width: 75%;
 }
 

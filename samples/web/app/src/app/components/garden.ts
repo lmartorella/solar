@@ -1,8 +1,8 @@
 import { Component, OnInit } from "@angular/core";
 import { res, format } from "../services/resources";
 import moment from "moment";
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
-import { Observable, catchError, of } from "rxjs";
+import { HttpClient } from "@angular/common/http";
+import { checkXhr } from "../services/xhr";
 
 moment.locale("it-IT");
 
@@ -99,33 +99,16 @@ export class GardenComponent implements OnInit {
         this.loadConfigAndStatus();
     }
 
-    private checkXhr<T extends IGardenResponse>(observable: Observable<T>): Promise<T> {
-        return new Promise((resolve, reject) => {
-            observable.pipe(catchError((err: HttpErrorResponse) => {
-                reject(new Error(err.statusText || err.message));
-                return of(null);
-            })).subscribe(data => {
-                if ((data as T & { error?: string }).error) {
-                    reject(new Error((data as T & { error?: string }).error));
-                } else if (!data) {
-                    reject(new Error("Empty response"));
-                } else {
-                    resolve(data);
-                }
-            });
-        });
-    }
-
     private async preCheckPrivilege(): Promise<void> {
         if (!this._hasPrivilege) {
-            await this.checkXhr(this.http.get("/checkLogin"));
+            await checkXhr(this.http.get("/checkLogin"));
             this._hasPrivilege = true;
         }
     }
 
     private loadConfigAndStatus() {
         // Fetch zones
-        this.checkXhr(this.http.get<IGardenStatusResponse>("/svc/gardenStatus")).then(resp => {
+        checkXhr(this.http.get<IGardenStatusResponse>("/svc/gardenStatus")).then(resp => {
             switch (resp.status) {
                 case 1: this.status1 = res["Device_StatusOnline"]; break;
                 case 2: this.status1 = res["Device_StatusOffline"]; break;
@@ -161,7 +144,7 @@ export class GardenComponent implements OnInit {
     }
 
     public stop() {
-        this.checkXhr(this.http.post<IGardenStartStopResponse>("/svc/gardenStop", "")).then(() => {
+        checkXhr(this.http.post<IGardenStartStopResponse>("/svc/gardenStop", "")).then(() => {
             this.message = res["Garden_Stopped"];  
             this.immediateStarted = false;
         }, err => {
@@ -171,7 +154,7 @@ export class GardenComponent implements OnInit {
 
     public startImmediate() {
         var body = { zones: this.immediateCycle!.zones.filter(z => z.enabled).map(z => z.index), time: new Number(this.immediateCycle!.time) };
-        this.checkXhr(this.http.post<IGardenStartStopResponse>("/svc/gardenStart", body)).then(() => {
+        checkXhr(this.http.post<IGardenStartStopResponse>("/svc/gardenStart", body)).then(() => {
             this.message = res["Garden_StartedImmediate"];  
             this.immediateStarted = true;
             this.loadConfigAndStatus();
@@ -214,7 +197,7 @@ export class GardenComponent implements OnInit {
     }
 
     public saveProgram(): Promise<void> {
-        return this.checkXhr(this.http.put("/svc/gardenCfg", this.config)).then(() => {
+        return checkXhr(this.http.put("/svc/gardenCfg", this.config)).then(() => {
             this.loadConfigAndStatus();
         }, err => {
             this.error = format("Garden_ErrorSetConf", err.message);
