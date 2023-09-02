@@ -101,7 +101,7 @@ export class GardenComponent implements OnInit {
 
     private async preCheckPrivilege(): Promise<void> {
         if (!this._hasPrivilege) {
-            await checkXhr(this.http.get("/checkLogin"));
+            await checkXhr(this.http.get("/checkLogin", { responseType: "text" }));
             this._hasPrivilege = true;
         }
     }
@@ -163,19 +163,18 @@ export class GardenComponent implements OnInit {
         });
     }
 
-    addImmediateCycle(): void {
-        this.preCheckPrivilege().then(() => {
-            // Mutually exclusive
-            this.clearProgram();
-            this.immediateCycle = new ImmediateCycle(this.zoneNames, "5");
-        }, () => { });
+    public async addImmediateCycle() {
+        await this.preCheckPrivilege();
+        // Mutually exclusive
+        this.clearProgram();
+        this.immediateCycle = new ImmediateCycle(this.zoneNames, "5");
     }
 
-    clearImmediate(): void {
+    public clearImmediate(): void {
         this.immediateCycle = null;
     }
 
-    resumeAll(): void {
+    public resumeAll(): void {
         const now = moment().toISOString(true);
         this.config.program!.cycles!.forEach(c => {
             c.start = now;
@@ -184,7 +183,7 @@ export class GardenComponent implements OnInit {
         this.saveProgram();
     }
 
-    suspendAll(): void {
+    public suspendAll(): void {
         this.config.program!.cycles!.forEach(c => c.suspended = true);
         this.saveProgram();
     }

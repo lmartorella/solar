@@ -5,13 +5,13 @@
   <span class="message" *ngIf="status2"> {{status2}} </span>
 
   <!-- Editor to add immediate cycle -->
-  <div *ngShow="loaded && !immediateStarted" class="garden-section">
-    <div *ngHide="immediateCycle">
+  <div [hidden]="!loaded || immediateStarted" class="garden-section">
+    <div [hidden]="immediateCycle">
       <button (click)="addImmediateCycle()">{{res["Garden_AddImmediate"]}}</button>
     </div>
-    <h4 *ngHide="!immediateCycle">{{res["Garden_QuickCycle"]}}</h4>
+    <h4 *ngIf="immediateCycle">{{res["Garden_QuickCycle"]}}</h4>
     <!-- List immediate program cycles -->
-    <div class="program-cycle" *ngHide="!immediateCycle">
+    <div class="program-cycle" *ngIf="immediateCycle">
       <div class="program-zones">
           <div *ngFor="let zone of immediateCycle!.zones">
              <label>{{zone.name}}</label>
@@ -20,25 +20,25 @@
       </div>
       <p>
         <span>{{res["Garden_Minutes"]}}</span>
-        <input type="text" [(ngModel])="immediateCycle.time" style="width: 3em" />
+        <input type="text" [(ngModel)]="immediateCycle.time" style="width: 3em" />
       </p>
     </div>
-    <div *ngHide="!immediateCycle">
+    <div *ngIf="immediateCycle">
       <button (click)="startImmediate()">{{res["Garden_StartImmediate"]}}</button>
       <button (click)="clearImmediate()">{{res["Garden_ClearImmediate"]}}</button>
     </div>
   </div>
 
   <!-- Section to suspend/resume for rain -->
-  <div *ngShow="loaded" class="garden-section">
-    <button (click)="resumeAll()" *ngShow="canResumeAll">{{res["Garden_ResumeAll"]}}</button>
-    <button (click)="suspendAll()" *ngShow="canSuspendAll">{{res["Garden_SuspendAll"]}}</button>
+  <div [hidden]="!loaded" class="garden-section">
+    <button (click)="resumeAll()" [hidden]="!canResumeAll">{{res["Garden_ResumeAll"]}}</button>
+    <button (click)="suspendAll()" [hidden]="!canSuspendAll">{{res["Garden_SuspendAll"]}}</button>
   </div>
 
   <!-- Editor to edit program cycle -->
-  <div *ngShow="loaded && config.program.cycles.length > 0" class="garden-section">
+  <div *ngIf="loaded && !!config?.program?.cycles?.length" class="garden-section">
     <div>
-      <button *ngHide="editProgramMode" (click)="startEdit()">{{res["Garden_EditProgram"]}}</button>
+      <button [hidden]="editProgramMode" (click)="startEdit()">{{res["Garden_EditProgram"]}}</button>
     </div>
     <h4 *ngIf="editProgramMode">{{res["Garden_EditProgram"]}}</h4>
     <!-- List program cycles -->
@@ -71,15 +71,15 @@
     </div>
   </div>
   
-  <div class="bot" *ngShow="loaded"> 
+  <div class="bot" *ngIf="loaded"> 
     <h3>{{res["Garden_NextCycles"]}}</h3>
       <p *ngFor="let cycle of nextCycles">
         <span [ngClass]="{ 'suspended': cycle.suspended, 'running': cycle.running }">
           {{format(cycle.scheduledTime ? "Garden_ScheduledProgram" : (cycle.running ? "Garden_RunningProgram" : "Garden_QueuedProgram"), cycle)}}
           <span *ngIf="cycle.suspended"> {{format("Garden_Suspended")}}</span>
-          <button *ngShow="cycle.running" (click)="stop()">{{res["Garden_Stop"]}}</button>
+          <button [hidden]="!cycle.running" (click)="stop()">{{res["Garden_Stop"]}}</button>
         </span>
       </p>
-    <p> {{res["Garden_FlowInfo"]}} {{flow.flowLMin | number:'1' }} <small><sup>Lit</sup>/<sub>min</sub></small>, {{flow.totalMc | number:'3' }} <small>M<sup>3</sup></small> </p>
+    <p *ngIf="flow"> {{res["Garden_FlowInfo"]}} {{flow.flowLMin | number:'1' }} <small><sup>Lit</sup>/<sub>min</sub></small>, {{flow.totalMc | number:'3' }} <small>M<sup>3</sup></small> </p>
   </div>
 </div>

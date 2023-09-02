@@ -29,7 +29,7 @@ export class SolarComponent implements OnInit {
     @ViewChild('chart') public chartElement!: ElementRef<HTMLDivElement>;
     public firstLineClass!: string;
     public firstLine!: string;
-    public pvData!: IPvData;
+    public pvData: Partial<IPvData> = { };
     public status!: string;
     public loaded!: boolean;
     public readonly res: { [key: string]: string };
@@ -57,6 +57,7 @@ export class SolarComponent implements OnInit {
                 this.firstLineClass = 'err';
             } else {
                 switch (this.pvData.inverterState) {
+                    case null:
                     case "OFF":
                         this.firstLine = res["Solar_Off"];
                         this.firstLineClass = 'gray';
