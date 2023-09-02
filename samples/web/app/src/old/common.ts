@@ -23,16 +23,4 @@ export class MainController {
             alert(err.message || err.data || err.statusText || err);
         });
     }
-
-    goSolar() {
-        this.pageUrl = "solar.tpl.html";
-    }
-
-    goGarden() {
-        this.pageUrl = "garden.tpl.html";
-    }
-
-    goAdmin() {
-        this.pageUrl = "admin.tpl.html";
-    }
 }
