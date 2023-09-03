@@ -13,7 +13,7 @@ export function register(app, privileged) {
     app.get('/', (_req, res) => {
         res.redirect('/app/index.html');
     });
-    app.use('/app', express.static(path.join(__dirname, './app/dist')));
+    app.use('/app', express.static(path.join(__dirname, '../../target/webapp')));
 
     solar.register(app, privileged);
     garden.register(app, privileged);
