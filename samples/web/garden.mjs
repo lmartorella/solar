@@ -7,6 +7,10 @@ const gardenCfgFile = path.join(etcDir, 'server/gardenCfg.json');
 const gardenCsvFile = path.join(etcDir, 'DB/GARDEN/garden.csv');
 
 export function register(app, privileged) {
+    app.get('/svc/checkLogin', privileged(), (_req, res) => {
+        res.status(200).send("OK");
+    });
+
     app.get('/svc/gardenStatus', async (_req, res) => {
         jsonRemoteCall(res, "garden/getStatus");
     });

@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import process from 'process';
 import express from 'express';
 import passport from 'passport';
@@ -41,7 +40,7 @@ passport.deserializeUser(function(id, cb) {
     cb(null, id);
 });
 
-function ensureLoggedIn() {
+const ensureLoggedIn = () => {
     return function(req, res, next) {
       if (!validateUser(req.session && req.session.passport && req.session.passport.user)) {
         if (req.session) {
@@ -61,15 +60,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.raw({ type: "application/octect-stream" }));
 app.use(expressSession({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
 
-// Redirect to SPA
-app.get('/', (_req, res) => {
-    res.redirect('/app/index.html');
-});
-
 // Register custom endpoints
 samples.register(app, ensureLoggedIn);
-
-app.use('/app', express.static(path.join(__dirname, '../../samples/web/app/dist')));
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -80,9 +72,6 @@ app.post('/login', passport.authenticate('local'), (req, res) => {
 app.get('/logout', (req, res) => {
     req.logout();
     res.sendStatus(401);
-});
-app.get('/checkLogin', ensureLoggedIn(), (_req, res) => {
-    res.status(200).send("OK");
 });
 
 let serverProcess;

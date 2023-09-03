@@ -101,7 +101,7 @@ export class GardenComponent implements OnInit {
 
     private async preCheckPrivilege(): Promise<void> {
         if (!this._hasPrivilege) {
-            await checkXhr(this.http.get("/checkLogin", { responseType: "text" }));
+            await checkXhr(this.http.get("/svc/checkLogin", { responseType: "text" }));
             this._hasPrivilege = true;
         }
     }
