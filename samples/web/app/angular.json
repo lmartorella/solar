@@ -21,24 +21,36 @@
               "zone.js"
             ],
             "tsConfig": "tsconfig.app.json",
-            "assets": [],
-            "styles": [
-              "src/styles.css"
+            "assets": [
+              "./src/assets"
             ],
-            "scripts": []
+            "styles": [
+              "./src/styles.css"
+            ],
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "plotly.js",
+              "moment"
+            ]
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
+                  "maximumWarning": "800kb",
                   "maximumError": "1mb"
                 },
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "2kb",
                   "maximumError": "4kb"
+                },
+                {
+                  "type": "bundle",
+                  "name": "plotly",
+                  "maximumWarning": "4Mb",
+                  "maximumError": "5Mb"
                 }
               ]
             },
