@@ -58,7 +58,11 @@ app.use(compression());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.raw({ type: "application/octect-stream" }));
-app.use(expressSession({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+const secret = process.env["EXPRESS_SECRET"];
+if (!secret) {
+    throw new Error("You need to set the `EXPRESS_SECRET` environment variable");
+}
+app.use(expressSession({ secret, resave: false, saveUninitialized: false }));
 
 // Register custom endpoints
 samples.register(app, ensureLoggedIn);
