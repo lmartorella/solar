@@ -1,7 +1,9 @@
-import { res, format } from "./resources";
-import { IHttpPromise } from "angular";
+import { Component, OnInit } from "@angular/core";
+import { res, format } from "../services/resources";
+import moment from "moment";
+import { HttpClient } from "@angular/common/http";
+import { checkXhr } from "../services/xhr";
 
-declare var moment: any;
 moment.locale("it-IT");
 
 interface IConfig {
@@ -22,6 +24,7 @@ interface ICycle {
 
 interface IScheduledCycle extends ICycle {
     scheduledTime: string;
+    running: boolean;
 }
 
 interface IGardenResponse {
@@ -55,72 +58,63 @@ class ImmediateCycle {
     }[];
 }
 
-export class GardenController {
-    public loaded: boolean;
-    public message: string;
-    public error: string;
+@Component({
+    selector: 'app-garden',
+    templateUrl: './garden.html',
+    styleUrls: ['./garden.css']
+})
+export class GardenComponent implements OnInit {
+    public loaded!: boolean;
+    public message!: string;
+    public error!: string;
     private zoneNames: string[] = [];
-    public immediateCycle: ImmediateCycle;
-    public config: IConfig;
-    public status1: string;
-    public status2: string;
-    public flow: { 
+    public immediateCycle!: ImmediateCycle | null;
+    public config!: IConfig;
+    public status1!: string;
+    public status2!: string;
+    public flow!: { 
         totalMc: number;
         flowLMin: number;
     };
-    public nextCycles: { name: string, scheduledTime: string, suspended: boolean }[];
-    public immediateStarted: boolean;
-    public canSuspendAll: boolean;
-    public canResumeAll: boolean;
-    public editProgramMode: boolean;
-    public isRunning: boolean;
+    public nextCycles!: { name: string, scheduledTime: string, suspended: boolean, running: boolean }[];
+    public immediateStarted!: boolean;
+    public canSuspendAll!: boolean;
+    public canResumeAll!: boolean;
+    public editProgramMode!: boolean;
+    public isRunning!: boolean;
     // To anticipate login request at beginning of an operation flow
-    private _hasPrivilege: boolean;
+    private _hasPrivilege!: boolean;
 
-    static $inject = ['$http', '$q'];
-    constructor(private $http: ng.IHttpService, private $q: ng.IQService) { }
+    public readonly res: { [key: string]: string };
+    public readonly format: (str: string, args?: any) => string;
 
-    public $onInit() {
+    constructor(private readonly http: HttpClient) {
+        this.res = res as unknown as { [key: string]: string };
+        this.format = format;
+    }
+
+    public ngOnInit() {
         this.status1 = res["Device_StatusLoading"];
         this.loaded = false;
         this.loadConfigAndStatus();
     }
 
-    private checkXhr<T extends IGardenResponse>(xhr: ng.IHttpPromise<T>): ng.IPromise<T> {
-        return xhr.then(resp => {
-            if (resp.status == 200 && resp.data) {
-                if (resp.data.error) {
-                    throw new Error(resp.data.error);
-                } else {
-                    return resp.data;
-                }
-            } else {
-                throw new Error(resp.data.toString() || resp.statusText);
-            }
-        }, err => {
-            throw new Error(err.data || err.statusText || err.message);
-        });
-    }
-
-    private preCheckPrivilege(): ng.IPromise<void> {
-        if (this._hasPrivilege) {
-            return this.$q.when();
-        } else {
-            return this.checkXhr(this.$http.get("/checkLogin")).then(() => {
-                this._hasPrivilege = true;
-            });
+    private async preCheckPrivilege(): Promise<void> {
+        if (!this._hasPrivilege) {
+            await checkXhr(this.http.get("/checkLogin", { responseType: "text" }));
+            this._hasPrivilege = true;
         }
     }
 
     private loadConfigAndStatus() {
         // Fetch zones
-        this.checkXhr(this.$http.get<IGardenStatusResponse>("/svc/gardenStatus")).then(resp => {
+        checkXhr(this.http.get<IGardenStatusResponse>("/svc/gardenStatus")).then(resp => {
             switch (resp.status) {
                 case 1: this.status1 = res["Device_StatusOnline"]; break;
                 case 2: this.status1 = res["Device_StatusOffline"]; break;
                 case 3: this.status1 = res["Device_StatusPartiallyOnline"]; break;
             }
-            this.status2 = !resp.config && res["Garden_MissingConf"];
+            this.status2 = (!resp.config && res["Garden_MissingConf"]) || "";
             this.flow = resp.flowData;
             this.isRunning = resp.isRunning;
 
@@ -145,12 +139,12 @@ export class GardenController {
     }
 
     private updateProgram(): void {
-        this.canResumeAll = this.config.program.cycles.length > 0 && this.config.program.cycles.some(c => c.suspended);
-        this.canSuspendAll = this.config.program.cycles.length > 0 && this.config.program.cycles.some(c => !c.suspended);
+        this.canResumeAll = this.config.program!.cycles!.length > 0 && this.config.program!.cycles!.some(c => c.suspended);
+        this.canSuspendAll = this.config.program!.cycles!.length > 0 && this.config.program!.cycles!.some(c => !c.suspended);
     }
 
     public stop() {
-        this.checkXhr(this.$http.post<IGardenStartStopResponse>("/svc/gardenStop", "")).then(() => {
+        checkXhr(this.http.post<IGardenStartStopResponse>("/svc/gardenStop", "")).then(() => {
             this.message = res["Garden_Stopped"];  
             this.immediateStarted = false;
         }, err => {
@@ -159,8 +153,8 @@ export class GardenController {
     }
 
     public startImmediate() {
-        var body = { zones: this.immediateCycle.zones.filter(z => z.enabled).map(z => z.index), time: new Number(this.immediateCycle.time) };
-        this.checkXhr(this.$http.post<IGardenStartStopResponse>("/svc/gardenStart", body)).then(() => {
+        var body = { zones: this.immediateCycle!.zones.filter(z => z.enabled).map(z => z.index), time: new Number(this.immediateCycle!.time) };
+        checkXhr(this.http.post<IGardenStartStopResponse>("/svc/gardenStart", body)).then(() => {
             this.message = res["Garden_StartedImmediate"];  
             this.immediateStarted = true;
             this.loadConfigAndStatus();
@@ -169,29 +163,28 @@ export class GardenController {
         });
     }
 
-    addImmediateCycle(): void {
-        this.preCheckPrivilege().then(() => {
-            // Mutually exclusive
-            this.clearProgram();
-            this.immediateCycle = new ImmediateCycle(this.zoneNames, "5");
-        }, () => { });
+    public async addImmediateCycle() {
+        await this.preCheckPrivilege();
+        // Mutually exclusive
+        this.clearProgram();
+        this.immediateCycle = new ImmediateCycle(this.zoneNames, "5");
     }
 
-    clearImmediate(): void {
+    public clearImmediate(): void {
         this.immediateCycle = null;
     }
 
-    resumeAll(): void {
+    public resumeAll(): void {
         const now = moment().toISOString(true);
-        this.config.program.cycles.forEach(c => {
+        this.config.program!.cycles!.forEach(c => {
             c.start = now;
             c.suspended = false;
         });
         this.saveProgram();
     }
 
-    suspendAll(): void {
-        this.config.program.cycles.forEach(c => c.suspended = true);
+    public suspendAll(): void {
+        this.config.program!.cycles!.forEach(c => c.suspended = true);
         this.saveProgram();
     }
 
@@ -202,8 +195,8 @@ export class GardenController {
         }, () => { });
     }
 
-    private saveProgram(): ng.IPromise<void> {
-        return this.checkXhr(this.$http.put("/svc/gardenCfg", this.config)).then(() => {
+    public saveProgram(): Promise<void> {
+        return checkXhr(this.http.put("/svc/gardenCfg", this.config)).then(() => {
             this.loadConfigAndStatus();
         }, err => {
             this.error = format("Garden_ErrorSetConf", err.message);
@@ -212,7 +205,7 @@ export class GardenController {
         })
     }
 
-    private clearProgram(): void {
+    public clearProgram(): void {
         this.editProgramMode = false;
     }
 }

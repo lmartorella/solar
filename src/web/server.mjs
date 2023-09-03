@@ -61,9 +61,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.raw({ type: "application/octect-stream" }));
 app.use(expressSession({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
 
-app.set("view engine", "ejs");
-app.set('views', __dirname);
-
 // Redirect to SPA
 app.get('/', (_req, res) => {
     res.redirect('/app/index.html');
@@ -72,24 +69,20 @@ app.get('/', (_req, res) => {
 // Register custom endpoints
 samples.register(app, ensureLoggedIn);
 
-app.use('/app', express.static(path.join(__dirname, '../../samples/web/app')));
-app.use('/lib/angular', express.static(path.join(__dirname, '../../node_modules/angular')));
-app.use('/lib/moment', express.static(path.join(__dirname, '../../node_modules/moment/min')));
-app.use('/lib/plotly.js', express.static(path.join(__dirname, '../../node_modules/plotly.js/dist')));
-app.use('/lib/requirejs', express.static(path.join(__dirname, '../../node_modules/requirejs')));
+app.use('/app', express.static(path.join(__dirname, '../../samples/web/app/dist')));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
-    res.sendStatus(200);
+    res.status(200).send("OK");
 });
 app.get('/logout', (req, res) => {
     req.logout();
     res.sendStatus(401);
 });
 app.get('/checkLogin', ensureLoggedIn(), (_req, res) => {
-    res.sendStatus(200);
+    res.status(200).send("OK");
 });
 
 let serverProcess;
