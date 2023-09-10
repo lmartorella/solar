@@ -1,0 +1,23 @@
+@import url(./common.css);
+
+.muted {
+    color: gray;
+    font-size: 0.8rem;
+}
+.gray {
+    color: gray;
+}
+
+.header {
+    font-size: xx-large;
+}
+.total-pw { 
+    font-size: x-large;
+}
+.peak-pw { 
+    font-size: larger;
+}
+.total-pw { 
+    font-size: x-large;
+}
+
