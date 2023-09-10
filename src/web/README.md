@@ -1,22 +1,13 @@
-# The web server
+# Web application
 
-This simple [Node.JS](https://nodejs.org/) web server is designed to allow some degree of remote access, mainly for checking status and start/stop/program some devices.
+This is a sample web application that leverages the [JS web-server](../../src/web/README.md) to interact with the Home system remotely.
 
-This process is loosely coupled with the main [server](../server/README.md) through an ad-hoc IPC channel for obvious security reasons.
+It is written in AngularjS (quite obsolete now) and supports:
+- see solar panel real-time statistics and charts, up to 4 days in the past
+- check and program the garden programmer.
+- start/stop the server
+- access the logs.
 
-Then, the web access will **not** expose:
-- anything about the topology
-- direct device/sink accesses
-- direct IP/protocol accesses
+TODO: i18n
 
-The generic messages-based protocol implemented here should be paired with logic in the server applicative layer.
-
-## Server interaction
-
-This Node.JS application can be even used to remotely start/stop/automatically restart the server process.
-
-For these operations a login is required (implemented via [Express.js](https://expressjs.com/) authentication methods).
-
-## A sample web app
-
-See [here](../../samples/web/README.md) for a sample web app.
+![](../../doc/webapp.png)
