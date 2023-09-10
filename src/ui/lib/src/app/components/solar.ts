@@ -46,7 +46,7 @@ export class SolarComponent implements OnInit {
         this.loaded = false;
 
         try {
-            this.pvData = await checkXhr(this.http.get<IPvData>('/svc/solarStatus'));
+            this.pvData = await checkXhr(this.http.get<IPvData>('/solar/solarStatus'));
             switch (this.pvData.status) {
                 case 1: this.status = res["Device_StatusOnline"]; break;
                 case 2: this.status = res["Device_StatusOffline"]; break;
@@ -87,7 +87,7 @@ export class SolarComponent implements OnInit {
     }
 
     private async getDayDataSeries(day: number): Promise<Partial<Plotly.PlotData> | null> {
-        const data = await checkXhr(this.http.get<IPvData>(`/svc/solarPowToday?day=${day}`));
+        const data = await checkXhr(this.http.get<IPvData>(`/solar/solarPowToday?day=${day}`));
         if (!Array.isArray(data)) {
             throw new Error("Unexpected data format");
         }

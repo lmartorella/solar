@@ -2,8 +2,8 @@ import path from 'path';
 import fs from 'fs';
 import moment from 'moment';
 import { setTimeout } from 'timers';
-import { etcDir } from '../../src/web/settings.mjs';
-import { jsonRemoteCall } from '../../src/web/mqtt.mjs';
+import { etcDir } from '../../../src/web/settings.mjs';
+import { jsonRemoteCall } from '../../../src/web/mqtt.mjs';
 
 const csvFolder = path.join(etcDir, 'DB/SOLAR');
 
@@ -130,11 +130,11 @@ function getPvChart(day) {
 }
 
 export function register(app) {
-    app.get('/svc/solarStatus', async (_req, res) => {
+    app.get('/solar/solarStatus', async (_req, res) => {
         jsonRemoteCall(res, "solar/getStatus");
     });
 
-    app.get('/svc/solarPowToday', (req, res) => {
+    app.get('/solar/solarPowToday', (req, res) => {
         setTimeout(() => {
             res.send(getPvChart(req.query && Number(req.query.day)));
         }, 1000);
