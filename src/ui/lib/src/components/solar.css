@@ -1,4 +1,10 @@
-@import url(./common.css);
+.bot {
+    bottom: 0;
+    position: absolute; 
+}
+.err {
+    color: red;
+}
 
 .muted {
     color: gray;

@@ -21,7 +21,7 @@ interface IPvData {
 }
 
 @Component({
-    selector: 'app-solar',
+    selector: 'solar-component',
     templateUrl: './solar.html',
     styleUrls: ['./solar.css']
 })
