@@ -139,4 +139,7 @@
   <data name="solar_error_mail_title" xml:space="preserve">
     <value>Inverter Errors</value>
   </data>
+  <data name="startupMessage" xml:space="preserve">
+    <value>Server Restarted</value>
+  </data>
 </root>

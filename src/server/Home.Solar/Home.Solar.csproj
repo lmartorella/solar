@@ -44,8 +44,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bootstrap.cs" />
+    <Compile Include="Db\CsvAggregate.cs" />
+    <Compile Include="Db\CsvAttribute.cs" />
+    <Compile Include="Db\CsvHelper.cs" />
+    <Compile Include="Db\FsTimeSeries.cs" />
+    <Compile Include="Db\ITimeSeries.cs" />
     <Compile Include="Device\Sofar\PollStrategyManager.cs" />
     <Compile Include="Device\Sofar\Zcs6000TlmV3.cs" />
+    <Compile Include="Services\ConfigurationService.cs" />
+    <Compile Include="Services\IConfigurationService.cs" />
+    <Compile Include="Services\IIsolatedStorageService.cs" />
+    <Compile Include="Services\ILogger.cs" />
+    <Compile Include="Services\ILoggerFactory.cs" />
+    <Compile Include="Services\INotificationService.cs" />
+    <Compile Include="Services\IService.cs" />
+    <Compile Include="Services\JsonIsolatedStorageService.cs" />
+    <Compile Include="Services\LoggerExtensions.cs" />
+    <Compile Include="Services\LoggerFactory.cs" />
+    <Compile Include="Services\Manager.cs" />
+    <Compile Include="Services\MqttRemoteCallError.cs" />
+    <Compile Include="Services\MqttService.cs" />
+    <Compile Include="Services\NotificationService.cs" />
+    <Compile Include="Services\PersistenceService.cs" />
+    <Compile Include="Services\ServiceBase.cs" />
+    <Compile Include="Services\ServiceBaseWithData.cs" />
     <Compile Include="Solar\AnalogIntegratorRpc.cs" />
     <Compile Include="Solar\BaseDevice.cs" />
     <Compile Include="Solar\DayPowerData.cs" />
@@ -86,12 +109,12 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\server\Home.Common\Home.Common.csproj">
-      <Project>{b13f0047-1cee-4463-baf6-a943e225d875}</Project>
-      <Name>Home.Common</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
+    <PackageReference Include="MQTTnet">
+      <Version>4.2.0.706</Version>
+    </PackageReference>
+    <PackageReference Include="MQTTnet.Extensions.ManagedClient">
+      <Version>4.2.0.706</Version>
+    </PackageReference>
     <PackageReference Include="FluentModbus">
       <Version>5.0.3</Version>
     </PackageReference>

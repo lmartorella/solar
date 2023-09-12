@@ -126,5 +126,14 @@ namespace Lucky.Home {
                 return ResourceManager.GetString("solar_error_mail_title", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server Restarted.
+        /// </summary>
+        internal static string startupMessage {
+            get {
+                return ResourceManager.GetString("startupMessage", resourceCulture);
+            }
+        }
     }
 }
