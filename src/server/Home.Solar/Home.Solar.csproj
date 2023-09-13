@@ -1,114 +1,44 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{56D68DDD-EAFB-4498-A4E8-46EEA18880F4}</ProjectGuid>
+    <TargetFramework>net7.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>Lucky.Home</RootNamespace>
-    <AssemblyName>Home.Solar</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>..\..\..\..\target\bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\target\bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <AssemblyTitle>Home.Solar</AssemblyTitle>
+    <Product>Home.Solar</Product>
+    <Copyright>Copyright ©  2023</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Bootstrap.cs" />
-    <Compile Include="Db\CsvAggregate.cs" />
-    <Compile Include="Db\CsvAttribute.cs" />
-    <Compile Include="Db\CsvHelper.cs" />
-    <Compile Include="Db\FsTimeSeries.cs" />
-    <Compile Include="Db\ITimeSeries.cs" />
-    <Compile Include="Device\Sofar\PollStrategyManager.cs" />
-    <Compile Include="Device\Sofar\Zcs6000TlmV3.cs" />
-    <Compile Include="Services\ConfigurationService.cs" />
-    <Compile Include="Services\IConfigurationService.cs" />
-    <Compile Include="Services\IIsolatedStorageService.cs" />
-    <Compile Include="Services\ILogger.cs" />
-    <Compile Include="Services\ILoggerFactory.cs" />
-    <Compile Include="Services\INotificationService.cs" />
-    <Compile Include="Services\IService.cs" />
-    <Compile Include="Services\JsonIsolatedStorageService.cs" />
-    <Compile Include="Services\LoggerExtensions.cs" />
-    <Compile Include="Services\LoggerFactory.cs" />
-    <Compile Include="Services\Manager.cs" />
-    <Compile Include="Services\MqttRemoteCallError.cs" />
-    <Compile Include="Services\MqttService.cs" />
-    <Compile Include="Services\NotificationService.cs" />
-    <Compile Include="Services\PersistenceService.cs" />
-    <Compile Include="Services\ServiceBase.cs" />
-    <Compile Include="Services\ServiceBaseWithData.cs" />
-    <Compile Include="Solar\AnalogIntegratorRpc.cs" />
-    <Compile Include="Solar\BaseDevice.cs" />
-    <Compile Include="Solar\DayPowerData.cs" />
-    <Compile Include="Solar\PowerData.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resources.Designer.cs">
+    <Compile Update="Resources.Designer.cs">
       <DependentUpon>Resources.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Resources.it-IT.Designer.cs">
+    <Compile Update="Resources.it-IT.Designer.cs">
       <DependentUpon>Resources.it-IT.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Solar\InverterDevice.cs" />
-    <Compile Include="Solar\OnlineStatus.cs" />
-    <Compile Include="Solar\DataLogger.cs" />
-    <Compile Include="Solar\UserInterface.cs" />
-    <Compile Include="Solar\WebMessages.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="UI\solar_daily_summary.it-IT.txt" />
     <Content Include="UI\solar_daily_summary.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources.it-IT.resx">
+    <EmbeddedResource Update="Resources.it-IT.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.it-IT.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources.resx">
+    <EmbeddedResource Update="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="MQTTnet">
       <Version>4.2.0.706</Version>
     </PackageReference>
@@ -118,6 +48,6 @@
     <PackageReference Include="FluentModbus">
       <Version>5.0.3</Version>
     </PackageReference>
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
