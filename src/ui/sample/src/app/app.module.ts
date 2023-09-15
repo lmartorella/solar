@@ -14,7 +14,7 @@ import { SolarModule } from 'solar-lib';
     BrowserModule,
     HttpClientModule,
     FormsModule,
-    SolarModule
+    SolarModule.forRoot({ baseUrl: "http://localhost:8081" })
   ],
   bootstrap: [AppComponent]
 })

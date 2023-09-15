@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from "@angular/core";
 import { res, format } from "../services/resources";
 import { HttpClient } from "@angular/common/http";
-import { checkXhr } from "../services/xhr";
+import { XhrService } from "../services/xhr";
 
 interface IPvData { 
     status: number;
@@ -36,7 +36,7 @@ export class SolarComponent implements OnInit {
     public readonly format: (str: string, args?: any) => string;
     public chartLoading = false;
 
-    constructor(private readonly http: HttpClient) {
+    constructor(private xhr: XhrService, private readonly http: HttpClient) {
         this.res = res as unknown as { [key: string]: string };
         this.format = format;
     }
@@ -46,7 +46,7 @@ export class SolarComponent implements OnInit {
         this.loaded = false;
 
         try {
-            this.pvData = await checkXhr(this.http.get<IPvData>('/solar/solarStatus'));
+            this.pvData = await this.xhr.check(this.http.get<IPvData>(`${this.xhr.baseUrl}/solar/solarStatus`));
             switch (this.pvData.status) {
                 case 1: this.status = res["Device_StatusOnline"]; break;
                 case 2: this.status = res["Device_StatusOffline"]; break;
@@ -87,7 +87,7 @@ export class SolarComponent implements OnInit {
     }
 
     private async getDayDataSeries(day: number): Promise<Partial<Plotly.PlotData> | null> {
-        const data = await checkXhr(this.http.get<IPvData>(`/solar/solarPowToday?day=${day}`));
+        const data = await this.xhr.check(this.http.get<IPvData>(`${this.xhr.baseUrl}/solar/solarPowToday?day=${day}`));
         if (!Array.isArray(data)) {
             throw new Error("Unexpected data format");
         }
