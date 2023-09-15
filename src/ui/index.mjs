@@ -1,6 +1,5 @@
+import * as solar from "./solar.mjs";
 
-import * as solar from './solar.mjs';
-
-export function register(app, privileged) {
-    solar.register(app, privileged);
+export const register = app => {
+    solar.register(app);
 };

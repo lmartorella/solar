@@ -1,17 +1,16 @@
-import path from 'path';
-import fs from 'fs';
-import moment from 'moment';
-import { setTimeout } from 'timers';
-import { etcDir } from '../../../src/web/settings.mjs';
-import { jsonRemoteCall } from '../../../src/web/mqtt.mjs';
+import path from "path";
+import fs from "fs";
+import moment from "moment";
+import { setTimeout } from "timers";
+import { jsonRemoteCall } from "./mqtt.mjs";
 
-const csvFolder = path.join(etcDir, 'DB/SOLAR');
+let csvFolder;
 
-function parseCsv(path) {
-    var content = fs.readFileSync(path, 'utf8');
-    var colKeys = { };
-    var rows = content.split('\n').map((line, idx) => {
-        var cells = line.replace('\r', '').split(',');
+const parseCsv = path => {
+    const content = fs.readFileSync(path, "utf8");
+    let colKeys = { };
+    const rows = content.split("\n").map((line, idx) => {
+        const cells = line.replace("\r", "").split(",");
         if (idx === 0) {
             // Decode keys
             colKeys = cells.reduce((acc, k, i) => {
@@ -23,7 +22,7 @@ function parseCsv(path) {
             return cells.map((cell, i) => {
                 if (i === 0) {
                     // First column should be a time. If not, nullify the whole row (e.g. csv headers)
-                    return (cell.indexOf(':') > 0) && cell;
+                    return (cell.indexOf(":") > 0) && cell;
                 } else {
                     // Other columns are number
                     return Number(cell);
@@ -35,7 +34,7 @@ function parseCsv(path) {
         colKeys, 
         rows
     };
-}
+};
 
 // Day can be 0 or -1 (T-1), -2, etc..
 function getCsvName(day) {
@@ -44,10 +43,10 @@ function getCsvName(day) {
     }
 
     // Get the latest CSV in the disk
-    var files = fs.readdirSync(csvFolder).filter(f => fs.lstatSync(path.join(csvFolder, f)).isFile() && f[0] !== '_');
+    let files = fs.readdirSync(csvFolder).filter(f => fs.lstatSync(path.join(csvFolder, f)).isFile() && f[0] !== "_");
     // Sort it by date
     files = files.sort();
-    var idx = files.length - 1 + (day || 0);
+    const idx = files.length - 1 + (day || 0);
 
     if (idx < 0) {
         return null;
@@ -57,8 +56,8 @@ function getCsvName(day) {
 }
 
 function formatDur(dur) {
-    var ts = moment().startOf('day').add(dur);
-    return ts.format('HH:mm');
+    const ts = moment().startOf("day").add(dur);
+    return ts.format("HH:mm");
 }
 
 
@@ -68,10 +67,10 @@ function sampleAtMin(arr) {
         return [];
     }
 
-    let toDateMin = (str) => {
-        var dur = moment.duration(str);
+    const toDateMin = (str) => {
+        const dur = moment.duration(str);
         return moment.duration(Math.floor(dur.asMinutes()), "minutes");
-    }
+    };
 
     let lastMin = toDateMin(arr[0].ts);
     let count = 0;
@@ -79,7 +78,7 @@ function sampleAtMin(arr) {
     return arr.reduce((ret, val) => {
         acc += val.value;
         count++;
-        let min = toDateMin(val.ts);
+        const min = toDateMin(val.ts);
         if (min > lastMin) {
             ret.push({ ts: formatDur(min), value: acc / count });
             count = 0;
@@ -109,19 +108,19 @@ function last(arr, handler) {
 }
 
 function getPvChart(day) {
-    var csv = getCsvName(day);
+    const csv = getCsvName(day);
     if (!csv) {
         return [];
     }
-    var data = parseCsv(path.join(csvFolder, csv));
-    var tsIdx = data.colKeys['TimeStamp'];
-    var powIdx = data.colKeys['PowerW'];
-    let ret = sampleAtMin(data.rows.map(row => {
+    const data = parseCsv(path.join(csvFolder, csv));
+    const tsIdx = data.colKeys["TimeStamp"];
+    const powIdx = data.colKeys["PowerW"];
+    const ret = sampleAtMin(data.rows.map(row => {
         return { ts: row[tsIdx], value: row[powIdx] };
     }));
     // Trim initial and final zeroes
-    let i1 = first(ret, i => i.value > 0);
-    let i2 = last(ret, i => i.value > 0);
+    const i1 = first(ret, i => i.value > 0);
+    const i2 = last(ret, i => i.value > 0);
     if (i1 >= 0 && i2 >= 0) {
         return ret.slice(i1, i2);
     } else {
@@ -129,12 +128,13 @@ function getPvChart(day) {
     }
 }
 
-export function register(app) {
-    app.get('/solar/solarStatus', async (_req, res) => {
+export function register(app, _csvFolder) {
+    csvFolder = _csvFolder;
+    app.get("/solar/solarStatus", async (_req, res) => {
         jsonRemoteCall(res, "solar/getStatus");
     });
 
-    app.get('/solar/solarPowToday', (req, res) => {
+    app.get("/solar/solarPowToday", (req, res) => {
         setTimeout(() => {
             res.send(getPvChart(req.query && Number(req.query.day)));
         }, 1000);

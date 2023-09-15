@@ -1,13 +1,17 @@
 # Web application
 
-This is a sample web application that leverages the [JS web-server](../../../src/web/README.md) to interact with the Home system remotely.
+## Library
 
-It is written in AngularjS (quite obsolete now) and supports:
-- see solar panel real-time statistics and charts, up to 4 days in the past
-- check and program the garden programmer.
-- start/stop the server
-- access the logs.
+The `lib` folder contains the Angular library that encapsulate the UI.
 
-TODO: i18n
+It shows solar panel real-time statistics and charts, up to 4 days in the past, and power meter data.
 
-![](../../doc/webapp.png)
+The `index.mjs` file instead is a Node.JS module for Express JS that implement the server-side REST API to communicate with MQTT.
+
+The library is meant to be loaded in a portal that contains other home automation UIs as well.
+
+## Sample
+
+The `sample` folder implements a very simple web app that shows a bare minimum UI for the solar library.
+
+Use `ng serve` to serve it in Angular server, and `npm run express` to start the REST API.
