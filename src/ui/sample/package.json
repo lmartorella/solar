@@ -1,4 +1,5 @@
 {
+  "name": "solar-sample",
   "scripts": {
     "build": "npx ng build --configuration production",
     "dev": "npx ng build --configuration development",

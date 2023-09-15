@@ -21,8 +21,12 @@
               "zone.js"
             ],
             "tsConfig": "tsconfig.app.json",
-            "assets": [],
-            "styles": [],
+            "assets": [
+              "./src/assets"
+            ],
+            "styles": [
+              "./src/styles.css"
+            ],
             "scripts": [],
             "allowedCommonJsDependencies": [
               "plotly.js",
