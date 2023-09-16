@@ -128,13 +128,13 @@ function getPvChart(day) {
     }
 }
 
-let lastData = { };
+let lastData = null;
 let lastErr;
 
 export function register(app, _csvFolder) {
     csvFolder = _csvFolder;
 
-    subscribeJsonTopic("ui/solar", data => (lastData = data, lastErr = null), err => lastErr = err);
+    subscribeJsonTopic("ui/solar", data => (lastData = data, lastErr = null), err => (lastErr = err, lastData = null));
 
     app.get("/solar/solarStatus", async (_req, res) => {
         if (lastErr) {
