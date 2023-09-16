@@ -1,11 +1,9 @@
-﻿using FluentModbus;
-using Lucky.Home.Services;
+﻿using Lucky.Home.Services;
 using Lucky.Home.Solar;
 using System;
-using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using ModbusClient = Lucky.Home.Services.ModbusClient;
 
 namespace Lucky.Home.Device.Sofar
 {
@@ -15,18 +13,16 @@ namespace Lucky.Home.Device.Sofar
     class Zcs6000TlmV3
     {
         private MqttService mqttService;
-        private readonly ModbusTcpClient modbusClient = new ModbusTcpClient();
-        private bool _connecting;
-        private readonly string _deviceHostName;
-        private readonly ILogger Logger;
+        private readonly ModbusClient modbusClient;
+        private int modbusNodeId;
+        private readonly PollStrategyManager pollStrategyManager;
 
-        private const int ModbusNodeId = 1;
-
-        public Zcs6000TlmV3(string deviceHostName)
+        public Zcs6000TlmV3(PollStrategyManager pollStrategyManager, string deviceHostName, int modbusNodeId)
         {
-            _deviceHostName = deviceHostName;
-            Logger = Manager.GetService<ILoggerFactory>().Create("Zcs6000TlmV3");
-            var pollStrategyManager = Manager.GetService<PollStrategyManager>();
+            this.modbusNodeId = modbusNodeId;
+            this.pollStrategyManager = pollStrategyManager;
+
+            modbusClient = Manager.GetService<ModbusClientFactory>().Get(deviceHostName, FluentModbus.ModbusEndianness.BigEndian);
             pollStrategyManager.PullData += (o, e) =>
             {
                 e.Task = PullData(e);
@@ -34,70 +30,26 @@ namespace Lucky.Home.Device.Sofar
             mqttService = Manager.GetService<MqttService>();
         }
 
-        private async Task StartConnect(TimeSpan connectTimeout)
+        public Task StartLoop()
         {
-            if (_connecting)
-            {
-                return;
-            }
-            _connecting = true;
-
-            try
-            {
-                IPAddress address = null;
-                try
-                {
-                    address = (await Dns.GetHostEntryAsync(_deviceHostName)).AddressList.Where(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).FirstOrDefault();
-                }
-                catch (Exception err)
-                {
-                    Logger.Log("DnsErr", "resolving", _deviceHostName, "err", err.Message);
-                    return;
-                }
-
-                if (address == null)
-                {
-                    Logger.Log("DnsErr", "resolving", _deviceHostName, "err", "no result");
-                    return;
-                }
-
-                modbusClient.ConnectTimeout = (int)connectTimeout.TotalMilliseconds;
-
-                try
-                {
-                    modbusClient.Connect(address, ModbusEndianness.BigEndian);
-                }
-                catch (Exception err)
-                {
-                    Logger.Log("ModbusConnect", "connectingTo", address, "err", err.Message);
-                    return;
-                }
-            }
-            finally
-            {
-                _connecting = false;
-            }
+            return pollStrategyManager.StartLoop();
         }
 
         private async Task PullData(PollStrategyManager.PullDataEventArgs args)
         {
-            // Publis the state machine state
+            // Publish the state machine state
             await mqttService.RawPublish(InverterDevice.SolarStateTopicId, Encoding.UTF8.GetBytes(args.State.ToString()));
 
             // Check TCP MODBUS connection
-            if (!modbusClient.IsConnected)
+            if (!modbusClient.CheckConnected())
             {
-                _ = StartConnect(args.ConnectTimeout);
                 args.IsConnected = false;
-                return;
             }
             else
             {
-                _connecting = false;
                 var data = await GetData();
                 args.DataValid = data != null;
                 args.IsConnected = true;
-
                 await PublishData(data);
             }
         }
@@ -118,18 +70,19 @@ namespace Lucky.Home.Device.Sofar
 
         private class RegistryValues
         {
-            private AddressRange Addresses;
+            private readonly AddressRange Addresses;
+            private readonly int modbusNodeId;
             private ushort[] Data;
 
-            public RegistryValues(AddressRange addresses)
+            public RegistryValues(AddressRange addresses, int modbusNodeId)
             {
                 Addresses = addresses;
+                this.modbusNodeId = modbusNodeId;
             }
 
             public async Task ReadData(ModbusClient client)
             {
-                var data = await client.ReadHoldingRegistersAsync<ushort>(ModbusNodeId, Addresses.Start, Addresses.End - Addresses.Start + 1);
-                Data = data.ToArray();
+                Data = await client.ReadHoldingRegistries(modbusNodeId, Addresses.Start, Addresses.End - Addresses.Start + 1);
             }
 
             public ushort GetValueAt(int address)
@@ -140,8 +93,8 @@ namespace Lucky.Home.Device.Sofar
 
         private class GridRegistryValues : RegistryValues
         {
-            public GridRegistryValues()
-                :base(new AddressRange { Start = 0x484, End = 0x48e })
+            public GridRegistryValues(int modbusNodeId)
+                :base(new AddressRange { Start = 0x484, End = 0x48e }, modbusNodeId)
             {
             }
 
@@ -180,8 +133,8 @@ namespace Lucky.Home.Device.Sofar
 
         private class StringsRegistryValues : RegistryValues
         {
-            public StringsRegistryValues()
-                :base(new AddressRange { Start = 0x584, End = 0x589 })
+            public StringsRegistryValues(int modbusNodeId)
+                :base(new AddressRange { Start = 0x584, End = 0x589 }, modbusNodeId)
             {
             }
 
@@ -236,8 +189,8 @@ namespace Lucky.Home.Device.Sofar
 
         private class ChargeRegistryValues : RegistryValues
         {
-            public ChargeRegistryValues()
-                : base(new AddressRange { Start = 0x426, End = 0x426 })
+            public ChargeRegistryValues(int modbusNodeId)
+                : base(new AddressRange { Start = 0x426, End = 0x426 }, modbusNodeId)
             {
             }
 
@@ -255,11 +208,11 @@ namespace Lucky.Home.Device.Sofar
             var data = new PowerData();
 
             // Aggregate data in order to minimize the block readings
-            var gridData = new GridRegistryValues();
+            var gridData = new GridRegistryValues(modbusNodeId);
             await gridData.ReadData(modbusClient);
-            var stringsData = new StringsRegistryValues();
+            var stringsData = new StringsRegistryValues(modbusNodeId);
             await stringsData.ReadData(modbusClient);
-            var chargeData = new ChargeRegistryValues();
+            var chargeData = new ChargeRegistryValues(modbusNodeId);
             await chargeData.ReadData(modbusClient);
 
             data.GridCurrentA = gridData.CurrentA;

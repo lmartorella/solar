@@ -18,7 +18,7 @@ namespace Lucky.Home.Solar
         public const string Topic = "ui/solar";
         public const string WillPayload = "null";
 
-        public UserInterface(DataLogger dataLogger, InverterDevice inverterDevice, AnalogIntegratorRpc ammeterSink)
+        public UserInterface(DataLogger dataLogger, InverterDevice inverterDevice, AnalogIntegrator ammeterSink)
         {
             this.dataLogger = dataLogger;
             mqttService = Manager.GetService<MqttService>();

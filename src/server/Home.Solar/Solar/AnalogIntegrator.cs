@@ -4,16 +4,21 @@ using System.Text;
 
 namespace Lucky.Home.Solar
 {
-    class AnalogIntegratorRpc
+    class AnalogIntegrator
     {
         private MqttService mqttService;
         private double? data;
 
-        public AnalogIntegratorRpc()
+        /// <summary>
+        /// RAW float LE data published by the ammeter
+        /// </summary>
+        public const string DataTopicId = "ammeter_0/value";
+
+        public AnalogIntegrator()
         {
             mqttService = Manager.GetService<MqttService>();
             // The ammeter uses will to send zero byte packet when disconnected
-            _ = mqttService.SubscribeRawTopic("ammeter_0/value", data => HandleData(data));
+            _ = mqttService.SubscribeRawTopic(DataTopicId, HandleData);
         }
 
         private void HandleData(byte[] data)

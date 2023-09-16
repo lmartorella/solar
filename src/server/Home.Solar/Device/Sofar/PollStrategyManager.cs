@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Lucky.Home.Device.Sofar
 {
-    class PollStrategyManager : ServiceBase
+    class PollStrategyManager
     {
         private StateEnum state = StateEnum.NightMode;
         private DateTime _lastValidData = DateTime.Now;
@@ -29,7 +29,6 @@ namespace Lucky.Home.Device.Sofar
         /// During day (e.g. when samples are working), retry every 10 seconds
         /// </summary>
         private static readonly TimeSpan CheckConnectionPeriodDay = TimeSpan.FromSeconds(10); // Less than grace time
-        private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(5);
 
         /// <summary>
         /// During night (e.g. when last sample is older that 2 minutes), retry every 2 minutes, to give time to the inverter to 
@@ -82,8 +81,6 @@ namespace Lucky.Home.Device.Sofar
             /// </summary>
             public Task Task;
 
-            public TimeSpan ConnectTimeout;
-
             /// <summary>
             /// Modbus bridge TCP is connected? (even if inverter is not responsive).
             /// When the bridge is powered by the inverter itself, during night the connection will be lost.
@@ -94,6 +91,11 @@ namespace Lucky.Home.Device.Sofar
             /// Data valid?
             /// </summary>
             public bool DataValid;
+        }
+
+        public PollStrategyManager()
+        {
+            Logger = Manager.GetService<ILoggerFactory>().Create("PollStrategy");
         }
 
         public event EventHandler<PullDataEventArgs> PullData;
@@ -114,10 +116,12 @@ namespace Lucky.Home.Device.Sofar
             }
         }
 
+        public ILogger Logger { get; }
+
         private async Task PullNow()
         {
             // Ask data to inverter via MODBUS. The inverter will update the MQTT in case of good data.
-            var args = new PullDataEventArgs { State = State, ConnectTimeout = ConnectTimeout };
+            var args = new PullDataEventArgs { State = State };
             PullData?.Invoke(this, args);
             if (args.Task != null)
             {

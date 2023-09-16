@@ -18,7 +18,7 @@ namespace Lucky.Home.Solar
         private readonly ILogger Logger;
         private double? _lastAmmeterValue = null;
 
-        public DataLogger(InverterDevice inverterDevice, AnalogIntegratorRpc ammeterSink)
+        public DataLogger(InverterDevice inverterDevice, AnalogIntegrator ammeterSink)
         {
             Logger = Manager.GetService<ILoggerFactory>().Create("DataLogger");
             inverterDevice.NewData += (o, e) => HandleNewData(e);

@@ -97,16 +97,14 @@ namespace Lucky.Home.Services
         /// </summary>
         public async Task RawPublish(string topic, byte[] value)
         {
-            if (!mqttClient.IsConnected)
+            if (mqttClient.IsConnected)
             {
-                throw new InvalidOperationException("Broker not connected");
+                var message = mqttFactory.CreateApplicationMessageBuilder()
+                    .WithPayload(value)
+                    .WithTopic(topic).
+                    Build();
+                await mqttClient.InternalClient.PublishAsync(message);
             }
-
-            var message = mqttFactory.CreateApplicationMessageBuilder()
-                .WithPayload(value)
-                .WithTopic(topic).
-                Build();
-            await mqttClient.InternalClient.PublishAsync(message);
         }
 
         /// <summary>

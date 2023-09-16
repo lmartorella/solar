@@ -1,5 +1,6 @@
 ﻿using Lucky.Home;
 using Lucky.Home.Db;
+using Lucky.Home.Device;
 using Lucky.Home.Device.Sofar;
 using Lucky.Home.Services;
 using Lucky.Home.Solar;
@@ -16,14 +17,13 @@ namespace Home.Solar
         private static readonly TimeSpan PeriodLenght = TimeSpan.FromDays(1);
         private static Timer _timerMinute;
 
-        //private const string DeviceHostName = "esp32.";
         private const string DeviceHostName = "localhost";
 
         public static async Task Main(string[] arguments)
         {
             await Bootstrap.Start(arguments, "solar");
 
-            var ammeter = new AnalogIntegratorRpc();
+            var ammeter = new AnalogIntegrator();
             var inverter = new InverterDevice();
             var dataLogger = new DataLogger(inverter, ammeter);
             var userInterface = new UserInterface(dataLogger, inverter, ammeter);
@@ -52,10 +52,19 @@ namespace Home.Solar
 
             dataLogger.Init(db);
 
-            new Zcs6000TlmV3(DeviceHostName);
+            await StartModbusBridges();
+        }
 
-            var pollStrategyManager = Manager.GetService<PollStrategyManager>();
-            await pollStrategyManager.StartLoop();
+        /// <summary>
+        /// Start modbus to mqtt bridges
+        /// </summary>
+        private static async Task StartModbusBridges()
+        {
+            var pollStrategyManager = new PollStrategyManager();
+            var inverterBridge = new Zcs6000TlmV3(pollStrategyManager, DeviceHostName, 1);
+            var ammeter = new ModbusAmmeter(DeviceHostName, 2);
+
+            await Task.WhenAll(inverterBridge.StartLoop(), ammeter.StartLoop());
         }
     }
 }
