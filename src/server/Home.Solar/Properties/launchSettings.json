@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Home.Solar": {
+      "commandName": "Project",
+      "workingDirectory": "$(OutputPath)\\..\\.."
+    }
+  }
+}

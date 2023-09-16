@@ -13,8 +13,7 @@ namespace Lucky.Home.Services
             string wrkDir = Manager.GetService<IConfigurationService>().GetConfig("wrk");
             if (wrkDir == null)
             {
-                wrkDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                wrkDir = Path.Combine(wrkDir, "Home");
+                wrkDir = Path.Combine(Environment.CurrentDirectory, "etc");
             }
             if (!string.IsNullOrEmpty(root))
             {

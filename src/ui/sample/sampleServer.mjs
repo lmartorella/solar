@@ -1,8 +1,10 @@
-import express from "express";
-import compression from "compression";
 import bodyParser from "body-parser";
-import * as solar from "../index.mjs";
+import compression from "compression";
 import cors from "cors";
+import express from "express";
+import path from "path";
+import process from "process";
+import * as solar from "../index.mjs";
 
 const port = 8081;
 
@@ -23,7 +25,7 @@ const corsOptions = {
 // Register custom endpoints
 solar.register({
     get: (url, options) => app.get(url, cors(corsOptions), options)
-}, "../dist/csv");
+}, path.join(process.cwd(), "../../../../target/etc/Db/SOLAR"));
 
 app.listen(port, () => {
     console.log(`REST server started at http://localhost:${port}`);
