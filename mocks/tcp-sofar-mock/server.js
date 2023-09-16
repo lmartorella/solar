@@ -4,7 +4,6 @@ import net from 'net';
 const netServer = new net.Server();
 const server = new modbus.server.TCP(netServer, { holding: Buffer.alloc(0x2000 * 2)});
 netServer.listen(502);
-
 const addresses = { 
     totalChargeToday: 0x426, // In (Ah / 2) * 10
 
