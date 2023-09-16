@@ -20,7 +20,7 @@ export class XhrService {
                 if ((data as T & { error?: string })?.error) {
                     reject(new Error((data as T & { error?: string }).error));
                 } else if (!data) {
-                    reject(new Error("Empty response"));
+                    reject(new Error("Server down"));
                 } else {
                     resolve(data);
                 }

@@ -2,7 +2,6 @@
 using Lucky.Home.Device.Sofar;
 using Lucky.Home.Services;
 using System;
-using System.Threading.Tasks;
 
 namespace Lucky.Home.Solar
 {
@@ -14,20 +13,25 @@ namespace Lucky.Home.Solar
     {
         private bool _isSummarySent = true;
         private ITimeSeries<PowerData, DayPowerData> Database { get; set; }
-        private readonly AnalogIntegratorRpc ammeterSink;
         private string _lastFault = null;
         private IStatusUpdate _lastFaultMessage;
         private readonly ILogger Logger;
+        private double? _lastAmmeterValue = null;
 
         public DataLogger(InverterDevice inverterDevice, AnalogIntegratorRpc ammeterSink)
         {
             Logger = Manager.GetService<ILoggerFactory>().Create("DataLogger");
-            this.ammeterSink = ammeterSink;
-            inverterDevice.NewData += (o, e) => _ = HandleNewData(e);
+            inverterDevice.NewData += (o, e) => HandleNewData(e);
             inverterDevice.StateChanged += (o, e) => HandleStateChanged(inverterDevice.State);
+            ammeterSink.DataChanged += (o, e) => UpdateAmmeterValue(ammeterSink.Data);
         }
 
-        private async Task HandleNewData(PowerData data)
+        private void UpdateAmmeterValue(double? data)
+        {
+            _lastAmmeterValue = data;
+        }
+
+        private void HandleNewData(PowerData data)
         {
             // Don't log OFF states
             if (data.InverterState == InverterStates.Off)
@@ -37,7 +41,7 @@ namespace Lucky.Home.Solar
             // Use the current grid voltage to calculate Net Energy Metering
             if (data.GridVoltageV > 0)
             {
-                data.HomeUsageCurrentA = (await ammeterSink.ReadData()) ?? -1;
+                data.HomeUsageCurrentA = _lastAmmeterValue ?? -1;
             }
             var db = Database;
             if (db != null)

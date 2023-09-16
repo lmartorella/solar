@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import moment from "moment";
 import { setTimeout } from "timers";
-import { jsonRemoteCall } from "./mqtt.mjs";
+import { subscribeJsonTopic } from "./mqtt.mjs";
 
 let csvFolder;
 
@@ -30,8 +30,8 @@ const parseCsv = path => {
             });
         }
     }).filter(row => row && row[0]);
-    return { 
-        colKeys, 
+    return {
+        colKeys,
         rows
     };
 };
@@ -128,10 +128,21 @@ function getPvChart(day) {
     }
 }
 
+let lastData = { };
+let lastErr;
+
 export function register(app, _csvFolder) {
     csvFolder = _csvFolder;
+
+    subscribeJsonTopic("ui/solar", data => (lastData = data, lastErr = null), err => lastErr = err);
+
     app.get("/solar/solarStatus", async (_req, res) => {
-        jsonRemoteCall(res, "solar/getStatus");
+        if (lastErr) {
+            res.statusMessage = lastErr.message;
+            res.status(500).end();
+        } else {
+            res.send(lastData);
+        }
     });
 
     app.get("/solar/solarPowToday", (req, res) => {

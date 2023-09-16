@@ -49,13 +49,6 @@ namespace Lucky.Home
                 await Manager.GetService<INotificationService>().SendMail(Resources.startupMessage, mailBody, true);
             }
 
-            // Implements a IPC pipe with web server
-            _ = Manager.GetService<MqttService>().SubscribeJsonRpc(appName + "/kill", (RpcVoid _) =>
-            {
-                Manager.Kill(logger, "killed by parent process", TimeSpan.FromSeconds(1.5));
-                return Task.FromResult(new RpcVoid());
-            });
-
             return logger;
         }
     }

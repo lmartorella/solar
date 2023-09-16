@@ -1,6 +1,5 @@
 ﻿using Lucky.Home.Device.Sofar;
 using Lucky.Home.Services;
-using System.Threading.Tasks;
 
 namespace Lucky.Home.Solar
 {
@@ -8,64 +7,65 @@ namespace Lucky.Home.Solar
     {
         /// <summary>
         /// This will never resets, and keep track of the last sampled grid voltage. Used even during night by home ammeter
-        /// </summary>
+        /// </summary>s
         private double _lastPanelVoltageV = -1.0;
+        private double? _lastAmmeterValue = null;
 
-        private readonly AnalogIntegratorRpc ammeterSink;
-        private readonly InverterDevice inverterDevice;
+        private readonly MqttService mqttService;
         private readonly DataLogger dataLogger;
         private bool isInverterOnline;
+
+        public const string Topic = "ui/solar";
+        public const string WillPayload = "null";
 
         public UserInterface(DataLogger dataLogger, InverterDevice inverterDevice, AnalogIntegratorRpc ammeterSink)
         {
             this.dataLogger = dataLogger;
-            this.ammeterSink = ammeterSink;
-            this.inverterDevice = inverterDevice;
-            inverterDevice.NewData += (o, e) => HandleNewData(e);
-            inverterDevice.StateChanged += (o, e) => UpdateState(inverterDevice.State);
-            UpdateState(inverterDevice.State);
-
-            _ = Subscribe();
+            mqttService = Manager.GetService<MqttService>();
+            inverterDevice.NewData += (o, e) => HandleNewInverterData(e);
+            inverterDevice.StateChanged += (o, e) => UpdateInverterState(inverterDevice.State);
+            ammeterSink.DataChanged += (o, e) => UpdateAmmeterValue(ammeterSink.Data);
+            UpdateInverterState(inverterDevice.State);
         }
 
-        private void UpdateState(PollStrategyManager.StateEnum state)
+        private void UpdateAmmeterValue(double? data)
+        {
+            _lastAmmeterValue = data;
+            PublishUpdate();
+        }
+
+        private void UpdateInverterState(PollStrategyManager.StateEnum state)
         {
             isInverterOnline = state == PollStrategyManager.StateEnum.NightMode || state == PollStrategyManager.StateEnum.Online;
+            PublishUpdate();
         }
 
-        private async Task Subscribe()
-        {
-            await Manager.GetService<MqttService>().SubscribeJsonRpc<RpcVoid, SolarRpcResponse>("solar/getStatus", _ =>
-            {
-                return GetPvData();
-            });
-        }
-
-        private void HandleNewData(PowerData data)
+        private void HandleNewInverterData(PowerData data)
         {
             if (data.GridVoltageV > 0)
             {
                 _lastPanelVoltageV = data.GridVoltageV;
             }
+            PublishUpdate();
         }
 
         /// <summary>
-        /// Called by web GUI
+        /// For the web GUI
         /// </summary>
-        private async Task<SolarRpcResponse> GetPvData()
+        private void PublishUpdate()
         {
-            var ret = new SolarRpcResponse
+            var packet = new SolarRpcResponse
             {
                 Status = OnlineStatus
             };
             var lastSample = dataLogger.GetLastSample();
             if (lastSample != null)
             {
-                ret.CurrentW = lastSample.PowerW;
-                ret.CurrentTs = lastSample.FromInvariantTime(lastSample.TimeStamp).ToString("F");
-                ret.TotalDayWh = lastSample.EnergyTodayWh;
-                ret.TotalKwh = lastSample.TotalEnergyKWh;
-                ret.InverterState = lastSample.InverterState;
+                packet.CurrentW = lastSample.PowerW;
+                packet.CurrentTs = lastSample.FromInvariantTime(lastSample.TimeStamp).ToString("F");
+                packet.TotalDayWh = lastSample.EnergyTodayWh;
+                packet.TotalKwh = lastSample.TotalEnergyKWh;
+                packet.InverterState = lastSample.InverterState;
 
                 // From a recover boot 
                 if (_lastPanelVoltageV <= 0 && lastSample.GridVoltageV > 0)
@@ -77,40 +77,40 @@ namespace Lucky.Home.Solar
                 var dayData = dataLogger.GetAggregatedData();
                 if (dayData != null)
                 {
-                    ret.PeakW = dayData.PeakPowerW;
-                    ret.PeakTsTime = dayData.FromInvariantTime(dayData.PeakTimestamp).ToString("hh\\:mm\\:ss");
+                    packet.PeakW = dayData.PeakPowerW;
+                    packet.PeakTsTime = dayData.FromInvariantTime(dayData.PeakTimestamp).ToString("hh\\:mm\\:ss");
                 }
             }
 
             if (lastSample?.GridVoltageV > 0)
             {
-                ret.GridV = lastSample.GridVoltageV;
-                ret.UsageA = lastSample.HomeUsageCurrentA;
+                packet.GridV = lastSample.GridVoltageV;
+                packet.UsageA = lastSample.HomeUsageCurrentA;
             }
             else if (_lastPanelVoltageV > 0)
             {
                 // APPROX: Use last panel voltage with up-to-date home power usage
-                ret.GridV = _lastPanelVoltageV;
-                ret.UsageA = (await ammeterSink.ReadData()) ?? -1.0;
+                packet.GridV = _lastPanelVoltageV;
+                packet.UsageA = _lastAmmeterValue ?? -1.0;
             }
             else
             {
-                ret.GridV = -1;
-                ret.UsageA = -1.0;
+                packet.GridV = -1;
+                packet.UsageA = -1.0;
             }
 
-            return ret;
+            mqttService.JsonPublish(Topic, packet);
         }
 
         private OnlineStatus OnlineStatus
         {
             get
             {
-                if (ammeterSink.IsOnline && isInverterOnline)
+                if (_lastAmmeterValue.HasValue && isInverterOnline)
                 {
                     return OnlineStatus.Online;
                 }
-                if (!ammeterSink.IsOnline && !isInverterOnline)
+                if (!_lastAmmeterValue.HasValue && !isInverterOnline)
                 {
                     return OnlineStatus.Offline;
                 }

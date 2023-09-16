@@ -1,40 +1,51 @@
 ﻿using Lucky.Home.Services;
 using System;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Lucky.Home.Solar
 {
-    class AnalogIntegratorRpc : BaseDevice
+    class AnalogIntegratorRpc
     {
         private MqttService mqttService;
-        private Task<MqttService.RpcOriginator> rpc;
-        public static TimeSpan Timeout = TimeSpan.FromSeconds(2);
+        private double? data;
 
         public AnalogIntegratorRpc()
         {
             mqttService = Manager.GetService<MqttService>();
-            rpc = mqttService.RegisterRpcOriginator("ammeter_0/value", Timeout);
+            // The ammeter uses will to send zero byte packet when disconnected
+            _ = mqttService.SubscribeRawTopic("ammeter_0/value", data => HandleData(data));
         }
 
-        public async Task<double?> ReadData()
+        private void HandleData(byte[] data)
         {
-            try
+            if (data == null || data.Length == 0)
             {
-                var response = await (await rpc).RawRemoteCall();
-                if (response == null || response.Length == 0)
-                {
-                    IsOnline = false;
-                    return null;
-                }
-                IsOnline = true;
-                return double.Parse(Encoding.UTF8.GetString(response));
+                Data = null;
             }
-            catch (TaskCanceledException)
+            else
             {
-                // No data
-                IsOnline = false;
-                return null;
+                Data = double.Parse(Encoding.UTF8.GetString(data));
+            }
+        }
+
+        /// <summary>
+        /// Event raised when new data comes from the inverter, or the state changes
+        /// </summary>
+        public event EventHandler DataChanged;
+
+        /// <summary>
+        /// Last sample. Null means offline
+        /// </summary>
+        public double? Data
+        {
+            get => data;
+            set
+            {
+                if (data != value)
+                {
+                    data = value;
+                    DataChanged?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
     }

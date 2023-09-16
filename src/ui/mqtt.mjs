@@ -1,75 +1,53 @@
 import mqtt from "mqtt";
-import { Buffer } from "node:buffer";
 
 console.log("Connecting to MQTT...");
-const client  = mqtt.connect({ clientId: "webserver", protocolVersion: 5 });
+const client  = mqtt.connect({ clientId: "solar.webserver" });
+const topics = { };
+
+const subscribeAllTopics = () => {
+    Object.keys(topics).forEach(topic => {
+        if (!topics[topic].subscribed) {
+            client.subscribe(topic, err => {
+                if (err) {
+                    console.error("Can't subscribe: " + err.message);
+                    topics[topic].errHandler(new Error("Can't subscribe: " + err.message));
+                }
+            });
+            topics[topic].subscribed = true;
+        }
+    });
+};
 
 client.on("connect", () => {
     console.log("Connected to MQTT");
-    client.subscribe("ui/resp", err => {
-        if (err) {
-            console.error("Can't subscribe: " + err.message);
-            throw new Error("Can't subscribe: " + err.message);
-        }
-    });
+    subscribeAllTopics();
 });
 
 client.on("disconnect", () => {
     console.log("Disconnected from MQTT, reconnecting...");
+    Object.keys(topics).forEach(topic => topics[topic].subscribed = false);
     setTimeout(() => {
         client.reconnect();
     }, 4000);
 });
 
-const msgs = { };
-let msgIdx = 0;
-
-client.on("message", (topic, payload, packet) => {
-    if (topic === "ui/resp") {
-        const correlationData = packet.properties?.correlationData.toString();
-        const msg = msgs[correlationData];
-        if (msg) {
-            delete msgs[correlationData];
-            if (packet.properties?.contentType === "application/net_err+text") {
-                msg.reject(new Error(payload.toString()));
-            } else {
-                msg.resolve(payload.toString());
-            }
+client.on("message", (topic, payload) => {
+    const handlers = topics[topic];
+    if (handlers) {
+        let data;
+        try {
+            data = JSON.parse(payload.toString());
+        } catch (err) {
+            handlers.errHandler(new Error("Invalid data received"));
+            return;
         }
+        handlers.dataHandler(data);
     }
 });
 
-export const rawRemoteCall = (topic, payload) => {
-    if (!client.connected) {
-        throw new Error("Broker disconnected");
-    }
-    // Make request to server
-    const correlationData = Buffer.from(`C${msgIdx++}`);
-    let msg;
-    const promise = new Promise((resolve, reject) => {
-        msg = { resolve, reject };
-    });
-    msgs[correlationData] = msg;
-    
-    client.publish(topic, payload, { properties: { responseTopic: "ui/resp", correlationData } }, err => {
-        if (err) {
-            msg.reject(new Error(`Can't publish request: ${err.message}`));
-        }
-    });
-
-    const timeout = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Timeout contacting the remote process")), 3500);
-    });
-
-    return Promise.race([promise, timeout]);
-};
-
-export const jsonRemoteCall = async (res, topic, json) => {
-    try {
-        const resp = JSON.parse(await rawRemoteCall(topic, JSON.stringify(json)));
-        res.send(resp);
-    } catch (err) {
-        res.statusMessage = err.message;
-        res.status(500).end();
+export const subscribeJsonTopic = (topic, dataHandler, errHandler) => {
+    topics[topic] = { dataHandler, errHandler };
+    if (client.connected) {
+        subscribeAllTopics();
     }
 };
