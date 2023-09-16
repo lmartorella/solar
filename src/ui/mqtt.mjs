@@ -69,6 +69,7 @@ export const jsonRemoteCall = async (res, topic, json) => {
         const resp = JSON.parse(await rawRemoteCall(topic, JSON.stringify(json)));
         res.send(resp);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.statusMessage = err.message;
+        res.status(500).end();
     }
 };

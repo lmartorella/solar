@@ -1,5 +1,1 @@
-import * as solar from "./solar.mjs";
-
-export const register = app => {
-    solar.register(app);
-};
+export { register } from "./solar.mjs";
