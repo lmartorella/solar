@@ -4,7 +4,7 @@ import cors from "cors";
 import express from "express";
 import path from "path";
 import process from "process";
-import * as solar from "../index.mjs";
+import * as solar from "../lib/webserver";
 
 const port = 8081;
 
