@@ -4,7 +4,7 @@ import cors from "cors";
 import express from "express";
 import path from "path";
 import process from "process";
-import * as solar from "../lib/webserver";
+import { register } from "../lib/webserver/index.mjs";
 
 const port = 8081;
 
@@ -23,7 +23,7 @@ const corsOptions = {
 };
 
 // Register custom endpoints
-solar.register({
+register({
     get: (url, options) => app.get(url, cors(corsOptions), options)
 }, path.join(process.cwd(), "../../../../target/etc/Db/SOLAR"));
 

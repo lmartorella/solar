@@ -1,5 +1,5 @@
 {
-  "name": "solar-lib",
+  "name": "@lucky-home/solar-lib",
   "scripts": {
     "build": "npx ng build solar-lib"
   }
