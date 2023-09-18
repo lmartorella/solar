@@ -60,9 +60,11 @@ namespace Home.Solar
         /// </summary>
         private static async Task StartModbusBridges()
         {
+            var configuration = Manager.GetService<SolarConfigurationService>().State;
+
             var pollStrategyManager = new PollStrategyManager();
-            var inverterBridge = new Zcs6000TlmV3(pollStrategyManager, DeviceHostName, 1);
-            var ammeter = new ModbusAmmeter(DeviceHostName, 2);
+            var inverterBridge = new Zcs6000TlmV3(pollStrategyManager, configuration.InverterHostName, configuration.InverterStationId);
+            var ammeter = new ModbusAmmeter(configuration.AmmeterHostName, configuration.AmmeterStationId);
 
             await Task.WhenAll(inverterBridge.StartLoop(), ammeter.StartLoop());
         }
