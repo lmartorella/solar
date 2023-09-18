@@ -2,5 +2,10 @@
   "name": "@lucky-home/solar-lib",
   "scripts": {
     "build": "npx ng build solar-lib"
+  },
+  "exports": {
+    "./webserver": {
+      "default": "./webserver/index.mjs"
+    }
   }
 }

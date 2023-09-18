@@ -5,10 +5,5 @@
     "dev": "npx ng build --configuration development",
     "serve-ng": "npx ng serve",
     "serve-rest": "node sampleServer.mjs"
-  },
-  "devDependencies": {
-    "cors": "2.8.5",
-    "express": "4.18.2",
-    "@lucky-home/solar-lib": "file:../dist/solar-lib"
   }
 }

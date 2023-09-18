@@ -15,6 +15,8 @@
     "@angular/platform-browser-dynamic": "16.2.3",
     "@angular/router": "16.2.3",
     "@types/plotly.js": "1.54.22",
+    "cors": "2.8.5",
+    "express": "4.18.2",
     "eslint": "8.49.0",
     "moment": "2.29.4",
     "ng-packagr": "16.2.3",
