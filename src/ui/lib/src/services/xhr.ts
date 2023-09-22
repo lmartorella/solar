@@ -1,15 +1,20 @@
 import { HttpErrorResponse } from "@angular/common/http";
-import { Inject, Injectable } from "@angular/core";
+import { Injectable } from "@angular/core";
 import { Observable, catchError, of } from "rxjs";
-import { ISolarModuleConfig } from "../solar.module";
 
-@Injectable()
+export interface ISolarModuleConfig {
+    baseUrl?: string;
+  }
+  
+export const config: ISolarModuleConfig = { };
+
+@Injectable({ 
+    providedIn: 'root'
+})
 export class XhrService {
-    constructor(@Inject('config') config: ISolarModuleConfig) {
-        this.baseUrl = config?.baseUrl;
+    public get baseUrl(): string {
+        return config.baseUrl || "";
     }
-
-    public readonly baseUrl?: string;
 
     public check<T>(observable: Observable<T>): Promise<T> {
         return new Promise((resolve, reject) => {

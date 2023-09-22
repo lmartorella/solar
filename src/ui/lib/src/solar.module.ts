@@ -1,14 +1,9 @@
-import { ModuleWithProviders, NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
+import { NgModule } from '@angular/core';
 
 import { HttpClientModule } from '@angular/common/http';
 import { SolarComponent } from './components/solar';
 import { XhrService } from './services/xhr';
-
-export interface ISolarModuleConfig {
-  baseUrl?: string;
-}
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -21,16 +16,8 @@ export interface ISolarModuleConfig {
     SolarComponent
   ],
   imports: [
-    BrowserModule,
+    CommonModule,
     HttpClientModule,
-    FormsModule
   ]
 })
-export class SolarModule {
-  public static forRoot(configuration?: ISolarModuleConfig): ModuleWithProviders<SolarModule> {
-    return {
-      ngModule: SolarModule,
-      providers: [XhrService, { provide: 'config', useValue: configuration }]
-    };
-  }
-}
+export class SolarModule { }

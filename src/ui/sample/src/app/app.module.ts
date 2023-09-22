@@ -14,7 +14,7 @@ import { SolarModule } from '@lucky-home/solar-lib';
     BrowserModule,
     HttpClientModule,
     FormsModule,
-    SolarModule.forRoot({ baseUrl: "http://localhost:8081" })
+    SolarModule
   ],
   bootstrap: [AppComponent]
 })
