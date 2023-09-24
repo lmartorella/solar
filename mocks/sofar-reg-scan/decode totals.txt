@@ -1,0 +1,12 @@
+[0x426] 648: Production today?
+[0x428] 1985: Production week?
+[0x42a] 2354: Production month?
+
+30.37 kWh today
+69.01 kWh all
+
+
+ratio 4.68? uses grid voltage? 468/2 = 234 that is the CURRENT grid voltage
+
+
+
