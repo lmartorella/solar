@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name current-sensor-eagle-import)(type Legacy)(uri ${KIPRJMOD}/current-sensor-eagle-import.lib)(options "")(descr ""))
-)
