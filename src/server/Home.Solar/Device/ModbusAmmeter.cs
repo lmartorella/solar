@@ -16,7 +16,10 @@ namespace Lucky.Home.Device
         public ModbusAmmeter(string deviceHostName, int modbusNodeId)
         {
             this.modbusNodeId = modbusNodeId;
-            modbusClient = Manager.GetService<ModbusClientFactory>().Get(deviceHostName, FluentModbus.ModbusEndianness.BigEndian);
+            if (deviceHostName != "")
+            {
+                modbusClient = Manager.GetService<ModbusClientFactory>().Get(deviceHostName, FluentModbus.ModbusEndianness.BigEndian);
+            }
             mqttService = Manager.GetService<MqttService>();
         }
 
@@ -33,7 +36,7 @@ namespace Lucky.Home.Device
         private async Task PullData()
         {
             // Check TCP MODBUS connection
-            if (!modbusClient.CheckConnected())
+            if (modbusClient == null || !modbusClient.CheckConnected())
             {
                 await PublishData(null);
             }
