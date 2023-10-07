@@ -51,6 +51,8 @@ const doBurstRead = async () => {
                 } else if (err.err === "ModbusException") {
                     // Modbus error
                     results.push("E");
+                    // Wait for serial data to finish to flush from inverter to bridge to avoid other errors
+                    await asleep(500);
                 } else {
                     throw err;
                 }
