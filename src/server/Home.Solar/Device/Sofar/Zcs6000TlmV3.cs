@@ -2,6 +2,7 @@
 using Lucky.Home.Solar;
 using System;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ModbusClient = Lucky.Home.Services.ModbusClient;
 
@@ -205,33 +206,40 @@ namespace Lucky.Home.Device.Sofar
 
         private async Task<PowerData> GetData()
         {
-            var data = new PowerData();
+            try
+            {
+                var data = new PowerData();
 
-            // Aggregate data in order to minimize the block readings
-            var gridData = new GridRegistryValues(modbusNodeId);
-            await gridData.ReadData(modbusClient);
-            var stringsData = new StringsRegistryValues(modbusNodeId);
-            await stringsData.ReadData(modbusClient);
-            var chargeData = new ChargeRegistryValues(modbusNodeId);
-            await chargeData.ReadData(modbusClient);
+                // Aggregate data in order to minimize the block readings
+                var gridData = new GridRegistryValues(modbusNodeId);
+                await gridData.ReadData(modbusClient);
+                var stringsData = new StringsRegistryValues(modbusNodeId);
+                await stringsData.ReadData(modbusClient);
+                var chargeData = new ChargeRegistryValues(modbusNodeId);
+                await chargeData.ReadData(modbusClient);
 
-            data.GridCurrentA = gridData.CurrentA;
-            data.GridVoltageV = gridData.VoltageV;
-            data.GridFrequencyHz = gridData.FrequencyHz;
-            data.PowerW = gridData.PowerW;
+                data.GridCurrentA = gridData.CurrentA;
+                data.GridVoltageV = gridData.VoltageV;
+                data.GridFrequencyHz = gridData.FrequencyHz;
+                data.PowerW = gridData.PowerW;
 
-            data.String1CurrentA = stringsData.String1CurrentA;
-            data.String1VoltageV = stringsData.String1VoltageV;
-            data.String2CurrentA = stringsData.String2CurrentA;
-            data.String2VoltageV = stringsData.String2VoltageV;
+                data.String1CurrentA = stringsData.String1CurrentA;
+                data.String1VoltageV = stringsData.String1VoltageV;
+                data.String2CurrentA = stringsData.String2CurrentA;
+                data.String2VoltageV = stringsData.String2VoltageV;
 
-            data.EnergyTodayWh = chargeData.ChargeAh * data.GridVoltageV;
+                data.EnergyTodayWh = chargeData.ChargeAh * data.GridVoltageV;
 
-            data.InverterState = InverterStates.Normal;
-            data.TotalEnergyKWh = 0;
-            data.TimeStamp = DateTime.Now;
+                data.InverterState = InverterStates.Normal;
+                data.TotalEnergyKWh = 0;
+                data.TimeStamp = DateTime.Now;
 
-            return data;
+                return data;
+            }
+            catch (TimeoutException)
+            {
+                return null;
+            }
         }
     }
 }

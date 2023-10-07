@@ -84,12 +84,12 @@ namespace Lucky.Home.Services
 
         public async Task<ushort[]> ReadHoldingRegistries(int unitId, int addressStart, int count)
         {
-            return (await client.ReadHoldingRegistersAsync<ushort>(unitId, addressStart, count)).ToArray();
+            return (await client.ReadHoldingRegistersAsync<ushort>(unitId, addressStart, count).WaitAsync(TimeSpan.FromMilliseconds(1000))).ToArray();
         }
 
         public async Task<float[]> ReadHoldingRegistriesFloat(int unitId, int addressStart, int count)
         {
-            return (await client.ReadHoldingRegistersAsync<float>(unitId, addressStart, count)).ToArray();
+            return (await client.ReadHoldingRegistersAsync<float>(unitId, addressStart, count).WaitAsync(TimeSpan.FromMilliseconds(1000))).ToArray();
         }
     }
 }

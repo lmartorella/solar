@@ -65,7 +65,14 @@ namespace Lucky.Home.Device.Sofar
                         break;
                 }
                 await Task.Delay(timeout);
-                await PullNow();
+                try
+                {
+                    await PullNow();
+                }
+                catch (Exception e)
+                {
+                    Logger.Exception(e);
+                }
             }
         }
 
