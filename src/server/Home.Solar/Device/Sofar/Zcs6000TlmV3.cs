@@ -1,6 +1,7 @@
 ﻿using Lucky.Home.Services;
 using Lucky.Home.Solar;
 using System;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -237,6 +238,10 @@ namespace Lucky.Home.Device.Sofar
                 return data;
             }
             catch (TimeoutException)
+            {
+                return null;
+            }
+            catch (IOException)
             {
                 return null;
             }
