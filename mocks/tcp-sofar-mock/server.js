@@ -1,26 +1,45 @@
 import modbus from 'jsmodbus';
 import net from 'net';
-
-const netServer = new net.Server();
-const server = new modbus.server.TCP(netServer, { holding: Buffer.alloc(0x2000 * 2)});
+import { onKeyPress } from "./keypress.js";
 
 const inverterBuffer = Buffer.alloc(0x2000 * 2);
 const ammeterBuffer = Buffer.alloc(0x2000 * 2);
 
-netServer.listen(502);
+let netServer, modbusServer;
 
-server.on("preReadHoldingRegisters", request => {
-    switch (request.unitId) {
-    case 1:
-        inverterBuffer.copy(server.holding);
-        break;
-    case 2:
-        ammeterBuffer.copy(server.holding);
-        break;
-    default:
-        throw new Error("Unimplemented unit ID");
+const openSocket = () => {
+    if (netServer) {
+        return;
     }
-});
+    console.log("Open socket");
+    netServer = new net.Server();
+    modbusServer = new modbus.server.TCP(netServer, { holding: Buffer.alloc(0x2000 * 2)});
+    netServer.listen(502);
+    modbusServer.on("preReadHoldingRegisters", request => {
+        console.log(` Request to unit ${request.unitId}`);
+        switch (request.unitId) {
+        case 1:
+            inverterBuffer.copy(modbusServer.holding);
+            break;
+        case 2:
+            ammeterBuffer.copy(modbusServer.holding);
+            break;
+        default:
+            throw new Error("Unimplemented unit ID");
+        }
+    });
+};
+
+const closeSocket = () => {
+    if (!netServer) {
+        return;
+    }
+    console.log("Close socket");
+    netServer.close();
+    netServer = null;
+    modbusServer._socket.destroy();
+    modbusServer = null;
+};
 
 const addresses = { 
     totalChargeToday: 0x426, // In (Ah / 2) * 10
@@ -98,3 +117,14 @@ setInterval(() => {
 
 console.log("Serving at port 502 (modbus)");
 console.log("Serving Sofar inverter at unit ID 1 and ammeter at unit ID 2");
+
+console.log("Press 'q' to quit");
+
+onKeyPress(key => {
+    switch (key) {
+        case 'q':
+            process.exit(0); break;
+    }
+});
+
+openSocket();
