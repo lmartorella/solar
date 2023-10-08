@@ -57,7 +57,7 @@ namespace Lucky.Home.Services
                 }
                 catch (Exception err)
                 {
-                    Logger.Log("ModbusConnect", "connectingTo", address, "err", err.Message);
+                    Logger.Log("ModbusConnect", "connectingTo", address, "err", err.Message, "type", err.GetType().Name);
                     return;
                 }
             }
