@@ -21,6 +21,18 @@ namespace Home.Solar
 
         public static async Task Main(string[] arguments)
         {
+            try
+            {
+                await _Main(arguments);
+            }
+            catch (Exception exc)
+            {
+                Manager.GetService<LoggerFactory>().Create("Main").Exception(exc);
+            }
+        }
+
+        private static async Task _Main(string[] arguments)
+        {
             await Bootstrap.Start(arguments, "solar");
 
             var ammeter = new AnalogIntegrator();
@@ -66,7 +78,11 @@ namespace Home.Solar
             var inverterBridge = new Zcs6000TlmV3(pollStrategyManager, configuration.InverterHostName, configuration.InverterStationId);
             var ammeter = new ModbusAmmeter(configuration.AmmeterHostName, configuration.AmmeterStationId);
 
-            await Task.WhenAll(inverterBridge.StartLoop(), ammeter.StartLoop());
+            var inverterTask = inverterBridge.StartLoop();
+            var ammeterTask = ammeter.StartLoop();
+            var finishedTask = await Task.WhenAny(inverterTask, ammeterTask);
+            Manager.GetService<LoggerFactory>().Create("Main").Log("LoopExited", "task", finishedTask == inverterTask ? "inverter" : "ammeter");
+            await finishedTask;
         }
     }
 }
