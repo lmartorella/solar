@@ -19,7 +19,7 @@ namespace Lucky.Home.Services
             {
                 wrkDir = Path.Combine(wrkDir, root);
             }
-
+            wrkDir = Path.GetFullPath(wrkDir);
             if (!Directory.Exists(wrkDir))
             {
                 Directory.CreateDirectory(wrkDir);
