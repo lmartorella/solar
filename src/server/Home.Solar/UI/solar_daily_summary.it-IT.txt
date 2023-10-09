@@ -1,5 +1,7 @@
 ﻿Energia totale: {PowerKWh} kWh
-con un picco di {PeakPowerW}W alle {PeakTimestamp}.
+con un picco di {PeakPowerW}W alle {PeakPowerTimestamp}.
 
 Durata del giorno: {SunTime}
+
+Picco del voltaggio di rete di {PeakVoltageV}V alle {PeakVoltageTimestamp}.
 	
