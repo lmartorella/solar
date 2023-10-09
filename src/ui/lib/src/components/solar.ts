@@ -20,6 +20,12 @@ interface IPvData {
     inverterState: string;
 }
 
+interface IPvChartPoint {
+    ts: string;
+    power: number;
+    voltage: number;
+}
+
 @Component({
     selector: 'solar-component',
     templateUrl: './solar.html',
@@ -87,7 +93,7 @@ export class SolarComponent implements OnInit {
     }
 
     private async getDayDataSeries(day: number): Promise<Partial<Plotly.PlotData> | null> {
-        const data = await this.xhr.check(this.http.get<IPvData>(`${this.xhr.baseUrl}/solar/solarPowToday?day=${day}`));
+        const data = await this.xhr.check(this.http.get<IPvChartPoint[]>(`${this.xhr.baseUrl}/solar/solarPowToday?day=${day}`));
         if (!Array.isArray(data)) {
             throw new Error("Unexpected data format");
         }
@@ -96,10 +102,11 @@ export class SolarComponent implements OnInit {
         }
         return {
             x: data.map(s => s.ts),
-            y: data.map(s => s.value),
+            y: data.map(s => s.power),
             mode: 'lines',
             name: 'T' + (day === 0 ? '' : day.toString()),
-            type: 'scatter'
+            type: 'scatter',
+            hovertext: data.map(s => `${s.power}W, ${s.voltage}V`)
         };
     }
 
