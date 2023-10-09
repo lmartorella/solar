@@ -60,9 +60,8 @@ function formatDur(dur) {
     return ts.format("HH:mm");
 }
 
-
 // Sample each round minute
-function sampleAtMin(arr) {
+function averageToMinute(arr, props) {
     if (arr.length === 0) {
         return [];
     }
@@ -74,18 +73,23 @@ function sampleAtMin(arr) {
 
     let lastMin = toDateMin(arr[0].ts);
     let count = 0;
-    let acc = 0;
+
+    const accumulators = { };
+    props.forEach(prop => accumulators[prop] = 0);
+
     return arr.reduce((ret, val) => {
-        acc += val.value;
+        props.forEach(prop => accumulators[prop] += val[prop]);
         count++;
         const min = toDateMin(val.ts);
         if (min > lastMin) {
-            ret.push({ ts: formatDur(min), value: acc / count });
+            const sample = { ts: formatDur(min) };
+            props.forEach(prop => sample[prop] = accumulators[prop] / count);
+            ret.push(sample);
             count = 0;
-            acc = 0;
+            props.forEach(prop => accumulators[prop] = 0);
             lastMin = min;
         }   
-        return ret;     
+        return ret;
     }, []);
 }
 
@@ -115,12 +119,15 @@ function getPvChart(day) {
     const data = parseCsv(path.join(csvFolder, csv));
     const tsIdx = data.colKeys["TimeStamp"];
     const powIdx = data.colKeys["PowerW"];
-    const ret = sampleAtMin(data.rows.map(row => {
-        return { ts: row[tsIdx], value: row[powIdx] };
-    }));
+    const voltageIdx = data.colKeys["GridVoltageV"];
+
+    const ret = averageToMinute(data.rows.map(row => {
+        return { ts: row[tsIdx], power: row[powIdx], voltage: row[voltageIdx] };
+    }), ["power", "voltage"]);
+
     // Trim initial and final zeroes
-    const i1 = first(ret, i => i.value > 0);
-    const i2 = last(ret, i => i.value > 0);
+    const i1 = first(ret, i => i.power > 0);
+    const i2 = last(ret, i => i.power > 0);
     if (i1 >= 0 && i2 >= 0) {
         return ret.slice(i1, i2);
     } else {

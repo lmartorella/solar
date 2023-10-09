@@ -4,7 +4,6 @@ using Lucky.Home.Solar;
 using System;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using ModbusClient = Lucky.Home.Services.ModbusClient;
 
@@ -33,6 +32,7 @@ namespace Lucky.Home.Device.Sofar
                 e.Task = PullData(e);
             };
             mqttService = Manager.GetService<MqttService>();
+            Logger.Log("Start", "host", deviceHostName + ":" + modbusNodeId);
         }
 
         public Task StartLoop()

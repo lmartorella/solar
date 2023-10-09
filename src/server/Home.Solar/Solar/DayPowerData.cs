@@ -44,7 +44,19 @@ namespace Lucky.Home.Solar
         /// Time of day of the peak power
         /// </summary>
         [Csv("hh\\:mm\\:ss")]
-        public TimeSpan PeakTimestamp;
+        public TimeSpan PeakPowerTimestamp;
+
+        /// <summary>
+        /// Peak grid voltage
+        /// </summary>
+        [Csv("0.00")]
+        public double PeakVoltageV;
+
+        /// <summary>
+        /// Time of day of the peak voltage
+        /// </summary>
+        [Csv("hh\\:mm\\:ss")]
+        public TimeSpan PeakVoltageTimestamp;
 
         public override bool Aggregate(DateTime date, IEnumerable<PowerData> data)
         {
@@ -81,10 +93,15 @@ namespace Lucky.Home.Solar
 
                 PowerKWh = totalPower / 1000.0;
 
-                // Calc max power
+                // Calc max power and voltage
                 var maxPowerSample = data.Aggregate((i1, i2) => i1.PowerW > i2.PowerW ? i1 : i2);
                 PeakPowerW = maxPowerSample.PowerW;
-                PeakTimestamp = maxPowerSample.TimeStamp.TimeOfDay;
+                PeakPowerTimestamp = maxPowerSample.TimeStamp.TimeOfDay;
+
+                var maxGridVoltageSample = data.Aggregate((i1, i2) => i1.GridVoltageV > i2.GridVoltageV ? i1 : i2);
+                PeakVoltageV = maxGridVoltageSample.GridVoltageV;
+                PeakVoltageTimestamp = maxGridVoltageSample.TimeStamp.TimeOfDay;
+
                 return true;
             }
             else
