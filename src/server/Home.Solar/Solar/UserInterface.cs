@@ -78,7 +78,9 @@ namespace Lucky.Home.Solar
                 if (dayData != null)
                 {
                     packet.PeakW = dayData.PeakPowerW;
-                    packet.PeakTsTime = dayData.FromInvariantTime(dayData.PeakTimestamp).ToString("hh\\:mm\\:ss");
+                    packet.PeakWTs = dayData.FromInvariantTime(dayData.PeakPowerTimestamp).ToString("hh\\:mm\\:ss");
+                    packet.PeakV = dayData.PeakVoltageV;
+                    packet.PeakVTs = dayData.FromInvariantTime(dayData.PeakVoltageTimestamp).ToString("hh\\:mm\\:ss");
                 }
             }
 

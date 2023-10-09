@@ -61,7 +61,7 @@ const addresses = {
 };
 
 // Produce a sinusoidal power curve. Fixed grid voltage.
-const gridVoltage = 230;
+const defGridVoltage = 230;
 const string1Ratio = 0.4;  // string1/(string1+string2)
 const totalFvPowers = { max: 5800, min: 800 };
 const homeCurrents = { max: 16, min: 2 };
@@ -99,6 +99,7 @@ setInterval(() => {
         write16RegBE(inverterBuffer, addresses.power, power / 10);
     };
 
+    const gridVoltage = defGridVoltage + Math.random() * 10 - 5;
     updatePower(addresses.grid, totalPower, gridVoltage);
     updatePower(addresses.string1, stringPowers[0], 290 + Math.random() * 20);
     updatePower(addresses.string2, stringPowers[1], 190 + Math.random() * 20);

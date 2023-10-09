@@ -14,7 +14,9 @@ interface IPvData {
     gridV: number;
 
     peakW: number;
-    peakTsTime: string;
+    peakWTs: string;
+    peakV: number;
+    peakVTs: string;
 
     currentTs: string;
     inverterState: string;

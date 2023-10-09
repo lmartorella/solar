@@ -10,8 +10,12 @@ export const Strings = {
     "Solar_EnergyToday": "Energia oggi:",
     "Solar_EnergyTotal": "Energia totale:",
     "Solar_Updated": (args: any) => `Aggiornato ${args.currentTs}.`,
-    "Solar_Peak1": "Picco di ",
-    "Solar_Peak2": (args: any) => ` alle ${args.ts}`,
+
+    "Solar_PeakW1": "Picco di ",
+    "Solar_PeakW2": (args: any) => ` alle ${args.ts}`,
+    "Solar_PeakV1": "Picco del voltaggio di rete di ",
+    "Solar_PeakV2": (args: any) => ` alle ${args.ts}`,
+
     "Solar_CurrentUsage": "Assorbimento attuale di ",
     "Solar_On": (args: any) => `Potenza: ${args.power}W`,
     "Solar_UnknownMode": (args: any) => `Errore: modalità sconosciuta: ${args.mode}`,

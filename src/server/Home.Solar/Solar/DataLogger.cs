@@ -119,7 +119,7 @@ namespace Lucky.Home.Solar
             var body = Resources.solar_daily_summary
                     .Replace("{PowerKWh}", day.PowerKWh.ToString("0.0"))
                     .Replace("{PeakPowerW}", day.PeakPowerW.ToString())
-                    .Replace("{PeakTimestamp}", day.FromInvariantTime(day.PeakTimestamp).ToString("hh\\:mm\\:ss"))
+                    .Replace("{PeakTimestamp}", day.FromInvariantTime(day.PeakPowerTimestamp).ToString("hh\\:mm\\:ss"))
                     .Replace("{SunTime}", (day.Last - day.First).ToString(Resources.solar_daylight_format));
 
             Manager.GetService<INotificationService>().SendMail(title, body, false);
