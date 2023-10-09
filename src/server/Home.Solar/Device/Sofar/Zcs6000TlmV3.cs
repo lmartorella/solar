@@ -1,6 +1,8 @@
-﻿using Lucky.Home.Services;
+﻿using FluentModbus;
+using Lucky.Home.Services;
 using Lucky.Home.Solar;
 using System;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,11 +19,13 @@ namespace Lucky.Home.Device.Sofar
         private readonly ModbusClient modbusClient;
         private int modbusNodeId;
         private readonly PollStrategyManager pollStrategyManager;
+        private readonly ILogger Logger;
 
         public Zcs6000TlmV3(PollStrategyManager pollStrategyManager, string deviceHostName, int modbusNodeId)
         {
             this.modbusNodeId = modbusNodeId;
             this.pollStrategyManager = pollStrategyManager;
+            Logger = Manager.GetService<LoggerFactory>().Create("Zcs");
 
             modbusClient = Manager.GetService<ModbusClientFactory>().Get(deviceHostName, FluentModbus.ModbusEndianness.BigEndian);
             pollStrategyManager.PullData += (o, e) =>
@@ -236,8 +240,19 @@ namespace Lucky.Home.Device.Sofar
 
                 return data;
             }
-            catch (TimeoutException)
+            catch (OperationCanceledException)
             {
+                Logger.Log("ModbusTimeoutReadMsg");
+                return null;
+            }
+            catch (IOException)
+            {
+                Logger.Log("ModbusIoExecReadMsg");
+                return null;
+            }
+            catch (ModbusException exc)
+            {
+                Logger.Log("ModbusExc", "message", exc.Message);
                 return null;
             }
         }

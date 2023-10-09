@@ -12,6 +12,7 @@ namespace Lucky.Home.Device
         private readonly ModbusClient modbusClient;
         private readonly MqttService mqttService;
         private static readonly TimeSpan Period = TimeSpan.FromSeconds(1.5);
+        private double? lastData = double.MaxValue;
 
         public ModbusAmmeter(string deviceHostName, int modbusNodeId)
         {
@@ -54,6 +55,16 @@ namespace Lucky.Home.Device
 
         private async Task PublishData(double? data)
         {
+            if (!data.HasValue && !lastData.HasValue)
+            {
+                return;
+            }
+            if (data.HasValue && lastData.HasValue && Math.Abs(data.Value - lastData.Value) < double.Epsilon)
+            {
+                return;
+            }
+            lastData = data;
+
             if (data != null)
             {
                 await mqttService.RawPublish(AnalogIntegrator.DataTopicId, Encoding.UTF8.GetBytes(data.ToString()));

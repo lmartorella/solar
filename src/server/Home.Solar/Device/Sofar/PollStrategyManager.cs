@@ -20,7 +20,7 @@ namespace Lucky.Home.Device.Sofar
         /// After this time of no samples, enter night mode
         /// </summary>
 #if !DEBUG
-        private static readonly TimeSpan EnterNightModeAfter = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan EnterNightModeAfter = TimeSpan.FromMinutes(5);
 #else
         private static readonly TimeSpan EnterNightModeAfter = TimeSpan.FromSeconds(15);
 #endif
@@ -65,14 +65,7 @@ namespace Lucky.Home.Device.Sofar
                         break;
                 }
                 await Task.Delay(timeout);
-                try
-                {
-                    await PullNow();
-                }
-                catch (Exception e)
-                {
-                    Logger.Exception(e);
-                }
+                await PullNow();
             }
         }
 

@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Lucky.Home</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputPath>..\..\..\..\target\bin\</OutputPath>
+    <OutputPath>${WorkspaceFolder}..\..\..\..\..\..\target\bin\</OutputPath>
     <AssemblyTitle>Home.Solar</AssemblyTitle>
     <Product>Home.Solar</Product>
     <Copyright>Copyright ©  2023</Copyright>

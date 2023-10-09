@@ -1,26 +1,44 @@
 import modbus from 'jsmodbus';
 import net from 'net';
-
-const netServer = new net.Server();
-const server = new modbus.server.TCP(netServer, { holding: Buffer.alloc(0x2000 * 2)});
+import { onKeyPress } from "./keypress.js";
 
 const inverterBuffer = Buffer.alloc(0x2000 * 2);
 const ammeterBuffer = Buffer.alloc(0x2000 * 2);
 
-netServer.listen(502);
+let netServer;
+let delayNext = false;
 
-server.on("preReadHoldingRegisters", request => {
-    switch (request.unitId) {
-    case 1:
-        inverterBuffer.copy(server.holding);
-        break;
-    case 2:
-        ammeterBuffer.copy(server.holding);
-        break;
-    default:
-        throw new Error("Unimplemented unit ID");
+const openSocket = () => {
+    if (netServer) {
+        return;
     }
-});
+    console.log("Open socket");
+    netServer = new net.Server();
+    const modbusServer = new modbus.server.TCP(netServer, { holding: null });
+    netServer.listen(502);
+
+    modbusServer.on("readHoldingRegisters", (request, cb) => {
+        console.log(` Request to unit ${request.unitId}${delayNext ? " (delayed)" : ""}`);
+
+        let holding;
+        switch (request.unitId) {
+            case 1:
+                holding = inverterBuffer;
+                break;
+            case 2:
+                holding = ammeterBuffer;
+                break;
+            default:
+                throw new Error("Unimplemented unit ID");
+        }
+    
+        const responseBody = modbus.responses.ReadHoldingRegistersResponseBody.fromRequest(request.body, holding);
+        const response = modbus.ModbusTCPResponse.fromRequest(request, responseBody);
+        const payload = response.createPayload();
+        setTimeout(() => cb(payload), delayNext ? 3000 : 0);
+        delayNext = false;
+    });
+};
 
 const addresses = { 
     totalChargeToday: 0x426, // In (Ah / 2) * 10
@@ -98,3 +116,16 @@ setInterval(() => {
 
 console.log("Serving at port 502 (modbus)");
 console.log("Serving Sofar inverter at unit ID 1 and ammeter at unit ID 2");
+
+console.log("Press 'q' to quit, 'd' to delay the next request");
+
+onKeyPress(key => {
+    switch (key) {
+        case 'q':
+            process.exit(0); break;
+        case 'd':
+            delayNext = true; break;
+    }
+});
+
+openSocket();
