@@ -240,7 +240,7 @@ namespace Lucky.Home.Device.Sofar
 
                 return data;
             }
-            catch (TimeoutException)
+            catch (OperationCanceledException)
             {
                 Logger.Log("ModbusTimeoutReadMsg");
                 return null;
