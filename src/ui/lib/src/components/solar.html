@@ -6,9 +6,13 @@
       &nbsp;
       <a (click)="drawDays(4)" href="javascript:void(0)">{{res["Solar_Chart4days"]}}</a>
     </p>
-    <p class="total-pw" *ngIf="pvData.totalDayWh"> {{res["Solar_EnergyToday"]}} <b>{{pvData.totalDayWh / 1000}} kWh</b> </p>
-    <p class="peak-pw" *ngIf="pvData.peakW"> {{res["Solar_Peak1"]}}<b>{{pvData.peakW}}W</b> {{format("Solar_Peak2", { ts: pvData.peakTsTime})}}</p>
+    <p class="total-pw" *ngIf="pvData.totalDayWh"> {{res["Solar_EnergyToday"]}} <b>{{pvData.totalDayWh / 1000 | number:'1.0-2' }} kWh</b> </p>
+
+    <p class="peak-pw" *ngIf="pvData.peakW"> {{res["Solar_PeakW1"]}}<b>{{pvData.peakW}}W</b> {{format("Solar_PeakW2", { ts: pvData.peakWTs })}}</p>
+    <p class="peak-v" *ngIf="pvData.peakV"> {{res["Solar_PeakV1"]}}<b>{{pvData.peakV}}V</b> {{format("Solar_PeakV2", { ts: pvData.peakVTs })}}</p>
+
     <p class="usage-pw" *ngIf="pvData.usageA! >= 0 && pvData.gridV"> {{res["Solar_CurrentUsage"]}}<b>{{pvData.gridV! * pvData.usageA! | number:'1.0-0'}}W</b></p>
+
     <br/>
     <br/>
     <br/>

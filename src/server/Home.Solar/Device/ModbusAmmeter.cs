@@ -13,15 +13,19 @@ namespace Lucky.Home.Device
         private readonly MqttService mqttService;
         private static readonly TimeSpan Period = TimeSpan.FromSeconds(1.5);
         private double? lastData = double.MaxValue;
+        private readonly ILogger Logger;
 
         public ModbusAmmeter(string deviceHostName, int modbusNodeId)
         {
             this.modbusNodeId = modbusNodeId;
+            Logger = Manager.GetService<LoggerFactory>().Create("Zcs");
+
             if (deviceHostName != "")
             {
                 modbusClient = Manager.GetService<ModbusClientFactory>().Get(deviceHostName, FluentModbus.ModbusEndianness.BigEndian);
             }
             mqttService = Manager.GetService<MqttService>();
+            Logger.Log("Start", "host", deviceHostName + ":" + modbusNodeId);
         }
 
         public async Task StartLoop()

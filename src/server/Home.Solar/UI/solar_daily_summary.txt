@@ -1,5 +1,7 @@
 ﻿Total Energy: {PowerKWh} kWh
-Peak of {PeakPowerW}W at {PeakTimestamp}.
+Peak of {PeakPowerW}W at {PeakPowerTimestamp}.
 
 Daylight time: {SunTime}
+
+Peak of grid voltage of {PeakVoltageV}V at {PeakVoltageTimestamp}.
 	
