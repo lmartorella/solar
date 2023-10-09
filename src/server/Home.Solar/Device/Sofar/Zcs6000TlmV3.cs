@@ -228,7 +228,7 @@ namespace Lucky.Home.Device.Sofar
                 data.String2CurrentA = stringsData.String2CurrentA;
                 data.String2VoltageV = stringsData.String2VoltageV;
 
-                data.EnergyTodayWh = chargeData.ChargeAh * data.GridVoltageV;
+                data.EnergyTodayWh = -1;// chargeData.ChargeAh * data.GridVoltageV;
 
                 data.InverterState = InverterStates.Normal;
                 data.TotalEnergyKWh = 0;
