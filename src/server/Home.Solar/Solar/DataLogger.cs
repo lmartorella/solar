@@ -115,7 +115,7 @@ namespace Lucky.Home.Solar
 
         private void SendSummaryMail(DayPowerData day)
         {
-            var title = string.Format(Resources.solar_daily_summary_title, day.PowerKWh);
+            var title = string.Format(Resources.solar_daily_summary_title, day.PeakPowerW / 1000.0);
             var body = Resources.solar_daily_summary
                     .Replace("{PowerKWh}", day.PowerKWh.ToString("0.0"))
                     .Replace("{PeakPowerW}", day.PeakPowerW.ToString())

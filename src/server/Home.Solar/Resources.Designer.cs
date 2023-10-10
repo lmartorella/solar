@@ -61,10 +61,11 @@ namespace Lucky.Home {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Total Energy: {PowerKWh} kWh
-        ///Peak of {PeakPowerW}W at {PeakTimestamp}.
+        ///   Looks up a localized string similar to Peak of {PeakPowerW}W at {PeakPowerTimestamp}.
         ///
         ///Daylight time: {SunTime}
+        ///
+        ///Peak of grid voltage of {PeakVoltageV}V at {PeakVoltageTimestamp}.
         ///	.
         /// </summary>
         internal static string solar_daily_summary {
@@ -74,7 +75,7 @@ namespace Lucky.Home {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Solar Power Today: {0:0.0} kWh.
+        ///   Looks up a localized string similar to Solar Power Peak today: {0:0.0} kWh.
         /// </summary>
         internal static string solar_daily_summary_title {
             get {
