@@ -8,6 +8,7 @@ namespace Lucky.Home.Device.Sofar
     {
         private InverterState state = InverterState.Off;
         private DateTime _lastValidData = DateTime.Now;
+        private CommunicationError? _lastCommunicationError = CommunicationError.None;
 
         /// <summary>
         /// After this time of no samples, enter night mode
@@ -125,6 +126,7 @@ namespace Lucky.Home.Device.Sofar
             {
                 InverterState = InverterState.ModbusConnecting;
             }
+            SetLastCommunicationError(args.CommunicationError);
             if (args.CommunicationError != CommunicationError.None)
             {
                 if (DateTime.Now - _lastValidData > EnterNightModeAfter && args.CommunicationError == CommunicationError.TotalLoss)
@@ -136,6 +138,15 @@ namespace Lucky.Home.Device.Sofar
             {
                 InverterState = InverterState.Online;
                 _lastValidData = DateTime.Now;
+            }
+        }
+
+        private void SetLastCommunicationError(CommunicationError value)
+        {
+            if (_lastCommunicationError != value)
+            {
+                Logger.Log("InvertCommErr", "value", value, "from", _lastCommunicationError);
+                _lastCommunicationError = value;
             }
         }
     }
