@@ -2,7 +2,9 @@
 using Lucky.Home.Services;
 using Lucky.Home.Solar;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ModbusClient = Lucky.Home.Services.ModbusClient;
@@ -48,59 +50,23 @@ namespace Lucky.Home.Device.Sofar
             // Check TCP MODBUS connection
             if (!modbusClient.CheckConnected())
             {
-                args.IsConnected = false;
+                args.IsModbusConnected = false;
             }
             else
             {
                 var data = await GetData();
-                args.DataValid = data != null;
-                args.IsConnected = true;
-                await PublishData(data);
+                args.CommunicationError = data.Item2;
+                args.IsModbusConnected = true;
+                if (data.Item2 == CommunicationError.None)
+                {
+                    await PublishData(data.Item1);
+                }
             }
         }
 
         private async Task PublishData(PowerData data)
         {
-            if (data != null)
-            {
-                await mqttService.JsonPublish(InverterDevice.SolarDataTopicId, data);
-            }
-        }
-
-        private class AddressRange
-        {
-            /// <summary>
-            /// Base 0
-            /// </summary>
-            public int Start;
-
-            /// <summary>
-            /// Base 0, included
-            /// </summary>
-            public int End;
-        }
-
-        private class RegistryValues
-        {
-            private readonly AddressRange Addresses;
-            private readonly int modbusNodeId;
-            private ushort[] Data;
-
-            public RegistryValues(AddressRange addresses, int modbusNodeId)
-            {
-                Addresses = addresses;
-                this.modbusNodeId = modbusNodeId;
-            }
-
-            public async Task ReadData(ModbusClient client)
-            {
-                Data = await client.ReadHoldingRegistries(modbusNodeId, Addresses.Start, Addresses.End - Addresses.Start + 1);
-            }
-
-            public ushort GetValueAt(int address)
-            {
-                return Data[address - Addresses.Start];
-            }
+            await mqttService.JsonPublish(InverterDevice.SolarDataTopicId, data);
         }
 
         private class GridRegistryValues : RegistryValues
@@ -218,7 +184,8 @@ namespace Lucky.Home.Device.Sofar
         private class StateRegistryValues : RegistryValues
         {
             /// <summary>
-            /// To be analyzed. Trying to use the ones described in the "Sofarsolar ModBus RTU Communication Protocol" pdf
+            /// Still to be reverse-engineered. 
+            /// Trying to use the ones described in the "Sofarsolar ModBus RTU Communication Protocol" pdf
             /// </summary>
             private const int LikelyFaultBitsWindowSize = 6;
 
@@ -277,22 +244,49 @@ namespace Lucky.Home.Device.Sofar
             }
         }
 
-        private async Task<PowerData> GetData()
+        private async Task<Tuple<PowerData, CommunicationError>> GetData()
         {
+            var data = new PowerData();
+            CommunicationError error = CommunicationError.None;
+
+            var gridData = new GridRegistryValues(modbusNodeId);
+            var stringsData = new StringsRegistryValues(modbusNodeId);
+            var chargeData = new ChargeRegistryValues(modbusNodeId);
+            var stateData = new StateRegistryValues(modbusNodeId);
+
             try
             {
-                var data = new PowerData();
-
+                var errors = 0;
                 // Aggregate data in order to minimize the block readings
-                var gridData = new GridRegistryValues(modbusNodeId);
-                await gridData.ReadData(modbusClient);
-                var stringsData = new StringsRegistryValues(modbusNodeId);
-                await stringsData.ReadData(modbusClient);
-                var chargeData = new ChargeRegistryValues(modbusNodeId);
-                await chargeData.ReadData(modbusClient);
-                var stateData = new StateRegistryValues(modbusNodeId);
-                await stateData.ReadData(modbusClient);
+                errors += (await gridData.ReadData(modbusClient)) ? 0 : 1;
+                errors += (await stringsData.ReadData(modbusClient)) ? 0 : 1;
+                errors += (await chargeData.ReadData(modbusClient)) ? 0 : 1;
+                errors += (await stateData.ReadData(modbusClient)) ? 0 : 1;
 
+                if (errors == 4)
+                {
+                    error = CommunicationError.TotalLoss;
+                }
+                else if (errors > 0)
+                {
+                    error = CommunicationError.PartialLoss;
+                }
+            }
+            catch (IOException)
+            {
+                Logger.Log("ModbusIoExecReadMsg");
+                // If persisting, this will cause modbus link down, so for now it is partial
+                error = CommunicationError.ManagedError;
+            }
+            catch (ModbusException exc)
+            {
+                Logger.Log("ModbusExc", "message", exc.Message);
+                // The inverter responded with some error, so it is alive
+                error = CommunicationError.ManagedError;
+            }
+
+            if (error == CommunicationError.None)
+            {
                 data.GridCurrentA = gridData.CurrentA;
                 data.GridVoltageV = gridData.VoltageV;
                 data.GridFrequencyHz = gridData.FrequencyHz;
@@ -308,24 +302,9 @@ namespace Lucky.Home.Device.Sofar
                 data.InverterState = stateData.StateStr;
                 data.TotalEnergyKWh = 0;
                 data.TimeStamp = DateTime.Now;
+            }
 
-                return data;
-            }
-            catch (OperationCanceledException)
-            {
-                Logger.Log("ModbusTimeoutReadMsg");
-                return null;
-            }
-            catch (IOException)
-            {
-                Logger.Log("ModbusIoExecReadMsg");
-                return null;
-            }
-            catch (ModbusException exc)
-            {
-                Logger.Log("ModbusExc", "message", exc.Message);
-                return null;
-            }
+            return Tuple.Create(data, error);
         }
     }
 }

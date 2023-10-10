@@ -72,7 +72,7 @@ namespace Lucky.Home.Device.Sofar
         public class PullDataEventArgs
         {
             /// <summary>
-            /// Send the strategy state
+            /// Send the strategy state, to update the MQTT
             /// </summary>
             public StateEnum State;
 
@@ -85,12 +85,12 @@ namespace Lucky.Home.Device.Sofar
             /// Modbus bridge TCP is connected? (even if inverter is not responsive).
             /// When the bridge is powered by the inverter itself, during night the connection will be lost.
             /// </summary>
-            public bool IsConnected;
+            public bool IsModbusConnected;
 
             /// <summary>
-            /// Data valid?
+            /// Has the communication with the inverter failed?
             /// </summary>
-            public bool DataValid;
+            public CommunicationError CommunicationError;
         }
 
         public PollStrategyManager()
@@ -128,13 +128,13 @@ namespace Lucky.Home.Device.Sofar
                 await args.Task;
             }
 
-            if (!args.IsConnected)
+            if (!args.IsModbusConnected)
             {
                 State = StateEnum.Connecting;
             }
-            if (!args.DataValid)
+            if (args.CommunicationError != CommunicationError.None)
             {
-                if (DateTime.Now - _lastValidData > EnterNightModeAfter)
+                if (DateTime.Now - _lastValidData > EnterNightModeAfter && args.CommunicationError == CommunicationError.TotalLoss)
                 {
                     State = StateEnum.NightMode;
                 }
