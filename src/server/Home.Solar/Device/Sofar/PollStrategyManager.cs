@@ -126,18 +126,21 @@ namespace Lucky.Home.Device.Sofar
             {
                 InverterState = InverterState.ModbusConnecting;
             }
-            SetLastCommunicationError(args.CommunicationError);
-            if (args.CommunicationError != CommunicationError.None)
-            {
-                if (DateTime.Now - _lastValidData > EnterNightModeAfter && args.CommunicationError == CommunicationError.TotalLoss)
-                {
-                    InverterState = InverterState.Off;
-                }
-            }
             else
             {
-                InverterState = InverterState.Online;
-                _lastValidData = DateTime.Now;
+                SetLastCommunicationError(args.CommunicationError);
+                if (args.CommunicationError != CommunicationError.None)
+                {
+                    if (DateTime.Now - _lastValidData > EnterNightModeAfter && args.CommunicationError == CommunicationError.TotalLoss)
+                    {
+                        InverterState = InverterState.Off;
+                    }
+                }
+                else
+                {
+                    InverterState = InverterState.Online;
+                    _lastValidData = DateTime.Now;
+                }
             }
         }
 

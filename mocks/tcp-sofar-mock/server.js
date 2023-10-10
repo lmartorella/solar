@@ -49,6 +49,7 @@ const openSocket = () => {
 
 const addresses = { 
     totalChargeToday: 0x426, // In (Ah / 2) * 10
+    status: 0x404,
 
     grid: {
         voltage: 0x48d, // V * 10
@@ -116,6 +117,7 @@ setInterval(() => {
     totalChargeLastUpdate = now;
 
     write16RegBE(inverterBuffer, addresses.totalChargeToday, totalCharge / 2 * 10);
+    write16RegBE(inverterBuffer, addresses.status, 2);
 
     const homeCurrent = ((Math.sin(elapsedSeconds / ammeterPeriod * 2 * Math.PI) + 1) / 2) * (homeCurrents.max - homeCurrents.min) + homeCurrents.min;
     writeFloatRegBE(ammeterBuffer, 0, homeCurrent);

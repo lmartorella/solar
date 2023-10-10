@@ -31,6 +31,10 @@ namespace Lucky.Home.Device.Sofar
             {
                 return false;
             }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
         }
 
         public ushort GetValueAt(int address)
