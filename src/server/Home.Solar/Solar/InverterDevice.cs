@@ -55,6 +55,6 @@ namespace Lucky.Home.Solar
         /// <summary>
         /// The low-level inverter state
         /// </summary>
-        public PollStrategyManager.StateEnum State;
+        public InverterState State;
     }
 }

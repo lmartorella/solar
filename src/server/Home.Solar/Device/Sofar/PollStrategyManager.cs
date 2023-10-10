@@ -6,15 +6,8 @@ namespace Lucky.Home.Device.Sofar
 {
     class PollStrategyManager
     {
-        private StateEnum state = StateEnum.NightMode;
+        private InverterState state = InverterState.Off;
         private DateTime _lastValidData = DateTime.Now;
-
-        public enum StateEnum
-        {
-            NightMode,
-            Connecting,
-            Online
-        }
 
         /// <summary>
         /// After this time of no samples, enter night mode
@@ -53,13 +46,13 @@ namespace Lucky.Home.Device.Sofar
                 TimeSpan timeout;
                 switch (state)
                 {
-                    case StateEnum.Online:
+                    case InverterState.Online:
                         timeout = PollDataPeriod;
                         break;
-                    case StateEnum.Connecting:
+                    case InverterState.ModbusConnecting:
                         timeout = CheckConnectionPeriodDay;
                         break;
-                    case StateEnum.NightMode:
+                    case InverterState.Off:
                     default:
                         timeout = CheckConnectionPeriodNight;
                         break;
@@ -74,7 +67,7 @@ namespace Lucky.Home.Device.Sofar
             /// <summary>
             /// Send the strategy state, to update the MQTT
             /// </summary>
-            public StateEnum State;
+            public InverterState State;
 
             /// <summary>
             /// Tell the caller to wait
@@ -100,7 +93,7 @@ namespace Lucky.Home.Device.Sofar
 
         public event EventHandler<PullDataEventArgs> PullData;
 
-        public StateEnum State
+        public InverterState InverterState
         {
             get
             {
@@ -121,7 +114,7 @@ namespace Lucky.Home.Device.Sofar
         private async Task PullNow()
         {
             // Ask data to inverter via MODBUS. The inverter will update the MQTT in case of good data.
-            var args = new PullDataEventArgs { State = State };
+            var args = new PullDataEventArgs { State = InverterState };
             PullData?.Invoke(this, args);
             if (args.Task != null)
             {
@@ -130,18 +123,18 @@ namespace Lucky.Home.Device.Sofar
 
             if (!args.IsModbusConnected)
             {
-                State = StateEnum.Connecting;
+                InverterState = InverterState.ModbusConnecting;
             }
             if (args.CommunicationError != CommunicationError.None)
             {
                 if (DateTime.Now - _lastValidData > EnterNightModeAfter && args.CommunicationError == CommunicationError.TotalLoss)
                 {
-                    State = StateEnum.NightMode;
+                    InverterState = InverterState.Off;
                 }
             }
             else
             {
-                State = StateEnum.Online;
+                InverterState = InverterState.Online;
                 _lastValidData = DateTime.Now;
             }
         }
