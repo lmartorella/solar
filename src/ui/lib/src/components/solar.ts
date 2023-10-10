@@ -19,7 +19,7 @@ interface IPvData {
     peakVTs: string;
 
     currentTs: string;
-    inverterState: string;
+    inverterState: keyof typeof FaultStates | keyof typeof NormalStates | null | "";
 }
 
 interface IPvChartPoint {
@@ -27,6 +27,16 @@ interface IPvChartPoint {
     power: number;
     voltage: number;
 }
+
+const NormalStates = {
+    "OFF": res.Solar_Off,
+    "WAIT": res.Solar_Wait,
+    "CHK": res.Solar_Check
+};
+
+const FaultStates = {
+    "NOGRID": res.Solar_FaultNoGrid
+};
 
 @Component({
     selector: 'solar-component',
@@ -64,20 +74,15 @@ export class SolarComponent implements OnInit {
                 this.firstLine = format("Error", this.pvData.error);
                 this.firstLineClass = 'err';
             } else {
-                switch (this.pvData.inverterState) {
-                    case null:
-                    case "OFF":
-                        this.firstLine = res["Solar_Off"];
-                        this.firstLineClass = 'gray';
-                        break;
-                    case undefined:
-                    case "":
-                        this.firstLine = format("Solar_On", { power: this.pvData.currentW });
-                        break;
-                    default:
-                        this.firstLine = format("Error", this.decodeFault(this.pvData.inverterState));
-                        this.firstLineClass = 'err';
-                        break;
+                const state = this.pvData.inverterState;
+                if (state == null || NormalStates[state as keyof typeof NormalStates]) {
+                    this.firstLine = NormalStates[state as keyof typeof NormalStates || "OFF"];
+                    this.firstLineClass = 'gray';
+                } else if (state === undefined || state === "") {
+                    this.firstLine = format("Solar_On", { power: this.pvData.currentW });
+                } else {
+                    this.firstLine = format("Error", this.decodeFault(this.pvData.inverterState as keyof typeof FaultStates));
+                    this.firstLineClass = 'err';
                 }
             }
         } catch (err) {
@@ -150,13 +155,8 @@ export class SolarComponent implements OnInit {
         }
     }
 
-    private decodeFault(fault: string) {
-        switch (fault) { 
-            case "NOGRID":
-                return res["Solar_FaultNoGrid"];
-            default:
-                return fault;
-        }
+    private decodeFault(fault: keyof typeof FaultStates) {
+        return FaultStates[fault] || fault;
     }
 }
 
