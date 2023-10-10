@@ -1,6 +1,6 @@
 Using lmartorella/mbpoll fork
 
--r 0x400 -c 16
+-0 -r 0x400 -c 16
 [1024]:         3           ?
 [1025]:         65472 (-64)
 [1026]:         1409

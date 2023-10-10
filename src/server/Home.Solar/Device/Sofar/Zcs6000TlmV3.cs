@@ -69,8 +69,15 @@ namespace Lucky.Home.Device.Sofar
 
         private class AddressRange
         {
+            /// <summary>
+            /// Base 0
+            /// </summary>
             public int Start;
-            public int End; // inclusive
+
+            /// <summary>
+            /// Base 0, included
+            /// </summary>
+            public int End;
         }
 
         private class RegistryValues
@@ -208,6 +215,68 @@ namespace Lucky.Home.Device.Sofar
             }
         }
 
+        private class StateRegistryValues : RegistryValues
+        {
+            /// <summary>
+            /// To be analyzed. Trying to use the ones described in the "Sofarsolar ModBus RTU Communication Protocol" pdf
+            /// </summary>
+            private const int LikelyFaultBitsWindowSize = 6;
+
+            public StateRegistryValues(int modbusNodeId)
+                : base(new AddressRange { Start = 0x404, End = 0x405 + LikelyFaultBitsWindowSize - 1 }, modbusNodeId)
+            {
+            }
+
+            public string StateStr
+            {
+                get
+                {
+                    switch (OperatingState)
+                    {
+                        case 0:
+                            return InverterStates.Waiting;
+                        case 1:
+                            return InverterStates.Checking;
+                        case 2:
+                            return InverterStates.Normal;
+                        case 3:
+                            return "FAULT:" + FaultBits;
+                        case 4:
+                            return "PERM_FAULT:" + FaultBits;
+                        default:
+                            return "UNKNOWN:" + OperatingState;
+                    }
+                }
+            }
+
+            private int OperatingState
+            {
+                get
+                {
+                    return GetValueAt(0x404);
+                }
+            }
+
+            private string FaultBits
+            {
+                get
+                {
+                    StringBuilder str = new StringBuilder();
+                    bool first = true;
+                    for (int a = 0x405; a < 0x405 + LikelyFaultBitsWindowSize; a++)
+                    {
+                        if (!first)
+                        {
+                            str.Append(",");
+                            first = false;
+                        }
+                        str.Append(GetValueAt(a).ToString("x4"));
+                    }
+                    return str.ToString();
+                }
+            }
+        }
+
         private async Task<PowerData> GetData()
         {
             try
@@ -221,6 +290,8 @@ namespace Lucky.Home.Device.Sofar
                 await stringsData.ReadData(modbusClient);
                 var chargeData = new ChargeRegistryValues(modbusNodeId);
                 await chargeData.ReadData(modbusClient);
+                var stateData = new StateRegistryValues(modbusNodeId);
+                await stateData.ReadData(modbusClient);
 
                 data.GridCurrentA = gridData.CurrentA;
                 data.GridVoltageV = gridData.VoltageV;
@@ -234,7 +305,7 @@ namespace Lucky.Home.Device.Sofar
 
                 data.EnergyTodayWh = chargeData.ChargeAh * data.GridVoltageV;
 
-                data.InverterState = InverterStates.Normal;
+                data.InverterState = stateData.StateStr;
                 data.TotalEnergyKWh = 0;
                 data.TimeStamp = DateTime.Now;
 

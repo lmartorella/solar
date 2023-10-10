@@ -44,9 +44,12 @@ namespace Lucky.Home.Solar
         public const string Off = "OFF";
         public const string NoGrid = "NOGRID";
 
+        public const string Waiting = "WAIT";
+        public const string Checking= "CHK";
+
         internal static bool IsFault(string state)
         {
-            return state != Normal && state != Off;
+            return state != Normal && state != Off && state != Waiting && state != Checking;
         }
 
         internal static string ToFault(string state)
