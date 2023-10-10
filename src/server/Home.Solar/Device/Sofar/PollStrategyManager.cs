@@ -31,7 +31,7 @@ namespace Lucky.Home.Device.Sofar
 #if !DEBUG
         private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromMinutes(2);
 #else
-        private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromSeconds(25);
 #endif
 
         /// <summary>
@@ -44,6 +44,7 @@ namespace Lucky.Home.Device.Sofar
             // Start wait loop
             while (true)
             {
+                await PullNow();
                 TimeSpan timeout;
                 switch (state)
                 {
@@ -59,7 +60,6 @@ namespace Lucky.Home.Device.Sofar
                         break;
                 }
                 await Task.Delay(timeout);
-                await PullNow();
             }
         }
 
