@@ -9,9 +9,9 @@
         "!0x418": "Some temperature",
         "!0x41a": "Some temperature",
         
-        "0x426": "Production today as Ah/2 * 10",
-        "!0x428": "Production week?",
-        "!0x42a": "Production month?",
+        "!0x426": "Today generation time (minutes). They move in sync",
+        "!0x428": "Monthly? Weekly? generation time (minutes). They move in sync",
+        "!0x42a": "Total? generation time (minutes). They move in sync",
 
         "!0x42c": "year",
         "!0x42d": "month",
