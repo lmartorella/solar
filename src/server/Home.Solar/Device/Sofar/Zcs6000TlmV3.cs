@@ -235,7 +235,6 @@ namespace Lucky.Home.Device.Sofar
 
             var gridData = new GridRegistryValues(modbusNodeId);
             var stringsData = new StringsRegistryValues(modbusNodeId);
-            var chargeData = new ChargeRegistryValues(modbusNodeId);
             var stateData = new StateRegistryValues(modbusNodeId);
 
             try
