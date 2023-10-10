@@ -5,20 +5,20 @@ import process from 'process';
 
 const socket = new net.Socket();
 
-if (process.argv.length < 3) {
-    console.error("Expected hostname");
+if (process.argv.length < 5) {
+    console.error("Expected hostname port_start port_end");
     process.exit(1);
 }
 const host = process.argv[2];
-
-// Read 8 registers at a time. Too broad windows could lead to "address errors" for valid registers, who knows.
-const rangeWindow = 8;
 // Scan only the range between 0x0 and 0x2000
-const range = [0, 0x2000];
-// Do a scan every 500ms
-const period = 1000;
+const range = [Number(process.argv[3]), Number(process.argv[4])];
+
+// Read 16 registers at a time. Too broad windows could lead to "address errors" for valid registers, who knows.
+const rangeWindow = 16;
+// Do a scan every 750ms
+const period = 750;
 // Timeout to abandon the query
-const timeout = 750;
+const timeout = 1000;
 
 const load = () => {
     if (fs.existsSync("dump.json")) {
@@ -77,16 +77,16 @@ socket.on("connect", async () => {
         let overrun = false;
         while (scans[currentAddress.toString()]?.isInvalid) {
             currentAddress += rangeWindow;
-            if (currentAddress >= range[1]) {
-                console.log("Restart the range");
-                await save();
-                if (overrun) {
-                    console.log("Everything seems empty");
-                    process.exit(0);
-                }
-                currentAddress = range[0];
-                overrun = true;
+        }
+        if (currentAddress >= range[1]) {
+            console.log("Restart the range");
+            await save();
+            if (overrun) {
+                console.log("Everything seems empty");
+                process.exit(0);
             }
+            currentAddress = range[0];
+            overrun = true;
         }
 
         const key = currentAddress.toString();

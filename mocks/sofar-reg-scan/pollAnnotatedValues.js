@@ -96,15 +96,6 @@ socket.on("connect", async () => {
                 }
             }
         }, Promise.resolve());
-
-        Object.keys(annotationData.calc).forEach(name => {
-            const formula = annotationData.calc[name];
-            const deps = formula.deps.map(reg => lastValues[parseHex(reg)]);
-            if (deps.every(reg => typeof reg === "number")) {
-                const result = new Function("reg", `return ${formula.formula};`)(deps);
-                console.log(`${name}: ${result}`);
-            }
-        });
     }
 });
 

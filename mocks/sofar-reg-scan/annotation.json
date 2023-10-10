@@ -1,17 +1,11 @@
 {
-    "calc": {
-        "Today kWh": {
-            "deps": ["0x426", "0x48d"],
-            "formula": "(reg[0] * 2 / 10) * (reg[1] / 10) / 1000"
-        }
-    },
     "registries": {
         "!0x418": "Some temperature",
         "!0x41a": "Some temperature",
         
-        "0x426": "Production today as Ah/2 * 10",
-        "!0x428": "Production week?",
-        "!0x42a": "Production month?",
+        "!0x426": "Today generation time (minutes). They move in sync",
+        "!0x428": "Monthly? Weekly? generation time (minutes). They move in sync",
+        "!0x42a": "Total? generation time (minutes). They move in sync",
 
         "!0x42c": "year",
         "!0x42d": "month",
@@ -23,9 +17,9 @@
         "!0x484": "grid frequency * 100",
         "!0x485": "Power /10",
         "!0x487": "Current in grid *100",
-        "!0x488": "Power again",
+        "!0x488": "Power /10 again?",
 
-        "0x48d": "Grid voltage, V*10",
+        "!0x48d": "Grid voltage, V*10",
         "!0x48e": "Grid current, A*10",
         "!0x493": "Power again",
 
@@ -45,7 +39,7 @@
         "!0x689": "Clones Voltage PV1",
         "!0x68b": "Clones Current PV1",
 
-        "!0x6c4": "? 2-3? flags?",
+        "!0x6c4": "? 2-3? operational flags?",
         "!0x6c6": "? flags",
 
         "!0x6cc": "?? ~3764",

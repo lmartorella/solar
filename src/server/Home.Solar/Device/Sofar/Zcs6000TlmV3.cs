@@ -192,22 +192,6 @@ namespace Lucky.Home.Device.Sofar
             }
         }
 
-        private class ChargeRegistryValues : RegistryValues
-        {
-            public ChargeRegistryValues(int modbusNodeId)
-                : base(new AddressRange { Start = 0x426, End = 0x426 }, modbusNodeId)
-            {
-            }
-
-            public double ChargeAh
-            {
-                get
-                {
-                    return GetValueAt(0x426) * 2 / 10.0;
-                }
-            }
-        }
-
         private async Task<PowerData> GetData()
         {
             try
@@ -219,8 +203,6 @@ namespace Lucky.Home.Device.Sofar
                 await gridData.ReadData(modbusClient);
                 var stringsData = new StringsRegistryValues(modbusNodeId);
                 await stringsData.ReadData(modbusClient);
-                var chargeData = new ChargeRegistryValues(modbusNodeId);
-                await chargeData.ReadData(modbusClient);
 
                 data.GridCurrentA = gridData.CurrentA;
                 data.GridVoltageV = gridData.VoltageV;
@@ -232,7 +214,7 @@ namespace Lucky.Home.Device.Sofar
                 data.String2CurrentA = stringsData.String2CurrentA;
                 data.String2VoltageV = stringsData.String2VoltageV;
 
-                data.EnergyTodayWh = chargeData.ChargeAh * data.GridVoltageV;
+                data.EnergyTodayWh = -1;
 
                 data.InverterState = InverterStates.Normal;
                 data.TotalEnergyKWh = 0;
