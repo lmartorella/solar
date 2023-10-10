@@ -1,5 +1,4 @@
 ﻿using Lucky.Db;
-using System;
 
 namespace Lucky.Home.Solar
 {
@@ -33,25 +32,5 @@ namespace Lucky.Home.Solar
         // Home usage current, to calculate Net Energy Metering
         [Csv("0.00")]
         public double HomeUsageCurrentA;
-    }
-
-    /// <summary>
-    /// Known inverter states. Unknown state will be logged with original flags
-    /// </summary>
-    static public class InverterStates
-    {
-        public const string Normal = "";
-        public const string Off = "OFF";
-        public const string NoGrid = "NOGRID";
-
-        internal static bool IsFault(string state)
-        {
-            return state != Normal && state != Off;
-        }
-
-        internal static string ToFault(string state)
-        {
-            return IsFault(state) ? state : null;
-        }
     }
 }

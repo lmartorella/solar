@@ -6,7 +6,9 @@ const inverterBuffer = Buffer.alloc(0x2000 * 2);
 const ammeterBuffer = Buffer.alloc(0x2000 * 2);
 
 let netServer;
+
 let delayNext = false;
+let simulateDown = false;
 
 const openSocket = () => {
     if (netServer) {
@@ -18,7 +20,12 @@ const openSocket = () => {
     netServer.listen(502);
 
     modbusServer.on("readHoldingRegisters", (request, cb) => {
-        console.log(` Request to unit ${request.unitId}${delayNext ? " (delayed)" : ""}`);
+        const action = simulateDown ? "(dropped)" : (delayNext ? " (delayed)" : "");
+        console.log(` Request to unit ${request.unitId} ${action}`);
+        if (simulateDown) {
+            cb(Buffer.alloc(0));
+            return;
+        }
 
         let holding;
         switch (request.unitId) {
@@ -41,6 +48,8 @@ const openSocket = () => {
 };
 
 const addresses = { 
+    status: 0x404,
+
     grid: {
         voltage: 0x48d, // V * 10
         current: 0x48e, // A + 100
@@ -100,6 +109,8 @@ setInterval(() => {
     updatePower(addresses.string1, stringPowers[0], 290 + Math.random() * 20);
     updatePower(addresses.string2, stringPowers[1], 190 + Math.random() * 20);
 
+    write16RegBE(inverterBuffer, addresses.status, 2);
+
     const homeCurrent = ((Math.sin(elapsedSeconds / ammeterPeriod * 2 * Math.PI) + 1) / 2) * (homeCurrents.max - homeCurrents.min) + homeCurrents.min;
     writeFloatRegBE(ammeterBuffer, 0, homeCurrent);
 
@@ -108,15 +119,37 @@ setInterval(() => {
 console.log("Serving at port 502 (modbus)");
 console.log("Serving Sofar inverter at unit ID 1 and ammeter at unit ID 2");
 
-console.log("Press 'q' to quit, 'd' to delay the next request");
+console.log(
+`Press:
+'q' to quit
+'d' to delay the next request of 3 seconds
+'s' to stop responding to all the requests
+'r' to resume responding to all the requests
+`);
 
 onKeyPress(key => {
     switch (key) {
         case 'q':
-            process.exit(0); break;
+            process.exit(0);
         case 'd':
-            delayNext = true; break;
-    }
+            if (!delayNext) {
+                console.log("Delaying next request...");
+                delayNext = true; 
+            }
+            break;
+        case 's':
+            if (!simulateDown) {
+                console.log("Simulating inverter down...");
+                simulateDown = true; 
+            }
+            break;
+        case 'r':
+            if (simulateDown) {
+                console.log("Simulating inverter up again...");
+                simulateDown = false; 
+            }
+            break;
+        }
 });
 
 openSocket();

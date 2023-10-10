@@ -6,15 +6,9 @@ namespace Lucky.Home.Device.Sofar
 {
     class PollStrategyManager
     {
-        private StateEnum state = StateEnum.NightMode;
+        private InverterState state = InverterState.Off;
         private DateTime _lastValidData = DateTime.Now;
-
-        public enum StateEnum
-        {
-            NightMode,
-            Connecting,
-            Online
-        }
+        private CommunicationError? _lastCommunicationError = CommunicationError.None;
 
         /// <summary>
         /// After this time of no samples, enter night mode
@@ -37,7 +31,7 @@ namespace Lucky.Home.Device.Sofar
 #if !DEBUG
         private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromMinutes(2);
 #else
-        private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromSeconds(25);
 #endif
 
         /// <summary>
@@ -50,31 +44,31 @@ namespace Lucky.Home.Device.Sofar
             // Start wait loop
             while (true)
             {
+                await PullNow();
                 TimeSpan timeout;
                 switch (state)
                 {
-                    case StateEnum.Online:
+                    case InverterState.Online:
                         timeout = PollDataPeriod;
                         break;
-                    case StateEnum.Connecting:
+                    case InverterState.ModbusConnecting:
                         timeout = CheckConnectionPeriodDay;
                         break;
-                    case StateEnum.NightMode:
+                    case InverterState.Off:
                     default:
                         timeout = CheckConnectionPeriodNight;
                         break;
                 }
                 await Task.Delay(timeout);
-                await PullNow();
             }
         }
 
         public class PullDataEventArgs
         {
             /// <summary>
-            /// Send the strategy state
+            /// Send the strategy state, to update the MQTT
             /// </summary>
-            public StateEnum State;
+            public InverterState State;
 
             /// <summary>
             /// Tell the caller to wait
@@ -85,12 +79,12 @@ namespace Lucky.Home.Device.Sofar
             /// Modbus bridge TCP is connected? (even if inverter is not responsive).
             /// When the bridge is powered by the inverter itself, during night the connection will be lost.
             /// </summary>
-            public bool IsConnected;
+            public bool IsModbusConnected;
 
             /// <summary>
-            /// Data valid?
+            /// Has the communication with the inverter failed?
             /// </summary>
-            public bool DataValid;
+            public CommunicationError CommunicationError;
         }
 
         public PollStrategyManager()
@@ -100,7 +94,7 @@ namespace Lucky.Home.Device.Sofar
 
         public event EventHandler<PullDataEventArgs> PullData;
 
-        public StateEnum State
+        public InverterState InverterState
         {
             get
             {
@@ -121,28 +115,41 @@ namespace Lucky.Home.Device.Sofar
         private async Task PullNow()
         {
             // Ask data to inverter via MODBUS. The inverter will update the MQTT in case of good data.
-            var args = new PullDataEventArgs { State = State };
+            var args = new PullDataEventArgs { State = InverterState };
             PullData?.Invoke(this, args);
             if (args.Task != null)
             {
                 await args.Task;
             }
 
-            if (!args.IsConnected)
+            if (!args.IsModbusConnected)
             {
-                State = StateEnum.Connecting;
-            }
-            if (!args.DataValid)
-            {
-                if (DateTime.Now - _lastValidData > EnterNightModeAfter)
-                {
-                    State = StateEnum.NightMode;
-                }
+                InverterState = InverterState.ModbusConnecting;
             }
             else
             {
-                State = StateEnum.Online;
-                _lastValidData = DateTime.Now;
+                SetLastCommunicationError(args.CommunicationError);
+                if (args.CommunicationError != CommunicationError.None)
+                {
+                    if (DateTime.Now - _lastValidData > EnterNightModeAfter && args.CommunicationError == CommunicationError.TotalLoss)
+                    {
+                        InverterState = InverterState.Off;
+                    }
+                }
+                else
+                {
+                    InverterState = InverterState.Online;
+                    _lastValidData = DateTime.Now;
+                }
+            }
+        }
+
+        private void SetLastCommunicationError(CommunicationError value)
+        {
+            if (_lastCommunicationError != value)
+            {
+                Logger.Log("InvertCommErr", "value", value, "from", _lastCommunicationError);
+                _lastCommunicationError = value;
             }
         }
     }

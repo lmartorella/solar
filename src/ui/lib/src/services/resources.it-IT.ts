@@ -19,5 +19,8 @@ export const Strings = {
     "Solar_CurrentUsage": "Assorbimento attuale di ",
     "Solar_On": (args: any) => `Potenza: ${args.power}W`,
     "Solar_UnknownMode": (args: any) => `Errore: modalità sconosciuta: ${args.mode}`,
-    "Solar_FaultNoGrid": "Mancanza rete"
+    "Solar_FaultNoGrid": "Mancanza rete",
+    "Solar_Off": "Spento",
+    "Solar_Wait": "In attesa",
+    "Solar_Check": "Controllo linea",
 };

@@ -57,9 +57,10 @@ namespace Lucky.Home.Solar
             }
         }
 
-        private void HandleStateChanged(PollStrategyManager.StateEnum state)
+        private void HandleStateChanged(InverterState state)
         {
-            if (state == PollStrategyManager.StateEnum.NightMode)
+            // From connected/connecting to OFF mean end of the day
+            if (state == InverterState.Off)
             {
                 // Send summary
                 var summary = Database.GetAggregatedData();

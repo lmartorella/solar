@@ -20,9 +20,11 @@ export const Strings = {
     "Solar_PeakV2": (args: any) => ` at ${args.ts}`,
 
     "Solar_CurrentUsage": "Current usage of ",
-    "Solar_Off": "OFF",
     "Solar_On": (args: any) => `Power: ${args.power}W`,
-    "Solar_FaultNoGrid": "No grid power"
+    "Solar_FaultNoGrid": "No grid power",
+    "Solar_Off": "OFF",
+    "Solar_Wait": "Waiting",
+    "Solar_Check": "Grid check"
 };
 
 /**
