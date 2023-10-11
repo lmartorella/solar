@@ -13,7 +13,7 @@ namespace Lucky.Home.Services
         private static readonly Dictionary<Type, Type> Types = new Dictionary<Type, Type>();
         private static readonly Dictionary<Type, object> Instances = new Dictionary<Type, object>();
         private static readonly object LockObject = new object();
-        private static readonly TaskCompletionSource<object> _killDefer = new TaskCompletionSource<object>();
+        private static readonly TaskCompletionSource _killDefer = new TaskCompletionSource();
 
         public static T GetService<T>() where T : IService
         {
@@ -85,16 +85,11 @@ namespace Lucky.Home.Services
             return _killDefer.Task;
         }
 
-        public static event EventHandler Killed;
-
-        public static void Kill(ILogger logger, string reason, TimeSpan delay)
+        public static async Task Kill(ILogger logger, string reason, TimeSpan delay)
         {
             logger.Log("Server killing: " + reason + ". Stopping devices...");
-            Task.Delay(delay).ContinueWith(task => {
-                _killDefer.TrySetResult(null);
-                Killed?.Invoke(null, null);
-                return Task.CompletedTask;
-            });
+            await Task.Delay(delay);
+            _killDefer.TrySetResult();
         }
     }
 }
