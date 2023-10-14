@@ -1,3 +1,4 @@
+import * as jsoncParser from 'jsonc-parser';
 import fs from 'fs';
 
 const load = () => {
@@ -60,7 +61,7 @@ fs.writeFileSync("fixedValues.json", JSON.stringify(fixedValues, null, 2));
 fs.writeFileSync("movingValues.json", JSON.stringify(movingValues, null, 2));
 
 // Write new values found in `movingValues` not in `annotation`
-const annotationData = JSON.parse(fs.readFileSync("annotation.json")).registries || { };
+const annotationData = jsoncParser.parse(fs.readFileSync("annotation.json")).registries || { };
 Object.keys(movingValues).forEach(address => {
     if (!annotationData[address] && !annotationData["!" + address]) {
         console.log("New not-annotated moving address: " + address);

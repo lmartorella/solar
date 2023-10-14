@@ -1,9 +1,12 @@
 {
     "registries": {
-        "!0x418": "Some temperature",
-        "!0x41a": "Some temperature",
+        // https://github.com/chmorant/Loxone-Sofar-Solar-3GKTLM-G3-Template
+        "!0x418": "Core temperature",
+        "!0x41a": "Radiator temperature",
         
         "!0x426": "Today generation time (minutes). They move in sync",
+        // https://github.com/chmorant/Loxone-Sofar-Solar-3GKTLM-G3-Template
+        // Probably 0x427 is high word
         "!0x428": "Monthly? Weekly? generation time (minutes). They move in sync",
         "!0x42a": "Total? generation time (minutes). They move in sync",
 
@@ -33,6 +36,14 @@
         "!0x589": "PV2 power /10",
 
         "!0x5c4": "? seconds?",
+
+        // https://github.com/pawsuch/Sofar_G3_LSW3/blob/main/InverterHWData.py
+        // https://github.com/tomek10861/Sofar_G3_LSW3
+        // Here it seems that 0x685 and 0x687 should have daily production and total production in G3-LSW3
+        // The other registers more or less matches
+
+        // https://github.com/chmorant/Loxone-Sofar-Solar-3GKTLM-G3-Template
+        // says 0x684 is daily production and 0x686 is total
 
         "!0x685": "Clones Voltage PV1",
         "!0x687": "Clones Current PV1",
