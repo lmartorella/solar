@@ -165,6 +165,30 @@ namespace Lucky.Home.Device.Sofar
             }
         }
 
+        private class ProductionRegistryValues : RegistryValues
+        {
+            public ProductionRegistryValues(int modbusNodeId)
+                : base(new AddressRange { Start = 0x684, End = 0x687 }, modbusNodeId)
+            {
+            }
+
+            public double DailyProductionWh
+            {
+                get
+                {
+                    return ((GetValueAt(0x684) << 16) + GetValueAt(0x685)) * 10.0;
+                }
+            }
+
+            public double TotalProductionKwh
+            {
+                get
+                {
+                    return ((GetValueAt(0x686) << 16) + GetValueAt(0x687)) * 100.0 / 1000.0;
+                }
+            }
+        }
+
         private class StateRegistryValues : RegistryValues
         {
             /// <summary>
@@ -236,6 +260,7 @@ namespace Lucky.Home.Device.Sofar
             var gridData = new GridRegistryValues(modbusNodeId);
             var stringsData = new StringsRegistryValues(modbusNodeId);
             var stateData = new StateRegistryValues(modbusNodeId);
+            var prodData = new ProductionRegistryValues(modbusNodeId);
 
             try
             {
@@ -244,8 +269,9 @@ namespace Lucky.Home.Device.Sofar
                 errors += (await gridData.ReadData(modbusClient)) ? 0 : 1;
                 errors += (await stringsData.ReadData(modbusClient)) ? 0 : 1;
                 errors += (await stateData.ReadData(modbusClient)) ? 0 : 1;
+                errors += (await prodData.ReadData(modbusClient)) ? 0 : 1;
 
-                if (errors == 3)
+                if (errors == 4)
                 {
                     error = CommunicationError.TotalLoss;
                 }
@@ -279,10 +305,10 @@ namespace Lucky.Home.Device.Sofar
                 data.String2CurrentA = stringsData.String2CurrentA;
                 data.String2VoltageV = stringsData.String2VoltageV;
 
-                data.EnergyTodayWh = -1;
+                data.EnergyTodayWh = prodData.DailyProductionWh;
+                data.TotalEnergyKWh = prodData.TotalProductionKwh;
 
                 data.InverterState = stateData.StateStr;
-                data.TotalEnergyKWh = 0;
                 data.TimeStamp = DateTime.Now;
             }
 
