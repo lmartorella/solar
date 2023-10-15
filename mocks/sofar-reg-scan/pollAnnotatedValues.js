@@ -1,5 +1,6 @@
 import fs from 'fs';
 import Modbus from 'jsmodbus';
+import * as jsoncParser from 'jsonc-parser';
 import net from 'net';
 import process from 'process';
 
@@ -22,7 +23,7 @@ const parseHex = s => {
     return parseInt(s.replace("0x", ""), 16);
 }
 
-const annotationData = JSON.parse(fs.readFileSync("annotation.json"));
+const annotationData = jsoncParser.parse(fs.readFileSync("annotation.json"));
 const annotations = []; // sparse array
 const addresses = Object.keys(annotationData.registries).filter(r => r[0] !== "!").map(key => {
     const address = parseHex(key);

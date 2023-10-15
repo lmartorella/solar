@@ -50,6 +50,12 @@ const openSocket = () => {
 const addresses = { 
     status: 0x404,
 
+    totalProdTodayH: 0x684, // In W / 10
+    totalProdTodayL: 0x685, // In W / 10
+    
+    totalProdH: 0x686, // In W / 100
+    totalProdL: 0x687, // In W / 100
+
     grid: {
         voltage: 0x48d, // V * 10
         current: 0x48e, // A + 100
@@ -77,6 +83,8 @@ const ammeterPeriod = 7 * 60; // In seconds
 const internalUpdateInterval = 500; // In ms
 
 const startTime = new Date();
+let dailyProdWh = 0; // in Wh
+let dailyProdLastUpdate = startTime;
 
 const write16RegBE = (buffer, regAddress, value) => {
     regAddress = Array.isArray(regAddress) ? regAddress : [regAddress];
@@ -110,6 +118,16 @@ setInterval(() => {
     updatePower(addresses.string2, stringPowers[1], 190 + Math.random() * 20);
 
     write16RegBE(inverterBuffer, addresses.status, 2);
+
+    dailyProdWh += totalPower * ((now - dailyProdLastUpdate) / 1000 / 60 / 60);
+    dailyProdLastUpdate = now;
+
+    write16RegBE(inverterBuffer, addresses.totalProdTodayH, (dailyProdWh / 10) >> 16);
+    write16RegBE(inverterBuffer, addresses.totalProdTodayL, (dailyProdWh / 10) & 0xffff);
+
+    const totalProdWh = 1e6 + dailyProdWh;
+    write16RegBE(inverterBuffer, addresses.totalProdH, (totalProdWh / 100) >> 16);
+    write16RegBE(inverterBuffer, addresses.totalProdL, (totalProdWh / 100) & 0xffff);
 
     const homeCurrent = ((Math.sin(elapsedSeconds / ammeterPeriod * 2 * Math.PI) + 1) / 2) * (homeCurrents.max - homeCurrents.min) + homeCurrents.min;
     writeFloatRegBE(ammeterBuffer, 0, homeCurrent);

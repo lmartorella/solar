@@ -122,7 +122,7 @@
     <value>ui\solar_daily_summary.it-it.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="solar_daily_summary_title" xml:space="preserve">
-    <value>Picco di potenza oggi: {0:0.0} kWh</value>
+    <value>Energia solare oggi: {0:0.0} kWh</value>
   </data>
   <data name="solar_daylight_format" xml:space="preserve">
     <value>h' ore e 'mm' minuti'</value>

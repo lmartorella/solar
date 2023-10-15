@@ -1,4 +1,5 @@
-﻿Peak of {PeakPowerW}W at {PeakPowerTimestamp}.
+﻿Total Energy: {PowerKWh} kWh
+Peak of {PeakPowerW}W at {PeakPowerTimestamp}.
 
 Daylight time: {SunTime}
 

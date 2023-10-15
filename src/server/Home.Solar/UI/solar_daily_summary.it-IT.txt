@@ -1,4 +1,5 @@
-﻿con un picco di {PeakPowerW}W alle {PeakPowerTimestamp}.
+﻿Energia totale: {PowerKWh} kWh
+con un picco di {PeakPowerW}W alle {PeakPowerTimestamp}.
 
 Durata del giorno: {SunTime}
 
