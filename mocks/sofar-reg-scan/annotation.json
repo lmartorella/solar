@@ -28,12 +28,12 @@
 
         "0x4bd": "? ~10040",
 
-        "!0x584": "PV1 voltage * 10",
-        "!0x585": "PV1 current * 100",
-        "!0x586": "PV1 power /10",
-        "!0x587": "PV2 voltage * 10",
-        "!0x588": "PV2 current * 100",
-        "!0x589": "PV2 power /10",
+        "!0x584": "PV1 voltage V * 10",
+        "!0x585": "PV1 current A * 100",
+        "!0x586": "PV1 power W / 10",
+        "!0x587": "PV2 voltage V * 10",
+        "!0x588": "PV2 current A * 100",
+        "!0x589": "PV2 power W / 10",
 
         "!0x5c4": "? seconds?",
 
@@ -45,10 +45,10 @@
         // https://github.com/chmorant/Loxone-Sofar-Solar-3GKTLM-G3-Template
         // says 0x684 is daily production and 0x686 is total
 
-        "!0x685": "Clones Voltage PV1",
-        "!0x687": "Clones Current PV1",
-        "!0x689": "Clones Voltage PV1",
-        "!0x68b": "Clones Current PV1",
+        "!0x684": "Daily production in W /10, high word",
+        "!0x685": "Daily production in W /10, low word",
+        "!0x686": "Total production in W /100, high word",
+        "!0x687": "Total production in W /100, low word",
 
         "!0x6c4": "? 2-3? operational flags?",
         "!0x6c6": "? flags",
