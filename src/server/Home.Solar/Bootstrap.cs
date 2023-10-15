@@ -32,7 +32,7 @@ namespace Lucky.Home
 
             Console.CancelKeyPress += (sender, args) =>
             {
-                Manager.Kill(logger, "detected CtrlBreak", TimeSpan.FromMilliseconds(10));
+                _ = Manager.Kill(logger, "detected CtrlBreak", TimeSpan.FromMilliseconds(10));
                 args.Cancel = true;
             };
 
@@ -50,9 +50,9 @@ namespace Lucky.Home
             }
 
             // Implements a IPC pipe with web server
-            _ = Manager.GetService<MqttService>().SubscribeRawTopic(appName + "/kill", (_) =>
+            _ = Manager.GetService<MqttService>().SubscribeRawTopic(appName + "/kill", (_e) =>
             {
-                Manager.Kill(logger, "killed by process manager via MQTT", TimeSpan.FromSeconds(1.5));
+                _ = Manager.Kill(logger, "killed by process manager via MQTT", TimeSpan.FromSeconds(1.5));
             });
 
 
