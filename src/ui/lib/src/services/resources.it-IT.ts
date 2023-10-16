@@ -7,6 +7,7 @@ export const Strings = {
 
     "Solar_ChartToday": "Andamento oggi",
     "Solar_Chart4days": "Andamento 4 giorni",
+    "Solar_ChartThisDay": (args: any) => `Andamento storico del ${args.day}`,
     "Solar_EnergyToday": "Energia oggi:",
     "Solar_EnergyTotal": "Energia totale:",
     "Solar_Updated": (args: any) => `Aggiornato ${args.currentTs}.`,
