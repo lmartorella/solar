@@ -1,0 +1,13 @@
+{
+  "name": "home.solar",
+  "scripts": {
+    "buildNet": "msbuild src/server/Home.Solar.sln /property:Configuration=Release -t:restore -p:RestorePackagesConfig=true && msbuild src/server/Home.Solar.sln /property:Configuration=Release -t:rebuild -p:RestorePackagesConfig=true",
+    "buildLib": "cd src/ui/lib && npx ng cache clean && npx ng build",
+    "build": "npm run buildNet && npm run buildLib",
+    "run-sample": "cd src/ui/sample && (npm run serve-ng & npm run serve-rest)"
+  },
+  "repository": {
+    "url": "https://github.com/lmartorella/solar"
+  },
+  "license": "GPL-3.0-or-later"
+}
