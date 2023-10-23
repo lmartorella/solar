@@ -1,5 +1,8 @@
-﻿using System;
+﻿using FluentModbus;
+using Lucky.Home.Services;
+using System;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using ModbusClient = Lucky.Home.Services.ModbusClient;
 
 namespace Lucky.Home.Device.Sofar
@@ -8,12 +11,14 @@ namespace Lucky.Home.Device.Sofar
     {
         private readonly AddressRange Addresses;
         private readonly int modbusNodeId;
+        private readonly ILogger logger;
         private ushort[] Data;
 
-        public RegistryValues(AddressRange addresses, int modbusNodeId)
+        public RegistryValues(AddressRange addresses, int modbusNodeId, ILogger logger)
         {
             Addresses = addresses;
             this.modbusNodeId = modbusNodeId;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -26,12 +31,11 @@ namespace Lucky.Home.Device.Sofar
                 Data = await client.ReadHoldingRegistries(modbusNodeId, Addresses.Start, Addresses.End - Addresses.Start + 1);
                 return true;
             }
-            catch (OperationCanceledException)
+            catch (ModbusException exc)
             {
-                return false;
-            }
-            catch (ObjectDisposedException)
-            {
+                logger.Log("ModbusExc", "message", exc.Message);
+                // The inverter responded with some error that is not managed, so it is alive
+                // Even the RTU timeout is managed by the gateway and translated to a modbus error
                 return false;
             }
         }

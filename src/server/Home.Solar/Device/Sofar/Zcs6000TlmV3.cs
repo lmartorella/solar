@@ -1,10 +1,7 @@
-﻿using FluentModbus;
-using Lucky.Home.Services;
+﻿using Lucky.Home.Services;
 using Lucky.Home.Solar;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ModbusClient = Lucky.Home.Services.ModbusClient;
@@ -61,6 +58,11 @@ namespace Lucky.Home.Device.Sofar
                 {
                     await PublishData(data.Item1);
                 }
+                else if (data.Item2 == CommunicationError.ChannelError)
+                {
+                    modbusClient.Disconnect();
+                    args.IsModbusConnected = false;
+                }
             }
         }
 
@@ -71,8 +73,8 @@ namespace Lucky.Home.Device.Sofar
 
         private class GridRegistryValues : RegistryValues
         {
-            public GridRegistryValues(int modbusNodeId)
-                :base(new AddressRange { Start = 0x484, End = 0x48e }, modbusNodeId)
+            public GridRegistryValues(int modbusNodeId, ILogger logger)
+                :base(new AddressRange { Start = 0x484, End = 0x48e }, modbusNodeId, logger)
             {
             }
 
@@ -111,8 +113,8 @@ namespace Lucky.Home.Device.Sofar
 
         private class StringsRegistryValues : RegistryValues
         {
-            public StringsRegistryValues(int modbusNodeId)
-                :base(new AddressRange { Start = 0x584, End = 0x589 }, modbusNodeId)
+            public StringsRegistryValues(int modbusNodeId, ILogger logger)
+                :base(new AddressRange { Start = 0x584, End = 0x589 }, modbusNodeId, logger)
             {
             }
 
@@ -167,8 +169,8 @@ namespace Lucky.Home.Device.Sofar
 
         private class ProductionRegistryValues : RegistryValues
         {
-            public ProductionRegistryValues(int modbusNodeId)
-                : base(new AddressRange { Start = 0x684, End = 0x687 }, modbusNodeId)
+            public ProductionRegistryValues(int modbusNodeId, ILogger logger)
+                : base(new AddressRange { Start = 0x684, End = 0x687 }, modbusNodeId, logger)
             {
             }
 
@@ -197,8 +199,8 @@ namespace Lucky.Home.Device.Sofar
             /// </summary>
             private const int LikelyFaultBitsWindowSize = 6;
 
-            public StateRegistryValues(int modbusNodeId)
-                : base(new AddressRange { Start = 0x404, End = 0x405 + LikelyFaultBitsWindowSize - 1 }, modbusNodeId)
+            public StateRegistryValues(int modbusNodeId, ILogger logger)
+                : base(new AddressRange { Start = 0x404, End = 0x405 + LikelyFaultBitsWindowSize - 1 }, modbusNodeId, logger)
             {
             }
 
@@ -257,10 +259,10 @@ namespace Lucky.Home.Device.Sofar
             var data = new PowerData();
             CommunicationError error = CommunicationError.None;
 
-            var gridData = new GridRegistryValues(modbusNodeId);
-            var stringsData = new StringsRegistryValues(modbusNodeId);
-            var stateData = new StateRegistryValues(modbusNodeId);
-            var prodData = new ProductionRegistryValues(modbusNodeId);
+            var gridData = new GridRegistryValues(modbusNodeId, Logger);
+            var stringsData = new StringsRegistryValues(modbusNodeId, Logger);
+            var stateData = new StateRegistryValues(modbusNodeId, Logger);
+            var prodData = new ProductionRegistryValues(modbusNodeId, Logger);
 
             try
             {
@@ -280,17 +282,21 @@ namespace Lucky.Home.Device.Sofar
                     error = CommunicationError.PartialLoss;
                 }
             }
-            catch (IOException)
+            catch (OperationCanceledException)
             {
-                Logger.Log("ModbusIoExecReadMsg");
+                // Timeout waiting data from the gateway. Since the TCP gateway uses a shorter (500ms) timeout for 
+                // RTU issues, this means that the gateway has issues.
+                // In addition, the FluentModbus implementation of timeouts closes the TCP clonnection, so now the channel should be reopened
+                Logger.Log("CancelledReadMsg");
                 // If persisting, this will cause modbus link down, so for now it is partial
-                error = CommunicationError.ManagedError;
+                error = CommunicationError.ChannelError;
             }
-            catch (ModbusException exc)
+            catch (Exception exc) when (exc is ObjectDisposedException || exc is IOException)
             {
-                Logger.Log("ModbusExc", "message", exc.Message);
-                // The inverter responded with some error, so it is alive
-                error = CommunicationError.ManagedError;
+                // It can happen when the TCP socket is dead. Reconnect.
+                Logger.Log("ModbusIoExecReadMsg", "type", exc.GetType());
+                // If persisting, this will cause modbus link down, so for now it is partial
+                error = CommunicationError.ChannelError;
             }
 
             if (error == CommunicationError.None)

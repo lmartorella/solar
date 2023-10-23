@@ -18,8 +18,8 @@
         TotalLoss,
 
         /// <summary>
-        /// Generic error, logged and resolved
+        /// The TCP channel has issues and connection should be restored
         /// </summary>
-        ManagedError
+        ChannelError
     }
 }

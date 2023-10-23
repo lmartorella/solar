@@ -86,11 +86,17 @@ namespace Lucky.Home.Services
             }
         }
 
+        public void Disconnect()
+        {
+            client.Disconnect();
+        }
+
         private CancellationToken Timeout
         {
             get
             {
-                return new CancellationTokenSource(1000).Token;
+                // Use a longer timeout than the one used in the gateway to avoid many disconnections
+                return new CancellationTokenSource(2000).Token;
             }
         }
 
