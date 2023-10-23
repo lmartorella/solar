@@ -36,11 +36,6 @@ namespace Home.Solar
         {
             await Bootstrap.Start(arguments, "solar");
 
-            var ammeter = new AnalogIntegrator();
-            var inverter = new InverterDevice();
-            var dataLogger = new DataLogger(inverter, ammeter);
-            var userInterface = new UserInterface(dataLogger, inverter, ammeter);
-
             var db = new FsTimeSeries<PowerData, DayPowerData>("SOLAR");
             await db.Init(DateTime.Now);
             _dayRotation += async () => await db.Rotate(DateTime.Now);
@@ -63,7 +58,12 @@ namespace Home.Solar
                 }
             }, null, 0, 30 * 1000);
 
-            dataLogger.Init(db);
+
+            var ammeter = new AnalogIntegrator();
+            var inverter = new InverterDevice();
+            var notificationSeder = new NotificationSender(inverter, db);
+            var dataLogger = new DataLogger(inverter, ammeter, notificationSeder, db);
+            var userInterface = new UserInterface(dataLogger, inverter, ammeter);
 
             await StartModbusBridges();
         }

@@ -1,8 +1,6 @@
 ﻿using FluentModbus;
 using Lucky.Home.Services;
-using System;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using ModbusClient = Lucky.Home.Services.ModbusClient;
 
 namespace Lucky.Home.Device.Sofar

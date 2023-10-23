@@ -11,18 +11,19 @@ namespace Lucky.Home.Solar
     /// </summary>
     class DataLogger
     {
-        private bool _isSummarySent = true;
-        private ITimeSeries<PowerData, DayPowerData> Database { get; set; }
+        private readonly ITimeSeries<PowerData, DayPowerData> Database;
         private string _lastFault = null;
         private IStatusUpdate _lastFaultMessage;
+        private readonly NotificationSender notificationSender;
         private readonly ILogger Logger;
         private double? _lastAmmeterValue = null;
 
-        public DataLogger(InverterDevice inverterDevice, AnalogIntegrator ammeterSink)
+        public DataLogger(InverterDevice inverterDevice, AnalogIntegrator ammeterSink, NotificationSender notificationSender, ITimeSeries<PowerData, DayPowerData> database)
         {
+            this.notificationSender = notificationSender;
+            Database = database;
             Logger = Manager.GetService<ILoggerFactory>().Create("DataLogger");
             inverterDevice.NewData += (o, e) => HandleNewData(e);
-            inverterDevice.StateChanged += (o, e) => HandleStateChanged(inverterDevice.State);
             ammeterSink.DataChanged += (o, e) => UpdateAmmeterValue(ammeterSink.Data);
         }
 
@@ -50,32 +51,11 @@ namespace Lucky.Home.Solar
                 if (data.PowerW > 0)
                 {
                     // New data, unlock next mail
-                    _isSummarySent = false;
+                    notificationSender.OnNewData();
                 }
 
                 CheckFault(data.InverterState);
             }
-        }
-
-        private void HandleStateChanged(InverterState state)
-        {
-            // From connected/connecting to OFF mean end of the day
-            if (state == InverterState.Off)
-            {
-                // Send summary
-                var summary = Database.GetAggregatedData();
-                // Skip the first migration from day to night at startup during night
-                if (summary != null && !_isSummarySent)
-                {
-                    SendSummaryMail(summary);
-                    _isSummarySent = true;
-                }
-            }
-        }
-
-        public void Init(ITimeSeries<PowerData, DayPowerData> database)
-        {
-            Database = database;
         }
 
         public PowerData ImmediateData { get; private set; }
@@ -112,21 +92,6 @@ namespace Lucky.Home.Solar
                 }
                 _lastFault = fault;
             }
-        }
-
-        private void SendSummaryMail(DayPowerData day)
-        {
-            var title = string.Format(Resources.solar_daily_summary_title, day.PowerKWh);
-            var body = Resources.solar_daily_summary
-                    .Replace("{PowerKWh}", day.PowerKWh.ToString("0.0"))
-                    .Replace("{PeakPowerW}", day.PeakPowerW.ToString())
-                    .Replace("{PeakPowerTimestamp}", day.FromInvariantTime(day.PeakPowerTimestamp).ToString("hh\\:mm\\:ss"))
-                    .Replace("{PeakVoltageV}", day.PeakVoltageV.ToString())
-                    .Replace("{PeakVoltageTimestamp}", day.FromInvariantTime(day.PeakVoltageTimestamp).ToString("hh\\:mm\\:ss"))
-                    .Replace("{SunTime}", (day.Last - day.First).ToString(Resources.solar_daylight_format));
-
-            Manager.GetService<INotificationService>().SendMail(title, body, false);
-            Logger.Log("DailyMailSent", "Power", day.PowerKWh);
         }
 
         public PowerData GetLastSample()
