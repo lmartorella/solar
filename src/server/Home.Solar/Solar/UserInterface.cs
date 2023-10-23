@@ -110,11 +110,11 @@ namespace Lucky.Home.Solar
             get
             {
                 // InverterState.ModbusConnecting means modbus server down. Other states means modbus up
-                if (_lastAmmeterValue.HasValue && inverterState != InverterState.ModbusConnecting)
+                if (_lastAmmeterValue.HasValue && inverterState == InverterState.Online)
                 {
                     return OnlineStatus.Online;
                 }
-                if (!_lastAmmeterValue.HasValue && inverterState == InverterState.ModbusConnecting)
+                if (!_lastAmmeterValue.HasValue && inverterState != InverterState.Online)
                 {
                     return OnlineStatus.Offline;
                 }

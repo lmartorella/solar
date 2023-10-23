@@ -3,17 +3,13 @@
     public enum InverterState
     {
         /// <summary>
-        /// Inverter not responding to modbus
+        /// Inverter not responding to modbus for some time (e.g. 5 minutes), or modbus bridge missing.
+        /// Considered Night Mode. Send notification of total energy when enter in Off state.
         /// </summary>
         Off,
 
         /// <summary>
-        /// Modbus bridge missing
-        /// </summary>
-        ModbusConnecting,
-
-        /// <summary>
-        /// Working
+        /// Working and receiving data
         /// </summary>
         Online
     }

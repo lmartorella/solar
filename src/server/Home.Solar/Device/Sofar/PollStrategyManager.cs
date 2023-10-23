@@ -9,6 +9,7 @@ namespace Lucky.Home.Device.Sofar
         private InverterState state = InverterState.Off;
         private DateTime _lastValidData = DateTime.Now;
         private CommunicationError? _lastCommunicationError = CommunicationError.None;
+        private bool isConnected;
 
         /// <summary>
         /// After this time of no samples, enter night mode
@@ -51,12 +52,16 @@ namespace Lucky.Home.Device.Sofar
                     case InverterState.Online:
                         timeout = PollDataPeriod;
                         break;
-                    case InverterState.ModbusConnecting:
-                        timeout = CheckConnectionPeriodDay;
-                        break;
                     case InverterState.Off:
                     default:
-                        timeout = CheckConnectionPeriodNight;
+                        if (isConnected)
+                        {
+                            timeout = CheckConnectionPeriodDay;
+                        }
+                        else
+                        {
+                            timeout = CheckConnectionPeriodNight;
+                        }
                         break;
                 }
                 await Task.Delay(timeout);
@@ -112,6 +117,15 @@ namespace Lucky.Home.Device.Sofar
 
         public ILogger Logger { get; }
 
+        private void UpdateOffline(bool isConnected)
+        {
+            this.isConnected = isConnected;
+            if (DateTime.Now - _lastValidData > EnterNightModeAfter)
+            {
+                InverterState = InverterState.Off;
+            }
+        }
+
         private async Task PullNow()
         {
             // Ask data to inverter via MODBUS. The inverter will update the MQTT in case of good data.
@@ -124,22 +138,26 @@ namespace Lucky.Home.Device.Sofar
 
             if (!args.IsModbusConnected)
             {
-                InverterState = InverterState.ModbusConnecting;
+                UpdateOffline(false);
             }
             else
             {
                 SetLastCommunicationError(args.CommunicationError);
-                if (args.CommunicationError != CommunicationError.None)
+                switch (args.CommunicationError)
                 {
-                    if (DateTime.Now - _lastValidData > EnterNightModeAfter && args.CommunicationError == CommunicationError.TotalLoss)
-                    {
-                        InverterState = InverterState.Off;
-                    }
-                }
-                else
-                {
-                    InverterState = InverterState.Online;
-                    _lastValidData = DateTime.Now;
+                    case CommunicationError.None:
+                        InverterState = InverterState.Online;
+                        _lastValidData = DateTime.Now;
+                        break;
+                    case CommunicationError.PartialLoss:
+                        InverterState = InverterState.Online;
+                        break;
+                    case CommunicationError.TotalLoss:
+                        UpdateOffline(true);
+                        break;
+                    case CommunicationError.ChannelError:
+                        UpdateOffline(false);
+                        break;
                 }
             }
         }
