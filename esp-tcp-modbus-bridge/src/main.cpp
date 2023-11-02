@@ -51,6 +51,7 @@ void setup() {
 
     WiFi.setHostname(WIFI_HOSTNAME);
     WiFi.begin(WIFI_SSID, WIFI_PASSPHRASE);
+    Serial.printf("Connected\n");
 
 #if defined(ESP32)
     // Initialize the mDNS library. You can now reach or ping this
@@ -67,6 +68,20 @@ void setup() {
 #endif
 }
 
+static unsigned long previousMillis = 0;
+const unsigned long interval = 30000;
+static void reconnectTask() {
+  unsigned long currentMillis = millis();
+  // if WiFi is down, try reconnecting
+  if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >= interval)) {
+    Serial.print(millis());
+    Serial.println("Reconnecting to WiFi...");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    previousMillis = currentMillis;
+  }
+}
+
 void loop() {
 #if defined(ESP32)
     // This actually runs the mDNS module. YOU HAVE TO CALL THIS PERIODICALLY,
@@ -75,6 +90,7 @@ void loop() {
 #endif
 
     bridge.task();
+    reconnectTask();
     yield();
 }
 
