@@ -46,6 +46,11 @@ void setup() {
 #else
     bridge.begin(_rtuSerial, 32, TxEnableHigh);
 #endif
+
+    // Sofar doesn't follow the modbus spec, and it is splitting messages with more than 3.5 * space time sometimes
+    // ((1 / 9600) * 11) * 3.5 = 4ms
+    // Use 8ms instead
+    bridge.setInterFrameTime(8000);
 }
 
 void loop() {
