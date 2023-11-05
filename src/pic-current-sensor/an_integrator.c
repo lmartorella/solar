@@ -1,8 +1,6 @@
+#include <xc.h>
 #include <pic-modbus/modbus.h>
 #include "an_integrator.h"
-
-// 1A = 1mA, on 39ohm = 39mV, sampled against 1.024V/1024 = 1/39 of the scale
-#define ANALOG_INTEGRATOR_FACTOR (1.0f/39.0f)
 
 static int32_t _accumulator;
 static int16_t _count;
@@ -59,7 +57,7 @@ void anint_poll() {
                 _count++;
                 if (_accumulator < 0 || _count < 0) {
                     // Overflow
-                    fatal("AI_Ov");
+                    sys_fatal(ERR_DEVICE_DEADLINE_MISSED);
                 }
                 _state = IDLE;
             }            
