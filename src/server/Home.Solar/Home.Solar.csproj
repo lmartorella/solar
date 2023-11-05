@@ -4,12 +4,13 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Lucky.Home</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputPath>..\..\..\..\target\bin\</OutputPath>
+    <OutputPath>${WorkspaceFolder}..\..\..\..\..\target\bin\</OutputPath>
     <AssemblyTitle>Home.Solar</AssemblyTitle>
     <Product>Home.Solar</Product>
     <Copyright>Copyright ©  2023</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="Resources.Designer.cs">
@@ -45,9 +46,14 @@
     <PackageReference Include="MQTTnet.Extensions.ManagedClient">
       <Version>4.2.0.706</Version>
     </PackageReference>
-    <PackageReference Include="FluentModbus">
+    <!--<PackageReference Include="FluentModbus">
       <Version>5.0.3</Version>
-    </PackageReference>
+    </PackageReference>-->
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="FluentModbus">
+      <HintPath>..\..\..\..\FluentModbus\artifacts\bin\FluentModbus\Release\netstandard2.1\FluentModbus.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

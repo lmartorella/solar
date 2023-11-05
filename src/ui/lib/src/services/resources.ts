@@ -10,15 +10,22 @@ export const Strings = {
 
     "Solar_ChartToday": "Chart today",
     "Solar_Chart4days": "Chart last 4 days",
+    "Solar_ChartThisDay": (args: any) => `Historical chart of ${args.day}`,
     "Solar_EnergyToday": "Today's energy:",
     "Solar_EnergyTotal": "Total energy:",
     "Solar_Updated": (args: any) => `Up-to-date at ${args.currentTs}.`,
-    "Solar_Peak1": "Peak of ",
-    "Solar_Peak2": (args: any) => ` at ${args.ts}`,
+
+    "Solar_PeakW1": "Peak of ",
+    "Solar_PeakW2": (args: any) => ` at ${args.ts}`,
+    "Solar_PeakV1": "Grid peak voltage of ",
+    "Solar_PeakV2": (args: any) => ` at ${args.ts}`,
+
     "Solar_CurrentUsage": "Current usage of ",
-    "Solar_Off": "OFF",
     "Solar_On": (args: any) => `Power: ${args.power}W`,
-    "Solar_FaultNoGrid": "No grid power"
+    "Solar_FaultNoGrid": "No grid power",
+    "Solar_Off": "OFF",
+    "Solar_Wait": "Waiting",
+    "Solar_Check": "Grid check"
 };
 
 /**

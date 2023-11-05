@@ -13,7 +13,7 @@ namespace Lucky.Home.Solar
 
         private readonly MqttService mqttService;
         private readonly DataLogger dataLogger;
-        private bool isInverterOnline;
+        private InverterState inverterState;
 
         public const string Topic = "ui/solar";
         public const string WillPayload = "null";
@@ -34,9 +34,9 @@ namespace Lucky.Home.Solar
             PublishUpdate();
         }
 
-        private void UpdateInverterState(PollStrategyManager.StateEnum state)
+        private void UpdateInverterState(InverterState state)
         {
-            isInverterOnline = state == PollStrategyManager.StateEnum.NightMode || state == PollStrategyManager.StateEnum.Online;
+            inverterState = state;
             PublishUpdate();
         }
 
@@ -65,7 +65,8 @@ namespace Lucky.Home.Solar
                 packet.CurrentTs = lastSample.FromInvariantTime(lastSample.TimeStamp).ToString("F");
                 packet.TotalDayWh = lastSample.EnergyTodayWh;
                 packet.TotalKwh = lastSample.TotalEnergyKWh;
-                packet.InverterState = lastSample.InverterState;
+                // If the inverter state is OFF, override the data of the last known sample
+                packet.InverterState = inverterState == InverterState.Off ? InverterStates.Off : lastSample.InverterState;
 
                 // From a recover boot 
                 if (_lastPanelVoltageV <= 0 && lastSample.GridVoltageV > 0)
@@ -78,7 +79,9 @@ namespace Lucky.Home.Solar
                 if (dayData != null)
                 {
                     packet.PeakW = dayData.PeakPowerW;
-                    packet.PeakTsTime = dayData.FromInvariantTime(dayData.PeakTimestamp).ToString("hh\\:mm\\:ss");
+                    packet.PeakWTs = dayData.FromInvariantTime(dayData.PeakPowerTimestamp).ToString("hh\\:mm\\:ss");
+                    packet.PeakV = dayData.PeakVoltageV;
+                    packet.PeakVTs = dayData.FromInvariantTime(dayData.PeakVoltageTimestamp).ToString("hh\\:mm\\:ss");
                 }
             }
 
@@ -106,11 +109,12 @@ namespace Lucky.Home.Solar
         {
             get
             {
-                if (_lastAmmeterValue.HasValue && isInverterOnline)
+                // InverterState.ModbusConnecting means modbus server down. Other states means modbus up
+                if (_lastAmmeterValue.HasValue && inverterState == InverterState.Online)
                 {
                     return OnlineStatus.Online;
                 }
-                if (!_lastAmmeterValue.HasValue && !isInverterOnline)
+                if (!_lastAmmeterValue.HasValue && inverterState != InverterState.Online)
                 {
                     return OnlineStatus.Offline;
                 }

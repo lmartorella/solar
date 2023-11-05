@@ -5,5 +5,8 @@
     "dev": "npx ng build --configuration development",
     "serve-ng": "npx ng serve",
     "serve-rest": "node sampleServer.mjs"
+  },
+  "devDependencies": {
+    "@lucky-home/solar-lib": "../../../target/solar-lib"
   }
 }

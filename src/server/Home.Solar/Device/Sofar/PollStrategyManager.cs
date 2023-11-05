@@ -6,21 +6,16 @@ namespace Lucky.Home.Device.Sofar
 {
     class PollStrategyManager
     {
-        private StateEnum state = StateEnum.NightMode;
+        private InverterState state = InverterState.Off;
         private DateTime _lastValidData = DateTime.Now;
-
-        public enum StateEnum
-        {
-            NightMode,
-            Connecting,
-            Online
-        }
+        private CommunicationError? _lastCommunicationError = CommunicationError.None;
+        private bool isConnected;
 
         /// <summary>
         /// After this time of no samples, enter night mode
         /// </summary>
 #if !DEBUG
-        private static readonly TimeSpan EnterNightModeAfter = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan EnterNightModeAfter = TimeSpan.FromMinutes(5);
 #else
         private static readonly TimeSpan EnterNightModeAfter = TimeSpan.FromSeconds(15);
 #endif
@@ -37,7 +32,7 @@ namespace Lucky.Home.Device.Sofar
 #if !DEBUG
         private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromMinutes(2);
 #else
-        private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromSeconds(25);
 #endif
 
         /// <summary>
@@ -50,31 +45,35 @@ namespace Lucky.Home.Device.Sofar
             // Start wait loop
             while (true)
             {
+                await PullNow();
                 TimeSpan timeout;
                 switch (state)
                 {
-                    case StateEnum.Online:
+                    case InverterState.Online:
                         timeout = PollDataPeriod;
                         break;
-                    case StateEnum.Connecting:
-                        timeout = CheckConnectionPeriodDay;
-                        break;
-                    case StateEnum.NightMode:
+                    case InverterState.Off:
                     default:
-                        timeout = CheckConnectionPeriodNight;
+                        if (isConnected)
+                        {
+                            timeout = CheckConnectionPeriodDay;
+                        }
+                        else
+                        {
+                            timeout = CheckConnectionPeriodNight;
+                        }
                         break;
                 }
                 await Task.Delay(timeout);
-                await PullNow();
             }
         }
 
         public class PullDataEventArgs
         {
             /// <summary>
-            /// Send the strategy state
+            /// Send the strategy state, to update the MQTT
             /// </summary>
-            public StateEnum State;
+            public InverterState State;
 
             /// <summary>
             /// Tell the caller to wait
@@ -85,12 +84,12 @@ namespace Lucky.Home.Device.Sofar
             /// Modbus bridge TCP is connected? (even if inverter is not responsive).
             /// When the bridge is powered by the inverter itself, during night the connection will be lost.
             /// </summary>
-            public bool IsConnected;
+            public bool IsModbusConnected;
 
             /// <summary>
-            /// Data valid?
+            /// Has the communication with the inverter failed?
             /// </summary>
-            public bool DataValid;
+            public CommunicationError CommunicationError;
         }
 
         public PollStrategyManager()
@@ -100,7 +99,7 @@ namespace Lucky.Home.Device.Sofar
 
         public event EventHandler<PullDataEventArgs> PullData;
 
-        public StateEnum State
+        public InverterState InverterState
         {
             get
             {
@@ -118,31 +117,57 @@ namespace Lucky.Home.Device.Sofar
 
         public ILogger Logger { get; }
 
+        private void UpdateOffline(bool isConnected)
+        {
+            this.isConnected = isConnected;
+            if (DateTime.Now - _lastValidData > EnterNightModeAfter)
+            {
+                InverterState = InverterState.Off;
+            }
+        }
+
         private async Task PullNow()
         {
             // Ask data to inverter via MODBUS. The inverter will update the MQTT in case of good data.
-            var args = new PullDataEventArgs { State = State };
+            var args = new PullDataEventArgs { State = InverterState };
             PullData?.Invoke(this, args);
             if (args.Task != null)
             {
                 await args.Task;
             }
 
-            if (!args.IsConnected)
+            if (!args.IsModbusConnected)
             {
-                State = StateEnum.Connecting;
-            }
-            if (!args.DataValid)
-            {
-                if (DateTime.Now - _lastValidData > EnterNightModeAfter)
-                {
-                    State = StateEnum.NightMode;
-                }
+                UpdateOffline(false);
             }
             else
             {
-                State = StateEnum.Online;
-                _lastValidData = DateTime.Now;
+                SetLastCommunicationError(args.CommunicationError);
+                switch (args.CommunicationError)
+                {
+                    case CommunicationError.None:
+                        InverterState = InverterState.Online;
+                        _lastValidData = DateTime.Now;
+                        break;
+                    case CommunicationError.PartialLoss:
+                        InverterState = InverterState.Online;
+                        break;
+                    case CommunicationError.TotalLoss:
+                        UpdateOffline(true);
+                        break;
+                    case CommunicationError.ChannelError:
+                        UpdateOffline(false);
+                        break;
+                }
+            }
+        }
+
+        private void SetLastCommunicationError(CommunicationError value)
+        {
+            if (_lastCommunicationError != value)
+            {
+                Logger.Log("InvertCommErr", "value", value, "from", _lastCommunicationError);
+                _lastCommunicationError = value;
             }
         }
     }

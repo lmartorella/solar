@@ -1,3 +1,4 @@
+import * as jsoncParser from 'jsonc-parser';
 import fs from 'fs';
 
 const load = () => {
@@ -45,7 +46,7 @@ validRanges.forEach(range => {
         }
         for (let i = 0; i < rangeWindow; i++) {
             // Check if fixed number
-            const samples = data.map(sample => sample.data[i]);
+            const samples = data.map(sample => sample.data[i]).filter(sample => !!sample || sample == 0);
             const firstSample = samples[0];
             if (samples.every(v => v === firstSample)) {
                 fixedValues[toHex(startAddress + i)] = firstSample;
@@ -58,3 +59,11 @@ validRanges.forEach(range => {
 
 fs.writeFileSync("fixedValues.json", JSON.stringify(fixedValues, null, 2));
 fs.writeFileSync("movingValues.json", JSON.stringify(movingValues, null, 2));
+
+// Write new values found in `movingValues` not in `annotation`
+const annotationData = jsoncParser.parse(fs.readFileSync("annotation.json")).registries || { };
+Object.keys(movingValues).forEach(address => {
+    if (!annotationData[address] && !annotationData["!" + address]) {
+        console.log("New not-annotated moving address: " + address);
+    }
+});

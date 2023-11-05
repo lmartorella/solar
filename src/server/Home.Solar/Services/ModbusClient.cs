@@ -1,7 +1,11 @@
 ﻿using FluentModbus;
+using Lucky.Home.Services.FluentModbus;
 using System;
+using System.Data;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Services
@@ -57,7 +61,7 @@ namespace Lucky.Home.Services
                 }
                 catch (Exception err)
                 {
-                    Logger.Log("ModbusConnect", "connectingTo", address, "err", err.Message);
+                    Logger.Log("ModbusConnect", "connectingTo", address, "err", err.Message, "type", err.GetType().Name);
                     return;
                 }
             }
@@ -82,14 +86,42 @@ namespace Lucky.Home.Services
             }
         }
 
+        public void Disconnect()
+        {
+            client.Disconnect();
+        }
+
+        private CancellationToken Timeout
+        {
+            get
+            {
+                // Use a longer timeout than the one used in the gateway to avoid many disconnections
+                return new CancellationTokenSource(2000).Token;
+            }
+        }
+
         public async Task<ushort[]> ReadHoldingRegistries(int unitId, int addressStart, int count)
         {
-            return (await client.ReadHoldingRegistersAsync<ushort>(unitId, addressStart, count)).ToArray();
+            // Buggy API not passing cancellation token. Switch to ReadHoldingRegistersAsync<T>
+            // after https://github.com/Apollo3zehn/FluentModbus/pull/100 merge
+            var dataset = SpanExtensions.Cast<byte, ushort>(await client.ReadHoldingRegistersAsync((byte)unitId, (ushort)addressStart, (ushort)count, Timeout));
+            if (/*client.SwapBytes*/ true)
+            {
+                ModbusUtils.SwitchEndianness(dataset);
+            }
+            return dataset.ToArray();
         }
 
         public async Task<float[]> ReadHoldingRegistriesFloat(int unitId, int addressStart, int count)
         {
-            return (await client.ReadHoldingRegistersAsync<float>(unitId, addressStart, count)).ToArray();
+            // Buggy API not passing cancellation token. Switch to ReadHoldingRegistersAsync<T>
+            // after https://github.com/Apollo3zehn/FluentModbus/pull/100 merge
+            var dataset = SpanExtensions.Cast<byte, float>(await client.ReadHoldingRegistersAsync((byte)unitId, (ushort)addressStart, (ushort)count, Timeout));
+            if (/*client.SwapBytes*/ true)
+            {
+                ModbusUtils.SwitchEndianness(dataset);
+            }
+            return dataset.ToArray();
         }
     }
 }

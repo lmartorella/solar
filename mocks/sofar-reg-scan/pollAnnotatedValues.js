@@ -1,5 +1,6 @@
 import fs from 'fs';
 import Modbus from 'jsmodbus';
+import * as jsoncParser from 'jsonc-parser';
 import net from 'net';
 import process from 'process';
 
@@ -22,7 +23,7 @@ const parseHex = s => {
     return parseInt(s.replace("0x", ""), 16);
 }
 
-const annotationData = JSON.parse(fs.readFileSync("annotation.json"));
+const annotationData = jsoncParser.parse(fs.readFileSync("annotation.json"));
 const annotations = []; // sparse array
 const addresses = Object.keys(annotationData.registries).filter(r => r[0] !== "!").map(key => {
     const address = parseHex(key);
@@ -96,15 +97,6 @@ socket.on("connect", async () => {
                 }
             }
         }, Promise.resolve());
-
-        Object.keys(annotationData.calc).forEach(name => {
-            const formula = annotationData.calc[name];
-            const deps = formula.deps.map(reg => lastValues[parseHex(reg)]);
-            if (deps.every(reg => typeof reg === "number")) {
-                const result = new Function("reg", `return ${formula.formula};`)(deps);
-                console.log(`${name}: ${result}`);
-            }
-        });
     }
 });
 

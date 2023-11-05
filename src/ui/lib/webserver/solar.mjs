@@ -36,33 +36,40 @@ const parseCsv = path => {
     };
 };
 
-// Day can be 0 or -1 (T-1), -2, etc..
-function getCsvName(day) {
+/**
+ * @param day can be a string in the yyyy-mm-dd format
+ * @param deltaDay is a negative number to apply to today. E.g. -1 means yesterday data, etc...
+ * If not passed, it means today
+ */
+const getCsvName = ({ day, deltaDay }) => {
     if (!fs.existsSync(csvFolder) || !fs.readdirSync(csvFolder)) {
         return null;
     }
 
-    // Get the latest CSV in the disk
-    let files = fs.readdirSync(csvFolder).filter(f => fs.lstatSync(path.join(csvFolder, f)).isFile() && f[0] !== "_");
-    // Sort it by date
-    files = files.sort();
-    const idx = files.length - 1 + (day || 0);
+    if (day) {
+        return fs.existsSync(path.join(csvFolder, `${day}.csv`)) && `${day}.csv`;
+    } else {
+        // Get the latest CSV in the disk
+        let files = fs.readdirSync(csvFolder).filter(f => fs.lstatSync(path.join(csvFolder, f)).isFile() && f[0] !== "_");
+        // Sort it by date
+        files = files.sort();
+        const idx = files.length - 1 + (deltaDay || 0);
 
-    if (idx < 0) {
-        return null;
+        if (idx < 0) {
+            return null;
+        }
+        // Take the T-N one
+        return files[idx];
     }
-    // Take the T-N one
-    return files[idx];
-}
+};
 
 function formatDur(dur) {
     const ts = moment().startOf("day").add(dur);
     return ts.format("HH:mm");
 }
 
-
 // Sample each round minute
-function sampleAtMin(arr) {
+function averageToMinute(arr, props) {
     if (arr.length === 0) {
         return [];
     }
@@ -74,18 +81,23 @@ function sampleAtMin(arr) {
 
     let lastMin = toDateMin(arr[0].ts);
     let count = 0;
-    let acc = 0;
+
+    const accumulators = { };
+    props.forEach(prop => accumulators[prop] = 0);
+
     return arr.reduce((ret, val) => {
-        acc += val.value;
+        props.forEach(prop => accumulators[prop] += val[prop]);
         count++;
         const min = toDateMin(val.ts);
         if (min > lastMin) {
-            ret.push({ ts: formatDur(min), value: acc / count });
+            const sample = { ts: formatDur(min) };
+            props.forEach(prop => sample[prop] = accumulators[prop] / count);
+            ret.push(sample);
             count = 0;
-            acc = 0;
+            props.forEach(prop => accumulators[prop] = 0);
             lastMin = min;
         }   
-        return ret;     
+        return ret;
     }, []);
 }
 
@@ -107,26 +119,34 @@ function last(arr, handler) {
     return -1;
 }
 
-function getPvChart(day) {
-    const csv = getCsvName(day);
+/**
+ * @param day can be a string in the yyyy-mm-dd format
+ * @param deltaDay is a negative number to apply to today. E.g. -1 means yesterday data, etc...
+ * If not passed, it means today
+ */
+const getPvChart = ({ day, deltaDay }) => {
+    const csv = getCsvName({ day, deltaDay });
     if (!csv) {
         return [];
     }
     const data = parseCsv(path.join(csvFolder, csv));
     const tsIdx = data.colKeys["TimeStamp"];
     const powIdx = data.colKeys["PowerW"];
-    const ret = sampleAtMin(data.rows.map(row => {
-        return { ts: row[tsIdx], value: row[powIdx] };
-    }));
+    const voltageIdx = data.colKeys["GridVoltageV"];
+
+    const ret = averageToMinute(data.rows.map(row => {
+        return { ts: row[tsIdx], power: row[powIdx], voltage: row[voltageIdx] };
+    }), ["power", "voltage"]);
+
     // Trim initial and final zeroes
-    const i1 = first(ret, i => i.value > 0);
-    const i2 = last(ret, i => i.value > 0);
+    const i1 = first(ret, i => i.power > 0);
+    const i2 = last(ret, i => i.power > 0);
     if (i1 >= 0 && i2 >= 0) {
         return ret.slice(i1, i2);
     } else {
         return [];
     }
-}
+};
 
 let lastData = null;
 let lastErr;
@@ -146,8 +166,16 @@ export function register(app, _csvFolder) {
     });
 
     app.get("/solar/solarPowToday", (req, res) => {
+        // Avoid DDOS
         setTimeout(() => {
-            res.send(getPvChart(req.query && Number(req.query.day)));
-        }, 1000);
+            const args = {
+                // if passed, day is a string in yyyy-mm-dd format
+                day: req.query?.day,
+                // deltaDay is a negative number to apply to today. E.g. -1 means yesterday data, etc...
+                deltaDay: Number(req.query?.deltaDay)
+            };
+            // If nothing is passed, it means today
+            res.send(getPvChart(args));
+        }, 250);
     });
 }

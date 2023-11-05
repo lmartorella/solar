@@ -93,21 +93,21 @@ namespace Lucky.Db
                         {
                             case TypeCode.UInt16:
                                 ushort u;
-                                if (ushort.TryParse(parts[i], out u))
+                                if (ushort.TryParse(parts[i], CultureInfo.InvariantCulture, out u))
                                 {
                                     value = u;
                                 }
                                 break;
                             case TypeCode.Int32:
                                 int r;
-                                if (int.TryParse(parts[i], out r))
+                                if (int.TryParse(parts[i], CultureInfo.InvariantCulture, out r))
                                 {
                                     value = r;
                                 }
                                 break;
                             case TypeCode.Double:
                                 double d;
-                                if (double.TryParse(parts[i], out d))
+                                if (double.TryParse(parts[i], CultureInfo.InvariantCulture, out d))
                                 {
                                     value = d;
                                 }

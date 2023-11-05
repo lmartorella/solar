@@ -12,12 +12,20 @@ namespace Lucky.Home.Device
         private readonly ModbusClient modbusClient;
         private readonly MqttService mqttService;
         private static readonly TimeSpan Period = TimeSpan.FromSeconds(1.5);
+        private double? lastData = double.MaxValue;
+        private readonly ILogger Logger;
 
         public ModbusAmmeter(string deviceHostName, int modbusNodeId)
         {
             this.modbusNodeId = modbusNodeId;
-            modbusClient = Manager.GetService<ModbusClientFactory>().Get(deviceHostName, FluentModbus.ModbusEndianness.BigEndian);
+            Logger = Manager.GetService<LoggerFactory>().Create("Zcs");
+
+            if (deviceHostName != "")
+            {
+                modbusClient = Manager.GetService<ModbusClientFactory>().Get(deviceHostName, FluentModbus.ModbusEndianness.BigEndian);
+            }
             mqttService = Manager.GetService<MqttService>();
+            Logger.Log("Start", "host", deviceHostName + ":" + modbusNodeId);
         }
 
         public async Task StartLoop()
@@ -33,7 +41,7 @@ namespace Lucky.Home.Device
         private async Task PullData()
         {
             // Check TCP MODBUS connection
-            if (!modbusClient.CheckConnected())
+            if (modbusClient == null || !modbusClient.CheckConnected())
             {
                 await PublishData(null);
             }
@@ -51,6 +59,16 @@ namespace Lucky.Home.Device
 
         private async Task PublishData(double? data)
         {
+            if (!data.HasValue && !lastData.HasValue)
+            {
+                return;
+            }
+            if (data.HasValue && lastData.HasValue && Math.Abs(data.Value - lastData.Value) < double.Epsilon)
+            {
+                return;
+            }
+            lastData = data;
+
             if (data != null)
             {
                 await mqttService.RawPublish(AnalogIntegrator.DataTopicId, Encoding.UTF8.GetBytes(data.ToString()));

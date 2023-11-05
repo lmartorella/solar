@@ -14,11 +14,29 @@ interface IPvData {
     gridV: number;
 
     peakW: number;
-    peakTsTime: string;
+    peakWTs: string;
+    peakV: number;
+    peakVTs: string;
 
     currentTs: string;
-    inverterState: string;
+    inverterState: keyof typeof FaultStates | keyof typeof NormalStates | null | "";
 }
+
+interface IPvChartPoint {
+    ts: string;
+    power: number;
+    voltage: number;
+}
+
+const NormalStates = {
+    "OFF": res.Solar_Off,
+    "WAIT": res.Solar_Wait,
+    "CHK": res.Solar_Check
+};
+
+const FaultStates = {
+    "NOGRID": res.Solar_FaultNoGrid
+};
 
 @Component({
     selector: 'solar-component',
@@ -30,6 +48,7 @@ export class SolarComponent implements OnInit {
     public firstLineClass!: string;
     public firstLine!: string;
     public pvData: Partial<IPvData> = { };
+    public readonly today: string;
     public status!: string;
     public loaded!: boolean;
     public readonly res: { [key: string]: string };
@@ -39,6 +58,7 @@ export class SolarComponent implements OnInit {
     constructor(private xhr: XhrService, private readonly http: HttpClient) {
         this.res = res as unknown as { [key: string]: string };
         this.format = format;
+        this.today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
     public async ngOnInit() {
@@ -56,20 +76,15 @@ export class SolarComponent implements OnInit {
                 this.firstLine = format("Error", this.pvData.error);
                 this.firstLineClass = 'err';
             } else {
-                switch (this.pvData.inverterState) {
-                    case null:
-                    case "OFF":
-                        this.firstLine = res["Solar_Off"];
-                        this.firstLineClass = 'gray';
-                        break;
-                    case undefined:
-                    case "":
-                        this.firstLine = format("Solar_On", { power: this.pvData.currentW });
-                        break;
-                    default:
-                        this.firstLine = format("Error", this.decodeFault(this.pvData.inverterState));
-                        this.firstLineClass = 'err';
-                        break;
+                const state = this.pvData.inverterState;
+                if (state == null || NormalStates[state as keyof typeof NormalStates]) {
+                    this.firstLine = NormalStates[state as keyof typeof NormalStates || "OFF"];
+                    this.firstLineClass = 'gray';
+                } else if (state === undefined || state === "") {
+                    this.firstLine = format("Solar_On", { power: this.pvData.currentW });
+                } else {
+                    this.firstLine = format("Error", this.decodeFault(this.pvData.inverterState as keyof typeof FaultStates));
+                    this.firstLineClass = 'err';
                 }
             }
         } catch (err) {
@@ -86,8 +101,13 @@ export class SolarComponent implements OnInit {
         }
     }
 
-    private async getDayDataSeries(day: number): Promise<Partial<Plotly.PlotData> | null> {
-        const data = await this.xhr.check(this.http.get<IPvData>(`${this.xhr.baseUrl}/solar/solarPowToday?day=${day}`));
+    /**
+     * @param opts.day can be a string in the yyyy-mm-dd format
+     * @param opts.deltaDay is a negative number to apply to today. E.g. -1 means yesterday data, etc...
+     */
+    private async getDayDataSeries(opts: { deltaDay?: number, day?: string }, seriesName: string): Promise<Partial<Plotly.PlotData> | null> {
+        const urlArgs = Object.keys(opts).map(key => `${key}=${encodeURIComponent((opts as any)[key])}`).join("&");
+        const data = await this.xhr.check(this.http.get<IPvChartPoint[]>(`${this.xhr.baseUrl}/solar/solarPowToday?${urlArgs}`));
         if (!Array.isArray(data)) {
             throw new Error("Unexpected data format");
         }
@@ -96,24 +116,50 @@ export class SolarComponent implements OnInit {
         }
         return {
             x: data.map(s => s.ts),
-            y: data.map(s => s.value),
+            y: data.map(s => s.power),
             mode: 'lines',
-            name: 'T' + (day === 0 ? '' : day.toString()),
-            type: 'scatter'
+            name: seriesName,
+            type: 'scatter',
+            hovertext: data.map(s => `${s.power}W, ${s.voltage}V`)
         };
     }
 
-    public async drawDays(count: number) {
+    private async getDaySpanSeries(count: number): Promise<Partial<Plotly.PlotData>[]> {
+        // Fetch the last 4 days
+        const promises = [] as Promise<Partial<Plotly.PlotData> | null>[];
+        for (let deltaDay = -count + 1; deltaDay <= 0; deltaDay++) {
+            promises.push(this.getDayDataSeries({ deltaDay }, `T${deltaDay === 0 ? '' : deltaDay}`));
+        }
+        return (await Promise.all(promises)).filter(r => !!r) as Partial<Plotly.PlotData>[];
+    }
+
+    private async getHistoricalSeries(count: number): Promise<Partial<Plotly.PlotData>[]> {
+        // Fetch the last 4 days
+        const promises = [] as Promise<Partial<Plotly.PlotData> | null>[];
+        const today = new Date();
+
+        const pad = (n: number, str: number) => {
+            return str.toString().padStart(n, "0");
+        };
+
+        for (let deltaYear = -count + 1; deltaYear <= 0; deltaYear++) {
+            const day = `${pad(4, today.getFullYear() + deltaYear)}-${pad(2, today.getMonth() + 1)}-${pad(2, today.getDate())}`;
+            promises.push(this.getDayDataSeries({ day  }, `Y${deltaYear === 0 ? '' : deltaYear}`));
+        }
+        return (await Promise.all(promises)).filter(r => !!r) as Partial<Plotly.PlotData>[];
+    }
+
+    public async drawDays(opts: { deltaDayCount?: number, historicalCount?: number }) {
         this.clearChartDom();
 
         this.chartLoading = true;
         try {
-            // Fetch the last 4 days
-            const promises = [] as Promise<Partial<Plotly.PlotData> | null>[];
-            for (let day = -count + 1; day <= 0; day++) {
-                promises.push(this.getDayDataSeries(day));
+            let series: Partial<Plotly.PlotData>[];
+            if (opts.historicalCount) {
+                series = await this.getHistoricalSeries(opts.historicalCount);
+            } else {
+                series = await this.getDaySpanSeries(opts.deltaDayCount || 1);
             }
-            const series = (await Promise.all(promises)).filter(r => !!r) as Partial<Plotly.PlotData>[];
 
             // Sort 'x' categories in alphabetical order
             const sortCat = (days: Partial<Plotly.PlotData>[]) => {
@@ -141,13 +187,8 @@ export class SolarComponent implements OnInit {
         }
     }
 
-    private decodeFault(fault: string) {
-        switch (fault) { 
-            case "NOGRID":
-                return res["Solar_FaultNoGrid"];
-            default:
-                return fault;
-        }
+    private decodeFault(fault: keyof typeof FaultStates) {
+        return FaultStates[fault] || fault;
     }
 }
 

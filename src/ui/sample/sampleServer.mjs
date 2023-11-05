@@ -25,7 +25,7 @@ const corsOptions = {
 // Register custom endpoints
 register({
     get: (url, options) => app.get(url, cors(corsOptions), options)
-}, path.join(process.cwd(), "../../../../target/etc/Db/SOLAR"));
+}, path.join(process.cwd(), "../../../target/etc/Db/SOLAR"));
 
 app.listen(port, () => {
     console.log(`REST server started at http://localhost:${port}`);

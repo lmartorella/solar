@@ -2,7 +2,6 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,
@@ -22,7 +21,14 @@
     "lib": [
       "ES2022",
       "dom"
-    ]
+    ],
+    "paths": {
+      "@angular/common": ["../node_modules/@angular/common"],
+      "@angular/common/http": ["../node_modules/@angular/common/http"],
+      "@angular/core": ["../node_modules/@angular/core"],
+      "plotly.js": ["../node_modules/plotly.js"],
+      "rxjs": ["../node_modules/rxjs"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
