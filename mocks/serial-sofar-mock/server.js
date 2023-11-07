@@ -6,6 +6,8 @@ import crc16modbus from 'crc/crc16modbus';
 const TimeoutRatio = 0.15;
 // Ratio of error 0x90
 const ErrorRatio = 0.15;
+// Ratio of splitted packet, with more than 3.5 spaces in between bursts
+const SplitMessageRatio = 0.15;
 
 const openPort = async () => {
     const ports = (await SerialPort.list()).filter(port => port.friendlyName.indexOf("USB-to-Serial Comm Port") >= 0);
@@ -47,23 +49,42 @@ const toHex = buffer => {
     };
 
     const writeData = async (resp) => {
-        console.log("-> ", toHex(resp));
+        const splitMessage = Math.random() < SplitMessageRatio;
+        let packets = [resp];
+        if (splitMessage) {
+            // Simulate splitted message
+            console.log(" splitted");
+            const l = Math.floor(resp.length / 2);
+            packets = [resp.slice(0, l), resp.slice(l)];
+        }
+
         port.set({ rts: false });
         // Sofar writes immediately
-        port.write(resp);
-        await new Promise((resolve, reject) => {
-            port.drain(err => {
-                if (err) reject(err); else resolve();
-            });
-        })
-        // Wait for complete flush + 1ms
-        await new Promise(resolve => setTimeout(resolve, 1 + (10 * resp.length) / 9600 * 1000));
+
+        for (const packet of packets) {
+            console.log("-> ", toHex(packet));
+            port.write(packet);
+            await new Promise((resolve, reject) => {
+                port.drain(err => {
+                    if (err) reject(err); else resolve();
+                });
+            })
+            // Wait for complete flush + 1ms
+            // TODO: Not sure what is the granularity on the OS (it can be 18ms on Windows)
+            let timeout = 1 + (10 * packet.length) / 9600 * 1000;
+            if (splitMessage) {
+                timeout += 6;
+            }
+            await new Promise(resolve => setTimeout(resolve, timeout));
+        }
+
         port.set({ rts: true });
     }
 
-    // Strange non-MODBUS response
+    // Strange non-MODBUS response, with a CRC of 0, a fn code of 0x90 but a "real" 0x2 error in case
+    // an invalid address is requested
     const respondWithError = () => {
-        const resp = new Uint8Array([0x01, 0x90, 0x02, 0x00, 0x00]);
+        const resp = new Uint8Array([0x01, 0x90, 0x02, 0x00, 0x00]); // 0x2: Illegal Data Address
         return writeData(resp);
     };
 
