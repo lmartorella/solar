@@ -21,18 +21,13 @@ typedef struct {
     uint8_t _filler2;
 } SYS_REGISTERS;
 
-typedef struct {
-    /** 32 + 16 bits = 3 registers */
-    ANALOG_INTEGRATOR_DATA data;
-} SENS_REGISTERS;
-
 #define SYS_REGS_ADDRESS (0)
 #define SYS_REGS_ADDRESS_BE (LE_TO_BE_16(SYS_REGS_ADDRESS))
 #define SYS_REGS_COUNT (sizeof(SYS_REGISTERS) / 2)
 
 #define SENSOR_REGS_ADDRESS (0x200)
 #define SENSOR_REGS_ADDRESS_BE (LE_TO_BE_16(SENSOR_REGS_ADDRESS))
-#define SENSOR_REGS_COUNT (3)
+#define SENSOR_REGS_COUNT (sizeof(ANALOG_INTEGRATOR_DATA) / 2)
 
 static uint16_t addressBe;
 

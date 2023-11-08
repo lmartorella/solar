@@ -3,7 +3,7 @@
 #include "an_integrator.h"
 
 static int32_t _accumulator;
-static int16_t _count;
+static uint16_t _count;
 static enum {
     IDLE,
     SAMPLING    
@@ -32,9 +32,9 @@ void anint_init() {
     ADCON0bits.ADON = 1;
 }
 
-// Sample line 4 times per seconds and accumulate value in 32-bit value.
+// Sample line 4 times per seconds and accumulate value in 32-bit value (signed so 31).
 // This means that, at max reading (10 bit), you have 2^(31-10)/4 seconds to read accumulator before overflow (~145h)
-// However count is 16 bit signed, so it resets first (after 2^15/4 seconds, ~136 minutes in case of no readings)
+// However count is 16 bit unsigned, so it resets first (after 2^16/4 seconds, ~273 minutes in case of no readings)
 void anint_poll() {
     switch (_state) {
         case IDLE: {
@@ -55,7 +55,7 @@ void anint_poll() {
                 uint16_t value = (uint16_t)((ADRESH << 8) + ADRESL);
                 _accumulator += value;
                 _count++;
-                if (_accumulator < 0 || _count < 0) {
+                if (_accumulator < 0 || _count == 0) {
                     // Overflow
                     sys_fatal(ERR_DEVICE_DEADLINE_MISSED);
                 }
@@ -66,8 +66,8 @@ void anint_poll() {
 }
 
 void anint_read(ANALOG_INTEGRATOR_DATA* data) {
-    data->count = (uint16_t)_count;
-    data->value = (uint32_t)_accumulator;
+    data->count = _count;
+    data->value = _accumulator;
     _count = 0;
     _accumulator = 0;
 }
