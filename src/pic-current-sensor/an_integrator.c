@@ -2,17 +2,22 @@
 #include <pic-modbus/modbus.h>
 #include "an_integrator.h"
 
-static int32_t _accumulator;
-static uint16_t _count;
+static ANALOG_INTEGRATOR_DATA _data;
 static enum {
     IDLE,
-    SAMPLING    
+    SAMPLING
 } _state;
 static TICK_TYPE _lastSample;
 
+static void resetData() {
+    _data.ch0.accumulator = 0;
+    _data.ch0.count = 0;
+    _data.ch1.accumulator = 0;
+    _data.ch1.count = 0;
+}
+
 void anint_init() {
-    _accumulator = 0;
-    _count = 0;
+    resetData();
     _state = IDLE;
     _lastSample = timers_get();
     
@@ -53,9 +58,9 @@ void anint_poll() {
             // if done, read it and 
             if (!ADCON0bits.GO) {
                 uint16_t value = (uint16_t)((ADRESH << 8) + ADRESL);
-                _accumulator += value;
-                _count++;
-                if (_accumulator < 0 || _count == 0) {
+                _data.ch0.accumulator += value;
+                _data.ch0.count++;
+                if (_data.ch0.accumulator < 0 || _data.ch0.count == 0) {
                     // Overflow
                     sys_fatal(ERR_DEVICE_DEADLINE_MISSED);
                 }
@@ -66,8 +71,6 @@ void anint_poll() {
 }
 
 void anint_read(ANALOG_INTEGRATOR_DATA* data) {
-    data->count = _count;
-    data->value = _accumulator;
-    _count = 0;
-    _accumulator = 0;
+    *data = _data;
+    resetData();
 }

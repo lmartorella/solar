@@ -25,15 +25,14 @@ typedef struct {
 #define SYS_REGS_ADDRESS_BE (LE_TO_BE_16(SYS_REGS_ADDRESS))
 #define SYS_REGS_COUNT (sizeof(SYS_REGISTERS) / 2)
 
-#define SENSOR_REGS_ADDRESS (0x200)
-#define SENSOR_REGS_ADDRESS_BE (LE_TO_BE_16(SENSOR_REGS_ADDRESS))
-#define SENSOR_REGS_COUNT (sizeof(ANALOG_INTEGRATOR_DATA) / 2)
+#define SENSORS_REGS_COUNT (sizeof(ANALOG_INTEGRATOR_DATA) / 2)
+#define SENSORS_REGS_ADDRESS (0x200)
+#define SENSORS_REGS_ADDRESS_BE (LE_TO_BE_16(SENSORS_REGS_ADDRESS))
 
-static uint16_t addressBe;
 
 _Bool regs_validateReg() {
     uint8_t count = bus_cl_header.address.countL;
-    addressBe = bus_cl_header.address.registerAddressBe;
+    uint16_t addressBe = bus_cl_header.address.registerAddressBe;
     
     // Exposes the system registers in the rane 0-2
     if (addressBe == SYS_REGS_ADDRESS_BE) {
@@ -41,15 +40,12 @@ _Bool regs_validateReg() {
             bus_cl_exceptionCode = ERR_INVALID_SIZE;
             return false;
         }
-        if (bus_cl_header.header.function != READ_HOLDING_REGISTERS) {
-            bus_cl_exceptionCode = ERR_INVALID_FUNCTION;
-            return false;
-        }
         return true;
     }
    
-    if (addressBe == SENSOR_REGS_ADDRESS_BE) {
-        if (count != SENSOR_REGS_COUNT) {
+    if (addressBe == SENSORS_REGS_ADDRESS_BE) {
+        // Only readinh whole channel range at a time is supported
+        if (count != SENSORS_REGS_COUNT) {
             bus_cl_exceptionCode = ERR_INVALID_SIZE;
             return false;
         }
@@ -65,6 +61,7 @@ _Bool regs_validateReg() {
 }
 
 _Bool regs_onReceive() {
+    uint16_t addressBe = bus_cl_header.address.registerAddressBe;
     if (addressBe == SYS_REGS_ADDRESS_BE) {
         // Ignore data, reset flags and counters
         sys_resetReason = RESET_NONE;
@@ -75,13 +72,14 @@ _Bool regs_onReceive() {
 }
 
 void regs_onSend() {
+    uint16_t addressBe = bus_cl_header.address.registerAddressBe;
     if (addressBe == SYS_REGS_ADDRESS_BE) {
         ((SYS_REGISTERS*)rs485_buffer)->crcErrors = bus_cl_crcErrors;
         ((SYS_REGISTERS*)rs485_buffer)->resetReason = sys_resetReason;
         return;
     }
     
-    if (addressBe == SENSOR_REGS_ADDRESS_BE) {
+    if (addressBe == SENSORS_REGS_ADDRESS_BE) {
         anint_read((ANALOG_INTEGRATOR_DATA*)rs485_buffer);
         return;
     }

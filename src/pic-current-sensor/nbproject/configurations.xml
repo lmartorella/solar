@@ -4,6 +4,19 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <logicalFolder name="f1" displayName="pic-modbus" projectFiles="true">
+        <logicalFolder name="f1" displayName="pic" projectFiles="true">
+          <itemPath>../../../pic-modbus/src/include/pic-modbus/pic/configuration.h</itemPath>
+          <itemPath>../../../pic-modbus/src/include/pic-modbus/pic/fuses_micro_bean.h</itemPath>
+        </logicalFolder>
+        <itemPath>../../../pic-modbus/src/include/pic-modbus/bus_client.h</itemPath>
+        <itemPath>../../../pic-modbus/src/include/pic-modbus/crc.h</itemPath>
+        <itemPath>../../../pic-modbus/src/include/pic-modbus/modbus.h</itemPath>
+        <itemPath>../../../pic-modbus/src/include/pic-modbus/rs485.h</itemPath>
+        <itemPath>../../../pic-modbus/src/include/pic-modbus/sys.h</itemPath>
+        <itemPath>../../../pic-modbus/src/include/pic-modbus/timers.h</itemPath>
+        <itemPath>../../../pic-modbus/src/include/pic-modbus/uart.h</itemPath>
+      </logicalFolder>
       <itemPath>an_integrator.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
