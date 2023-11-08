@@ -2,8 +2,16 @@ import { SerialPort } from 'serialport';
 import { InterByteTimeoutParser } from '@serialport/parser-inter-byte-timeout';
 import crc16modbus from 'crc/crc16modbus';
 
+// Ratio of packet loss, that simulates timeout issues
+const TimeoutRatio = 0.15;
+// Ratio of error 0x90
+const ErrorRatio = 0.15;
+
 const openPort = async () => {
     const ports = (await SerialPort.list()).filter(port => port.friendlyName.indexOf("USB-to-Serial Comm Port") >= 0);
+    if (ports.length === 0) {
+        throw new Error("No COM ports found with the name `USB-to-Serial Comm Port`");
+    }
 
     const port = new SerialPort({
         path: ports[0].path,
@@ -33,12 +41,15 @@ const toHex = buffer => {
     port.set({ rts: true });
 
     const parser = port.pipe(new InterByteTimeoutParser({ interval: 1 })); // in ms
-    const inverterData = (await import("./data.json", { assert: { type: "json" } })).default;
+    const inverterData = {
+        start: 1024,
+        data: Array.from({ length: 2048 }, () => Math.floor(Math.random() * 65535))
+    };
 
     const writeData = async (resp) => {
         console.log("-> ", toHex(resp));
         port.set({ rts: false });
-        await new Promise(resolve => setTimeout(resolve, 1));
+        // Sofar writes immediately
         port.write(resp);
         await new Promise((resolve, reject) => {
             port.drain(err => {
@@ -57,8 +68,13 @@ const toHex = buffer => {
     };
 
     parser.on('data', async data => {
-
         console.log("<- ", toHex(data));
+
+        if (Math.random() < TimeoutRatio) {
+            // Simulate packet loss
+            console.log(" dropped");
+            return;
+        }
 
         if (data.length === 9 && data[8] === 0) {
             // That's ok, skip the last
@@ -77,6 +93,13 @@ const toHex = buffer => {
             return;
         }
 
+        // Decode the function code
+        if (Math.random() < ErrorRatio) {
+            console.log(" Simulate random error");
+            await respondWithError();
+            return;
+        }
+        
         // Decode the function code
         if (data[1] != 3) {
             console.log(" Err: function code expected: 0x03");

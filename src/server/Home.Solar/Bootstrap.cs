@@ -25,6 +25,7 @@ namespace Lucky.Home
 
             var logger = Manager.GetService<ILoggerFactory>().Create(appName + ":Main");
             logger.Log("Started");
+            logger.Log("WrkDir", "etc", Manager.GetService<PersistenceService>().GetAppFolderPath());
             AppDomain.CurrentDomain.UnhandledException += (o, e) =>
             {
                 logger.Exception((Exception)e.ExceptionObject);

@@ -26,19 +26,19 @@ namespace Lucky.Home.Device.Sofar
         private static readonly TimeSpan CheckConnectionPeriodDay = TimeSpan.FromSeconds(10); // Less than grace time
 
         /// <summary>
-        /// During night (e.g. when last sample is older that 2 minutes), retry every 2 minutes, to give time to the inverter to 
+        /// During night (e.g. when last sample is older that 5 minutes), retry less often, to give time to the inverter to 
         /// be stable good enough
         /// </summary>
-#if !DEBUG
-        private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromMinutes(2);
-#else
         private static readonly TimeSpan CheckConnectionPeriodNight = TimeSpan.FromSeconds(25);
-#endif
 
         /// <summary>
         /// Get a solar PV sample every 15 seconds
         /// </summary>
+#if !DEBUG
         private static readonly TimeSpan PollDataPeriod = TimeSpan.FromSeconds(15);
+#else
+        private static readonly TimeSpan PollDataPeriod = TimeSpan.FromSeconds(5);
+#endif
 
         public async Task StartLoop()
         {

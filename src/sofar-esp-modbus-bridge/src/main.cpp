@@ -19,10 +19,10 @@ protected:
     /**
      * Fix frame errors of the first byte due to bus arbitration/drive switch 
      */
-    virtual void tryFixFrame(uint8_t rtuNodeId, uint8_t requestFunction, Modbus::frame_arg_t* frameArg, uint8_t*& data, uint8_t& len);
+    virtual void tryFixFrame(uint8_t rtuNodeId, uint8_t requestFunction, Modbus::frame_arg_t* frameArg, uint8_t*& data, uint8_t& len) override;
 };
 
-static TelnetModbusBridge bridge;
+static SofarModbusBridge bridge;
 
 void setup() {
 #if defined(ESP32)
@@ -69,7 +69,7 @@ void SofarModbusBridge::tryFixFrame(uint8_t rtuNodeId, uint8_t requestFunction, 
   }
   if (len == 2 && data[0] == 0x90) {
     // Fix Sofar error
-    data[0] = 0x83;
+    data[0] = 0x80 | requestFunction;
     frameArg->validFrame = true;
     frameArg->slaveId = rtuNodeId;
     log.printf("Recovered 0x90 error\n");
