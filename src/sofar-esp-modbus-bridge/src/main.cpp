@@ -35,14 +35,14 @@ void setup() {
 #if defined(ESP8266)
     _rtuSerial.begin(9600, SERIAL_8N1);
 #else
-    _rtuSerial.begin(9600, SERIAL_8N1, 35, 33); // 35 is input only
+    _rtuSerial.begin(9600, SERIAL_8N1, 35, 33); // 35 = RX, is a input-only pin
 #endif
 
     WiFi.setHostname(WIFI_HOSTNAME);
     WiFi.begin(WIFI_SSID, WIFI_PASSPHRASE);
 
 #if defined(ESP8266)
-    bridge.begin(_rtuSerial, 0, TxEnableHigh);
+    bridge.begin(_rtuSerial, 0, TxEnableHigh);  // GPIO0 avail on ESP01
 #else
     bridge.begin(_rtuSerial, 32, TxEnableHigh);
 #endif
