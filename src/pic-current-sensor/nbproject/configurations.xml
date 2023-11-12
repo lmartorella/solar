@@ -34,8 +34,8 @@
         </logicalFolder>
         <itemPath>../../../pic-modbus/src/bus_client.c</itemPath>
         <itemPath>../../../pic-modbus/src/crc.c</itemPath>
-        <itemPath>../../../pic-modbus/src/net.c</itemPath>
         <itemPath>../../../pic-modbus/src/rs485.c</itemPath>
+        <itemPath>../../../pic-modbus/src/modbus.c</itemPath>
       </logicalFolder>
       <itemPath>an_integrator.c</itemPath>
       <itemPath>main.c</itemPath>

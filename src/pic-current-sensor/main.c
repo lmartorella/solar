@@ -98,13 +98,13 @@ static void enableInterrupts() {
 void main() {
     // Analyze RESET reason
     sys_init();
-    net_init();
+    modbus_init();
     anint_init();
     enableInterrupts();
     // I'm alive
     while (1) {
         CLRWDT();
-        net_poll();
+        modbus_poll();
         anint_poll();
     }
 }

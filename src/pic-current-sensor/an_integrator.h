@@ -8,9 +8,11 @@ typedef struct {
     uint16_t count;
 } ANALOG_INTEGRATOR_CHANNEL_DATA;
 
+// Read two inputs
+#define AN_CHANNELS (2)
+
 typedef struct {
-    ANALOG_INTEGRATOR_CHANNEL_DATA ch0;
-    ANALOG_INTEGRATOR_CHANNEL_DATA ch1;
+    ANALOG_INTEGRATOR_CHANNEL_DATA ch[AN_CHANNELS];
 } ANALOG_INTEGRATOR_DATA;
 
 void anint_init(void);
