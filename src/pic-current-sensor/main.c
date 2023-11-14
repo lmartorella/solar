@@ -21,13 +21,14 @@ typedef struct {
     uint8_t _filler2;
 } SYS_REGISTERS;
 
-#define SYS_REGS_ADDRESS (0)
-#define SYS_REGS_ADDRESS_BE (LE_TO_BE_16(SYS_REGS_ADDRESS))
+#define SYS_REGS_ADDRESS_BE (LE_TO_BE_16(0x0))
 #define SYS_REGS_COUNT (sizeof(SYS_REGISTERS) / 2)
 
 #define SENSORS_REGS_COUNT (sizeof(ANALOG_INTEGRATOR_DATA) / 2)
-#define SENSORS_REGS_ADDRESS (0x200)
-#define SENSORS_REGS_ADDRESS_BE (LE_TO_BE_16(SENSORS_REGS_ADDRESS))
+#define SENSORS_REGS_ADDRESS_BE (LE_TO_BE_16(0x200))
+
+#define CALIB_REGS_COUNT (sizeof(ANALOG_INTEGRATOR_CALIBRATION) / 2)
+#define CALIB_REGS_ADDRESS_BE (LE_TO_BE_16(0x300))
 
 
 _Bool regs_validateReg() {
@@ -44,13 +45,22 @@ _Bool regs_validateReg() {
     }
    
     if (addressBe == SENSORS_REGS_ADDRESS_BE) {
-        // Only readinh whole channel range at a time is supported
+        // Only reading whole channel range at a time is supported
         if (count != SENSORS_REGS_COUNT) {
             bus_cl_exceptionCode = ERR_INVALID_SIZE;
             return false;
         }
         if (bus_cl_header.header.function != READ_HOLDING_REGISTERS) {
             bus_cl_exceptionCode = ERR_INVALID_FUNCTION;
+            return false;
+        }
+        return true;
+    }
+
+    if (addressBe == CALIB_REGS_ADDRESS_BE) {
+        // Only reading/writing whole channel range at a time is supported
+        if (count != CALIB_REGS_COUNT) {
+            bus_cl_exceptionCode = ERR_INVALID_SIZE;
             return false;
         }
         return true;
@@ -68,6 +78,10 @@ _Bool regs_onReceive() {
         bus_cl_crcErrors = 0;
         return true;
     }
+    if (addressBe == CALIB_REGS_ADDRESS_BE) {
+        anint_write_calib((ANALOG_INTEGRATOR_CALIBRATION*)rs485_buffer);
+        return true;
+    }
     return false;
 }
 
@@ -80,7 +94,11 @@ void regs_onSend() {
     }
     
     if (addressBe == SENSORS_REGS_ADDRESS_BE) {
-        anint_read((ANALOG_INTEGRATOR_DATA*)rs485_buffer);
+        anint_read_values((ANALOG_INTEGRATOR_DATA*)rs485_buffer);
+        return;
+    }
+    if (addressBe == CALIB_REGS_ADDRESS_BE) {
+        anint_read_calib((ANALOG_INTEGRATOR_CALIBRATION*)rs485_buffer);
         return;
     }
 }

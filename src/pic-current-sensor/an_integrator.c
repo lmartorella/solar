@@ -10,12 +10,14 @@
 #define ACQUISITION_PER_CHANNEL_PERIOD (ACQUISITION_LOOP_PERIOD / AN_CHANNELS)
 
 typedef struct {
-    // The integrated A/D value for the last period. Every single reading is an unsigned 10bits.
-    uint16_t accumulator;
+    // Calibration data, cached in RAM. When set to 2^15, it is the neutral calibration.
+    uint16_t calibration;
 } ANALOG_INTEGRATOR_ACCUMULATOR;
 
-static ANALOG_INTEGRATOR_ACCUMULATOR _accumulators[AN_CHANNELS];
+// The integrated A/D value for the last period. Every single reading is an unsigned 10bits.
+static uint16_t _accumulators[AN_CHANNELS];
 static ANALOG_INTEGRATOR_DATA _values;
+static ANALOG_INTEGRATOR_CALIBRATION _calibration;
 
 static enum {
     // Idle and acquisition time
@@ -30,9 +32,11 @@ static uint8_t _count;
 
 static void storeValuesAndReset() {
     for (uint8_t i = 0; i < AN_CHANNELS; i++) {
-        _values.ch[i].value = (((uint32_t)_accumulators[i].accumulator) << 16) / _count;
+        // By default calibration is 2^15 (32k), so shift an additional bit to have 16+16 fixed decimal
+        _values.values[i] = (((uint32_t)_accumulators[i] * (uint32_t)_calibration.calib[i]) << 1) / _count;
+        _accumulators[i] = 0;
     }
-    memset(&_accumulators, 0, sizeof(_accumulators));
+    _count = 0;
 }
 
 static void startAcquire() {
@@ -58,11 +62,18 @@ static void startAcquire() {
     _acquisitionStartTs = timers_get();
 }
 
+// Default values stored in EEPROM
+__eeprom ANALOG_INTEGRATOR_CALIBRATION calibrationValuesEeprom = { 0x8000, 0x8000 };
+            
 void anint_init() {
-    storeValuesAndReset();
+    _count = 0;
     _state = IDLE;
     _channel = 0;
-    _count = 0;
+    
+    for (uint8_t i = 0; i < AN_CHANNELS; i++) {
+        _accumulators[i] = 0;
+        _calibration.calib[i] = calibrationValuesEeprom.calib[i];
+    }
     
     // FVR: Fixed voltage reference
     // Since the LTC1966 RMS converter module range is 1Vpeak in input (so ~0.7V out), uses the internal 1.024V ref for ADC.
@@ -105,7 +116,7 @@ void anint_poll() {
             if (!ADCON0bits.GO) {
                 // Read ADC RESult registers
                 uint16_t value = (uint16_t)((ADRESH << 8) + ADRESL);
-                _accumulators[_channel].accumulator += value;
+                _accumulators[_channel] += value;
                 _state = IDLE;
                 // Move to next channel
                 startAcquire();
@@ -114,6 +125,19 @@ void anint_poll() {
     }
 }
 
-void anint_read(ANALOG_INTEGRATOR_DATA* data) {
+void anint_read_values(ANALOG_INTEGRATOR_DATA* data) {
     *data = _values;
+}
+
+void anint_read_calib(ANALOG_INTEGRATOR_CALIBRATION* data) {
+    *data = _calibration;
+}
+
+void anint_write_calib(ANALOG_INTEGRATOR_CALIBRATION* data) {
+    _calibration = *data;
+    unsigned short addr = (unsigned short)&calibrationValuesEeprom;
+    uint8_t* src = (uint8_t*)&_calibration;
+    for (int i = 0; i < sizeof(ANALOG_INTEGRATOR_CALIBRATION); i++) {
+        eeprom_write(addr++, *(src++));
+    }
 }
