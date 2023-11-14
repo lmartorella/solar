@@ -2,10 +2,8 @@
 #define _AN_INTEGRATOR_H
 
 typedef struct {
-    // The integrated A/D value for the last period. Every accumulated reading is an unsigned 10bits.
-    int32_t accumulator;
-    // The count of samples accumulated in `value` so far
-    uint16_t count;
+    // The integrated A/D value for the last second, 16 integer + 16 fractional bits (value * 65536)
+    uint32_t value;
 } ANALOG_INTEGRATOR_CHANNEL_DATA;
 
 // Read two inputs

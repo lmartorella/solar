@@ -2,14 +2,21 @@
 #include <pic-modbus/modbus.h>
 #include "an_integrator.h"
 
-// Sample loop 4 times per seconds and accumulate each value in 32-bit value (signed so 31).
-// This means that, at max reading (10 bit), you have 2^(31-10)/4 seconds to read accumulator before overflow (~145h)
-// However count is 16 bit unsigned, so it resets first (after 2^16/4 seconds, ~273 minutes in case of no readings)
+// Sample the A/D (10bit) 4 times per seconds (for each channel) and accumulate each value in 16-bit unsigned value.
+// The average result (accumulator / count) is stored in a fixed-point decimal register.
 // See also Microchip datasheet for minimum period (16.4 A/D Acquisition Requirements)
-#define ACQUISITION_LOOP_PERIOD (TICKS_PER_SECOND / 4)
-#define ACQUISITION_PERIOD (ACQUISITION_LOOP_PERIOD / AN_CHANNELS)
+#define ACQUISITIONS_PER_SECONDS (4)
+#define ACQUISITION_LOOP_PERIOD (TICKS_PER_SECOND / ACQUISITIONS_PER_SECONDS)
+#define ACQUISITION_PER_CHANNEL_PERIOD (ACQUISITION_LOOP_PERIOD / AN_CHANNELS)
 
-static ANALOG_INTEGRATOR_DATA _data;
+typedef struct {
+    // The integrated A/D value for the last period. Every single reading is an unsigned 10bits.
+    uint16_t accumulator;
+} ANALOG_INTEGRATOR_ACCUMULATOR;
+
+static ANALOG_INTEGRATOR_ACCUMULATOR _accumulators[AN_CHANNELS];
+static ANALOG_INTEGRATOR_DATA _values;
+
 static enum {
     // Idle and acquisition time
     IDLE,
@@ -19,22 +26,23 @@ static enum {
 
 static TICK_TYPE _acquisitionStartTs;
 static uint8_t _channel;
-static ANALOG_INTEGRATOR_CHANNEL_DATA* _channelPtr;
+static uint8_t _count;
 
-static void resetData() {
-    _channelPtr = &_data.ch[0];
-    for (uint8_t i = 0; i < AN_CHANNELS; i++, _channelPtr++) {
-        _channelPtr->accumulator = 0;
-        _channelPtr->count = 0;
+static void storeValuesAndReset() {
+    for (uint8_t i = 0; i < AN_CHANNELS; i++) {
+        _values.ch[i].value = (((uint32_t)_accumulators[i].accumulator) << 16) / _count;
     }
+    memset(&_accumulators, 0, sizeof(_accumulators));
 }
 
 static void startAcquire() {
     _channel++;
-    _channelPtr++;
     if (_channel >= AN_CHANNELS) {
         _channel = 0;
-        _channelPtr = &_data.ch[0];
+        _count++;
+        if (_count >= ACQUISITIONS_PER_SECONDS) {
+            storeValuesAndReset();
+        }
     }
 
     switch (_channel) {
@@ -51,9 +59,10 @@ static void startAcquire() {
 }
 
 void anint_init() {
-    resetData();
+    storeValuesAndReset();
     _state = IDLE;
     _channel = 0;
+    _count = 0;
     
     // FVR: Fixed voltage reference
     // Since the LTC1966 RMS converter module range is 1Vpeak in input (so ~0.7V out), uses the internal 1.024V ref for ADC.
@@ -82,8 +91,7 @@ void anint_init() {
 void anint_poll() {
     switch (_state) {
         case IDLE: {
-            TICK_TYPE now = timers_get();
-            if ((now - _acquisitionStartTs) > ACQUISITION_PERIOD) {
+            if ((timers_get() - _acquisitionStartTs) > ACQUISITION_PER_CHANNEL_PERIOD) {
                 _state = SAMPLING;
 
                 // Start sampling
@@ -97,13 +105,7 @@ void anint_poll() {
             if (!ADCON0bits.GO) {
                 // Read ADC RESult registers
                 uint16_t value = (uint16_t)((ADRESH << 8) + ADRESL);
-                _channelPtr->accumulator += value;
-                _channelPtr->count++;
-                if (_channelPtr->accumulator < 0 || _channelPtr->count == 0) {
-                    // Overflow
-                    sys_fatal(ERR_DEVICE_DEADLINE_MISSED);
-                }
-                
+                _accumulators[_channel].accumulator += value;
                 _state = IDLE;
                 // Move to next channel
                 startAcquire();
@@ -113,6 +115,5 @@ void anint_poll() {
 }
 
 void anint_read(ANALOG_INTEGRATOR_DATA* data) {
-    *data = _data;
-    resetData();
+    *data = _values;
 }
