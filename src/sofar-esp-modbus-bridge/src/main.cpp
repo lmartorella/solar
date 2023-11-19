@@ -56,6 +56,7 @@ void setup() {
 void loop() {
     bridge.task();
     yield();
+    delay(1);
 }
 
 /**
