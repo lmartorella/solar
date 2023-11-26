@@ -20,9 +20,10 @@ namespace Lucky.Home.Device.Sofar
         }
 
         /// <summary>
-        /// Returns false in case of timeout
+        /// Returns false in case of timeout or other Modbus errors.
+        /// In night mode, silence logging of timeout errors
         /// </summary>
-        public async Task<bool> ReadData(ModbusClient client)
+        public async Task<bool> ReadData(ModbusClient client, bool nightMode)
         {
             try
             {
@@ -31,8 +32,11 @@ namespace Lucky.Home.Device.Sofar
             }
             catch (ModbusException exc)
             {
-                logger.Log("ModbusExc", "message", exc.Message);
-                // The inverter responded with some error that is not managed, so it is alive
+                if (exc.ExceptionCode != ModbusExceptionCode.GatewayTargetDeviceFailedToRespond || !nightMode)
+                {
+                    logger.Log("ModbusExc", "message", exc.Message);
+                }
+                // The inverter RTU-to-TCP responded with some error that is not managed, so it is alive
                 // Even the RTU timeout is managed by the gateway and translated to a modbus error
                 return false;
             }

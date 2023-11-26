@@ -51,7 +51,7 @@ namespace Lucky.Home.Device.Sofar
             }
             else
             {
-                var data = await GetData();
+                var data = await GetData(args.State == InverterState.Off);
                 args.CommunicationError = data.Item2;
                 args.IsModbusConnected = true;
                 if (data.Item2 == CommunicationError.None)
@@ -254,7 +254,10 @@ namespace Lucky.Home.Device.Sofar
             }
         }
 
-        private async Task<Tuple<PowerData, CommunicationError>> GetData()
+        /// <summary>
+        /// In night mode, silence timeout errors
+        /// </summary>
+        private async Task<Tuple<PowerData, CommunicationError>> GetData(bool nightMode)
         {
             var data = new PowerData();
             CommunicationError error = CommunicationError.None;
@@ -268,10 +271,10 @@ namespace Lucky.Home.Device.Sofar
             {
                 var errors = 0;
                 // Aggregate data in order to minimize the block readings
-                errors += (await gridData.ReadData(modbusClient)) ? 0 : 1;
-                errors += (await stringsData.ReadData(modbusClient)) ? 0 : 1;
-                errors += (await stateData.ReadData(modbusClient)) ? 0 : 1;
-                errors += (await prodData.ReadData(modbusClient)) ? 0 : 1;
+                errors += (await gridData.ReadData(modbusClient, nightMode)) ? 0 : 1;
+                errors += (await stringsData.ReadData(modbusClient, nightMode)) ? 0 : 1;
+                errors += (await stateData.ReadData(modbusClient, nightMode)) ? 0 : 1;
+                errors += (await prodData.ReadData(modbusClient, nightMode)) ? 0 : 1;
 
                 if (errors == 4)
                 {
