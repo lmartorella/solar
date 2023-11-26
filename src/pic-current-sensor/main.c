@@ -27,10 +27,6 @@ typedef struct {
 #define SENSORS_REGS_COUNT (sizeof(ANALOG_INTEGRATOR_DATA) / 2)
 #define SENSORS_REGS_ADDRESS_BE (LE_TO_BE_16(0x200))
 
-#define CALIB_REGS_COUNT (sizeof(ANALOG_INTEGRATOR_CALIBRATION) / 2)
-#define CALIB_REGS_ADDRESS_BE (LE_TO_BE_16(0x300))
-
-
 _Bool regs_validateReg() {
     uint8_t count = bus_cl_header.address.countL;
     uint16_t addressBe = bus_cl_header.address.registerAddressBe;
@@ -56,15 +52,6 @@ _Bool regs_validateReg() {
         }
         return true;
     }
-
-    if (addressBe == CALIB_REGS_ADDRESS_BE) {
-        // Only reading/writing whole channel range at a time is supported
-        if (count != CALIB_REGS_COUNT) {
-            bus_cl_exceptionCode = ERR_INVALID_SIZE;
-            return false;
-        }
-        return true;
-    }
     
     bus_cl_exceptionCode = ERR_INVALID_ADDRESS;
     return false;
@@ -76,10 +63,6 @@ _Bool regs_onReceive() {
         // Ignore data, reset flags and counters
         sys_resetReason = RESET_NONE;
         bus_cl_crcErrors = 0;
-        return true;
-    }
-    if (addressBe == CALIB_REGS_ADDRESS_BE) {
-        anint_write_calib((ANALOG_INTEGRATOR_CALIBRATION*)rs485_buffer);
         return true;
     }
     return false;
@@ -95,10 +78,6 @@ void regs_onSend() {
     
     if (addressBe == SENSORS_REGS_ADDRESS_BE) {
         anint_read_values((ANALOG_INTEGRATOR_DATA*)rs485_buffer);
-        return;
-    }
-    if (addressBe == CALIB_REGS_ADDRESS_BE) {
-        anint_read_calib((ANALOG_INTEGRATOR_CALIBRATION*)rs485_buffer);
         return;
     }
 }

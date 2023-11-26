@@ -9,20 +9,10 @@ typedef struct {
     uint32_t values[AN_CHANNELS];
 } ANALOG_INTEGRATOR_DATA;
 
-typedef struct {
-    // The calibration data, stored in EEPROM
-    // Calibration data. When set to 2^15, it is the neutral calibration.
-    uint16_t calib[AN_CHANNELS];
-} ANALOG_INTEGRATOR_CALIBRATION;
-
 void anint_init(void);
 void anint_poll(void);
 
 // Read data, sampled at 1 second
 void anint_read_values(ANALOG_INTEGRATOR_DATA* data);
-
-// Read/write calibration data
-void anint_read_calib(ANALOG_INTEGRATOR_CALIBRATION* data);
-void anint_write_calib(ANALOG_INTEGRATOR_CALIBRATION* data);
 
 #endif
