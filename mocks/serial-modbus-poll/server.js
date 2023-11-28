@@ -68,43 +68,58 @@ const toHex = buffer => {
         data.push(...toLe(crc));
         writeData(Uint8Array.from(data));
 
-        parser.once('data', async data => {
-            console.log("<- ", toHex(data));
+        return new Promise((resolve, reject) => {
+            parser.once('data', async data => {
+                console.log("<- ", toHex(data));
+        
+                if (data[0] != 1) {
+                    reject(new Error("not addressed to node 1"));
+                    return;
+                }
+                const l = count * 2 + 2 + 3;
+                if (data.length < l) {
+                    reject(new Error("truncated message"));
+                    return;
+                }
     
-            if (data[0] != 1) {
-                console.log(" Skip: not addressed to node 1");
-                return;
-            }
-            const l = count * 2 + 2 + 3;
-            if (data.length < l) {
-                console.log(" Skip: truncated message");
-                return;
-            }
-
-            const crc = fromLe(data, l - 2);
-            if (crc16modbus(data.slice(0, l - 2)) !== crc) {
-                console.log(" Skip: invalid CRC");
-                return;
-            }
-    
-            // Decode the function code
-            if (data[1] != 3) {
-                console.log(" Err: function code expected: 0x03");
-                return;
-            }
-            if (data[2] != count * 2) {
-                console.log(" Err: buffer size expected: " + count * 2);
-                return;
-            }
-    
-            let values = [];
-            for (let i = 0; i < count; i++) {
-                values.push(fromLe(data, i * 2 + 3));
-            }
-            console.log(`Data: ${values.join(", ")}`);
+                const crc = fromLe(data, l - 2);
+                if (crc16modbus(data.slice(0, l - 2)) !== crc) {
+                    reject(new Error("invalid CRC"));
+                    return;
+                }
+        
+                // Decode the function code
+                if (data[1] != 3) {
+                    reject(new Error("function code expected: 0x03"));
+                    return;
+                }
+                if (data[2] != count * 2) {
+                    reject(new Error("buffer size expected: " + count * 2));
+                    return;
+                }
+        
+                let values = [];
+                for (let i = 0; i < count; i++) {
+                    // PIC little endian
+                    values.push(fromLe(data, i * 2 + 3));
+                }
+                resolve(values);
+            });
         });
     }
 
-    setInterval(() => poll(0x200, 6), 1000);
+    setInterval(async () => { 
+        try {
+            const registries = await poll(0x200, 4);
+            if (registries) {
+                const toFixedPoint = i => {
+                    return (registries[i] + (registries[i + 1] << 16)) / 65536.0;
+                }
+                console.log(`I1: ${toFixedPoint(0)}, I2: ${toFixedPoint(2)}`);
+            }
+        } catch (err) {
+            console.log(`Skip: ${err.message}`);
+        }
+    }, 1000);
 
 })();
