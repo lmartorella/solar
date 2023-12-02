@@ -16,7 +16,7 @@ namespace Lucky.Home.Solar
         private IStatusUpdate _lastFaultMessage;
         private readonly NotificationSender notificationSender;
         private readonly ILogger Logger;
-        private double? _lastAmmeterValue = null;
+        private double? _lastHomeUsageCurrentA = null;
 
         public DataLogger(InverterDevice inverterDevice, AnalogIntegrator ammeterSink, NotificationSender notificationSender, ITimeSeries<PowerData, DayPowerData> database)
         {
@@ -24,12 +24,12 @@ namespace Lucky.Home.Solar
             Database = database;
             Logger = Manager.GetService<ILoggerFactory>().Create("DataLogger");
             inverterDevice.NewData += (o, e) => HandleNewData(e);
-            ammeterSink.DataChanged += (o, e) => UpdateAmmeterValue(ammeterSink.Data);
+            ammeterSink.HomeDataChanged += (o, e) => UpdateHomeUsage(ammeterSink.HomeData);
         }
 
-        private void UpdateAmmeterValue(double? data)
+        private void UpdateHomeUsage(double? data)
         {
-            _lastAmmeterValue = data;
+            _lastHomeUsageCurrentA = data;
         }
 
         private void HandleNewData(PowerData data)
@@ -42,7 +42,7 @@ namespace Lucky.Home.Solar
             // Use the current grid voltage to calculate Net Energy Metering
             if (data.GridVoltageV > 0)
             {
-                data.HomeUsageCurrentA = _lastAmmeterValue ?? -1;
+                data.HomeUsageCurrentA = _lastHomeUsageCurrentA ?? -1;
             }
             var db = Database;
             if (db != null)

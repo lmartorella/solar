@@ -10,38 +10,43 @@ namespace Lucky.Home.Solar
         private double? data;
 
         /// <summary>
-        /// RAW float LE data published by the ammeter
+        /// Decimal value of Ampere RMS, home usage
         /// </summary>
-        public const string DataTopicId = "ammeter_0/value";
+        public const string HomeDataTopicId = "ammeter/home";
+
+        /// <summary>
+        /// Decimal value of Ampere RMS, grid immission
+        /// </summary>
+        public const string ImmissionDataTopicId = "ammeter/immission";
 
         public AnalogIntegrator()
         {
             mqttService = Manager.GetService<MqttService>();
             // The ammeter uses will to send zero byte packet when disconnected
-            _ = mqttService.SubscribeRawTopic(DataTopicId, HandleData);
+            _ = mqttService.SubscribeRawTopic(HomeDataTopicId, HandleHomeData);
         }
 
-        private void HandleData(byte[] data)
+        private void HandleHomeData(byte[] data)
         {
             if (data == null || data.Length == 0)
             {
-                Data = null;
+                HomeData = null;
             }
             else
             {
-                Data = double.Parse(Encoding.UTF8.GetString(data));
+                HomeData = double.Parse(Encoding.UTF8.GetString(data));
             }
         }
 
         /// <summary>
-        /// Event raised when new data comes from the inverter, or the state changes
+        /// Event raised when new home usage data comes from the sensor, or the state changes
         /// </summary>
-        public event EventHandler DataChanged;
+        public event EventHandler HomeDataChanged;
 
         /// <summary>
-        /// Last sample. Null means offline
+        /// Last sample of home usage. Null means offline
         /// </summary>
-        public double? Data
+        public double? HomeData
         {
             get => data;
             set
@@ -49,7 +54,7 @@ namespace Lucky.Home.Solar
                 if (data != value)
                 {
                     data = value;
-                    DataChanged?.Invoke(this, EventArgs.Empty);
+                    HomeDataChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }

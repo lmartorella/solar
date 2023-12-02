@@ -24,7 +24,7 @@ namespace Lucky.Home.Solar
             mqttService = Manager.GetService<MqttService>();
             inverterDevice.NewData += (o, e) => HandleNewInverterData(e);
             inverterDevice.StateChanged += (o, e) => UpdateInverterState(inverterDevice.State);
-            ammeterSink.DataChanged += (o, e) => UpdateAmmeterValue(ammeterSink.Data);
+            ammeterSink.HomeDataChanged += (o, e) => UpdateAmmeterValue(ammeterSink.HomeData);
             UpdateInverterState(inverterDevice.State);
         }
 
