@@ -6,6 +6,7 @@
 
 typedef struct {
     // The integrated A/D value for the last second, 16 integer + 16 fractional bits (value * 65536)
+    // as LSB fixed point values
     uint32_t values[AN_CHANNELS];
 } ANALOG_INTEGRATOR_DATA;
 
