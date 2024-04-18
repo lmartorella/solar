@@ -35,9 +35,9 @@ namespace Lucky.Home.Solar
             });
             await Manager.GetService<MqttService>().SubscribeRawTopic(SolarStateTopicId, data =>
             {
-                if (Enum.TryParse(Encoding.UTF8.GetString(data), out State))
+                if (Enum.TryParse(Encoding.UTF8.GetString(data), out NightState))
                 {
-                    StateChanged?.Invoke(this, EventArgs.Empty);
+                    NightStateChanged?.Invoke(this, EventArgs.Empty);
                 }
             });
         }
@@ -48,13 +48,13 @@ namespace Lucky.Home.Solar
         public event EventHandler<PowerData> NewData;
 
         /// <summary>
-        /// Event raised when <see cref="State"/> changes.
+        /// Event raised when <see cref="NightState"/> changes.
         /// </summary>
-        public event EventHandler StateChanged;
+        public event EventHandler NightStateChanged;
 
         /// <summary>
         /// The low-level inverter state
         /// </summary>
-        public InverterState State;
+        public NightState NightState;
     }
 }

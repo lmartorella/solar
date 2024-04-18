@@ -42,7 +42,7 @@ namespace Lucky.Home.Device.Sofar
         private async Task PullData(PollStrategyManager.PullDataEventArgs args)
         {
             // Publish the state machine state
-            await mqttService.RawPublish(InverterDevice.SolarStateTopicId, Encoding.UTF8.GetBytes(args.State.ToString()));
+            await mqttService.RawPublish(InverterDevice.SolarStateTopicId, Encoding.UTF8.GetBytes(args.NightState.ToString()));
 
             // Check TCP MODBUS connection
             if (!modbusClient.CheckConnected())
@@ -51,7 +51,7 @@ namespace Lucky.Home.Device.Sofar
             }
             else
             {
-                var data = await GetData(args.State == InverterState.Off);
+                var data = await GetData(args.NightState == NightState.Night);
                 args.CommunicationError = data.Item2;
                 args.IsModbusConnected = true;
                 if (data.Item2 == CommunicationError.None)

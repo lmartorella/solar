@@ -15,13 +15,13 @@ namespace Lucky.Home.Solar
         {
             this.database = database;
             Logger = Manager.GetService<ILoggerFactory>().Create("NotifSvc");
-            inverterDevice.StateChanged += (o, e) => HandleStateChanged(inverterDevice.State);
+            inverterDevice.NightStateChanged += (o, e) => HandleStateChanged(inverterDevice.NightState);
         }
 
-        private void HandleStateChanged(InverterState state)
+        private void HandleStateChanged(NightState state)
         {
             // From connected/connecting to OFF mean end of the day
-            if (state == InverterState.Off)
+            if (state == NightState.Night)
             {
                 // Send summary
                 var summary = database.GetAggregatedData();

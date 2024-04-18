@@ -13,7 +13,7 @@ namespace Lucky.Home.Solar
 
         private readonly MqttService mqttService;
         private readonly DataLogger dataLogger;
-        private InverterState inverterState;
+        private NightState inverterNightState;
 
         public const string Topic = "ui/solar";
         public const string WillPayload = "null";
@@ -23,9 +23,9 @@ namespace Lucky.Home.Solar
             this.dataLogger = dataLogger;
             mqttService = Manager.GetService<MqttService>();
             inverterDevice.NewData += (o, e) => HandleNewInverterData(e);
-            inverterDevice.StateChanged += (o, e) => UpdateInverterState(inverterDevice.State);
+            inverterDevice.NightStateChanged += (o, e) => UpdateInverterState(inverterDevice.NightState);
             ammeterSink.DataChanged += (o, e) => UpdateAmmeterValue(ammeterSink.Data);
-            UpdateInverterState(inverterDevice.State);
+            UpdateInverterState(inverterDevice.NightState);
         }
 
         private void UpdateAmmeterValue(double? data)
@@ -34,9 +34,9 @@ namespace Lucky.Home.Solar
             PublishUpdate();
         }
 
-        private void UpdateInverterState(InverterState state)
+        private void UpdateInverterState(NightState state)
         {
-            inverterState = state;
+            inverterNightState = state;
             PublishUpdate();
         }
 
@@ -66,7 +66,7 @@ namespace Lucky.Home.Solar
                 packet.TotalDayWh = lastSample.EnergyTodayWh;
                 packet.TotalKwh = lastSample.TotalEnergyKWh;
                 // If the inverter state is OFF, override the data of the last known sample
-                packet.InverterState = inverterState == InverterState.Off ? InverterStates.Off : lastSample.InverterState;
+                packet.InverterState = inverterNightState == NightState.Night ? InverterStates.Off : lastSample.InverterState;
 
                 // From a recover boot 
                 if (_lastPanelVoltageV <= 0 && lastSample.GridVoltageV > 0)
@@ -110,11 +110,11 @@ namespace Lucky.Home.Solar
             get
             {
                 // InverterState.ModbusConnecting means modbus server down. Other states means modbus up
-                if (_lastAmmeterValue.HasValue && inverterState == InverterState.Online)
+                if (_lastAmmeterValue.HasValue && inverterNightState == NightState.Running)
                 {
                     return OnlineStatus.Online;
                 }
-                if (!_lastAmmeterValue.HasValue && inverterState != InverterState.Online)
+                if (!_lastAmmeterValue.HasValue && inverterNightState != NightState.Running)
                 {
                     return OnlineStatus.Offline;
                 }
