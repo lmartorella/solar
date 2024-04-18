@@ -1,4 +1,6 @@
-﻿namespace Lucky.Home.Solar
+﻿using System;
+
+namespace Lucky.Home.Solar
 {
     public enum OperatingState
     {
@@ -41,6 +43,26 @@
             }
         }
 
+        internal static InverterState FromCsv(string value)
+        {
+            if (value == "")
+            {
+                return new InverterState(OperatingState.Normal);
+            }
+            else
+            {
+                var parts = value.Split(":");
+                if (parts.Length == 2)
+                {
+                    return new InverterState(Enum.Parse<OperatingState>(parts[0]), parts[1]);
+                }
+                else
+                {
+                    return new InverterState(Enum.Parse<OperatingState>(parts[0]));
+                }
+            }
+        }
+
         internal string ToUserInterface(Device.Sofar.NightState inverterNightState) 
         {
             if (inverterNightState == Device.Sofar.NightState.Night)
@@ -53,9 +75,17 @@
             }
         }
 
+        internal bool IsFault
+        {
+            get
+            {
+                return OperatingState != OperatingState.Normal && OperatingState != OperatingState.Waiting && OperatingState != OperatingState.Checking;
+            }
+        }
+
         internal string IsFaultToReport()
         {
-            if (OperatingState != OperatingState.Normal && OperatingState != OperatingState.Waiting && OperatingState != OperatingState.Checking)
+            if (IsFault)
             {
                 return ToCsv();
             }

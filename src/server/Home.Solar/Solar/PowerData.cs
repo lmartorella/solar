@@ -21,6 +21,10 @@ namespace Lucky.Home.Solar
             {
                 return InverterState.ToCsv();
             }
+            set
+            {
+                InverterState = InverterState.FromCsv(value);
+            }
         }
 
         [Csv("0")]

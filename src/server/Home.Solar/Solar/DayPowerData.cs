@@ -14,49 +14,49 @@ namespace Lucky.Home.Solar
         /// Time of day of the first sample with power > 0
         /// </summary>
         [Csv("hh\\:mm\\:ss")]
-        public TimeSpan First;
+        public TimeSpan First { get; set; }
 
         /// <summary>
         /// Time of day of the last sample with power > 0
         /// </summary>
         [Csv("hh\\:mm\\:ss")]
-        public TimeSpan Last;
+        public TimeSpan Last { get; set; }
 
         /// <summary>
         /// Total power
         /// </summary>
         [Csv("0.00")]
-        public double PowerKWh;
+        public double PowerKWh { get; set; }
 
         /// <summary>
         /// Has at least a fault?
         /// </summary>
         [Csv("0")]
-        public int Fault;
+        public int Fault { get; set; }
 
         /// <summary>
         /// Peak power
         /// </summary>
         [Csv("0.00")]
-        public double PeakPowerW;
+        public double PeakPowerW { get; set; }
 
         /// <summary>
         /// Time of day of the peak power
         /// </summary>
         [Csv("hh\\:mm\\:ss")]
-        public TimeSpan PeakPowerTimestamp;
+        public TimeSpan PeakPowerTimestamp { get; set; }
 
         /// <summary>
         /// Peak grid voltage
         /// </summary>
         [Csv("0.00")]
-        public double PeakVoltageV;
+        public double PeakVoltageV { get; set; }
 
         /// <summary>
         /// Time of day of the peak voltage
         /// </summary>
         [Csv("hh\\:mm\\:ss")]
-        public TimeSpan PeakVoltageTimestamp;
+        public TimeSpan PeakVoltageTimestamp { get; set; }
 
         public override bool Aggregate(DateTime date, IEnumerable<PowerData> data)
         {
@@ -71,7 +71,7 @@ namespace Lucky.Home.Solar
                 // Have a sun range
                 First = first.Value.TimeOfDay;
                 Last = last.Value.TimeOfDay;
-                Fault = data.Any(t => InverterStates.IsFault(t.InverterState)) ? 1 : 0;
+                Fault = data.Any(t => t.InverterState.IsFault) ? 1 : 0;
 
                 // Now take total power.
                 // Typically this is stored in the EnergyTodayWh that is progressively stored, so ideally the last sample is OK
