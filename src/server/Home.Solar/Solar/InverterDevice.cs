@@ -37,7 +37,7 @@ namespace Lucky.Home.Solar
             {
                 if (Enum.TryParse(Encoding.UTF8.GetString(data), out NightState))
                 {
-                    NightStateChanged?.Invoke(this, EventArgs.Empty);
+                    NightStateChanged?.Invoke(this, NightState);
                 }
             });
         }
@@ -50,7 +50,7 @@ namespace Lucky.Home.Solar
         /// <summary>
         /// Event raised when <see cref="NightState"/> changes.
         /// </summary>
-        public event EventHandler NightStateChanged;
+        public event EventHandler<NightState> NightStateChanged;
 
         /// <summary>
         /// The low-level inverter state

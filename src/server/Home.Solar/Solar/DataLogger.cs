@@ -15,16 +15,22 @@ namespace Lucky.Home.Solar
         private string _lastFault = null;
         private IStatusUpdate _lastFaultMessage;
         private readonly NotificationSender notificationSender;
-        private readonly ILogger Logger;
         private double? _lastAmmeterValue = null;
+        private NightState nightState;
 
         public DataLogger(InverterDevice inverterDevice, AnalogIntegrator ammeterSink, NotificationSender notificationSender, ITimeSeries<PowerData, DayPowerData> database)
         {
             this.notificationSender = notificationSender;
             Database = database;
-            Logger = Manager.GetService<ILoggerFactory>().Create("DataLogger");
             inverterDevice.NewData += (o, e) => HandleNewData(e);
+            inverterDevice.NightStateChanged += (o, e) => HandleNightStateChanged(e);
+            nightState = inverterDevice.NightState;
             ammeterSink.DataChanged += (o, e) => UpdateAmmeterValue(ammeterSink.Data);
+        }
+
+        private void HandleNightStateChanged(NightState e)
+        {
+            nightState = e;
         }
 
         private void UpdateAmmeterValue(double? data)
@@ -35,7 +41,7 @@ namespace Lucky.Home.Solar
         private void HandleNewData(PowerData data)
         {
             // Don't log OFF states
-            if (data.InverterState == InverterStates.Off)
+            if (nightState == NightState.Night)
             {
                 return;
             }
@@ -60,9 +66,9 @@ namespace Lucky.Home.Solar
 
         public PowerData ImmediateData { get; private set; }
 
-        private void CheckFault(string inverterState)
+        private void CheckFault(InverterState inverterState)
         {
-            var fault = InverterStates.ToFault(inverterState);
+            var fault = inverterState.IsFaultToReport();
             if (_lastFault != fault)
             {
                 var notification = Manager.GetService<INotificationService>();

@@ -65,8 +65,7 @@ namespace Lucky.Home.Solar
                 packet.CurrentTs = lastSample.FromInvariantTime(lastSample.TimeStamp).ToString("F");
                 packet.TotalDayWh = lastSample.EnergyTodayWh;
                 packet.TotalKwh = lastSample.TotalEnergyKWh;
-                // If the inverter state is OFF, override the data of the last known sample
-                packet.InverterState = inverterNightState == NightState.Night ? InverterStates.Off : lastSample.InverterState;
+                packet.InverterState = lastSample.InverterState.ToUserInterface(inverterNightState);
 
                 // From a recover boot 
                 if (_lastPanelVoltageV <= 0 && lastSample.GridVoltageV > 0)
