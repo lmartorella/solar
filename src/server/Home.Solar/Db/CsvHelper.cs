@@ -12,7 +12,7 @@ namespace Lucky.Db
     /// </summary>
     public static class CsvHelper<T> where T : class, new()
     {
-        private static readonly List<Tuple<FieldInfo, string>> s_fields;
+        private static readonly List<Tuple<PropertyInfo, string>> s_properties;
 
         private class TypeComparer : IComparer<Type>
         {
@@ -32,21 +32,26 @@ namespace Lucky.Db
 
         static CsvHelper()
         {
-            // List fields
-            var fields = typeof(T)
-                .GetFields(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance)
+            // List properties
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance)
                 .OrderBy(f => f.DeclaringType, new TypeComparer())
                 .Where(f => f.GetCustomAttributes(typeof(CsvAttribute), false) != null)
                 .ToArray();
-            Header = string.Join(",", fields.Select(fi => fi.Name));
-            s_fields = fields.Select(fi => Tuple.Create(fi, fi.GetCustomAttribute<CsvAttribute>().Format)).ToList();
+            Header = string.Join(",", properties.Select(pi => GetCsvFieldName(pi)));
+            s_properties = properties.Select(fi => Tuple.Create(fi, fi.GetCustomAttribute<CsvAttribute>().Format)).ToList();
+        }
+
+        private static string GetCsvFieldName(PropertyInfo propertyInfo)
+        {
+            var attr = propertyInfo.GetCustomAttribute<CsvAttribute>();
+            return attr.Name ?? propertyInfo.Name;
         }
 
         private static string Header { get; set; }
 
         private static string ToCsv(T value)
         {
-            return string.Join(",", s_fields.Select(fi =>
+            return string.Join(",", s_properties.Select(fi =>
             {
                 var format = fi.Item2 != null ? ("{0:" + fi.Item2 + "}") : "{0}";
                 return string.Format(CultureInfo.InvariantCulture, format, fi.Item1.GetValue(value));
@@ -58,7 +63,7 @@ namespace Lucky.Db
             if (!string.IsNullOrEmpty(line))
             {
                 string[] parts = line.Split(',');
-                return parts.Select(name => s_fields.FindIndex(t => t.Item1.Name == name)).ToArray();
+                return parts.Select(name => s_properties.FindIndex(t => t.Item1.Name == name)).ToArray();
             }
             else
             {
@@ -77,7 +82,7 @@ namespace Lucky.Db
                 }
 
                 // Special case: duplicate header
-                if (parts.Zip(header, (a1, a2) => Tuple.Create(a1, a2)).All(t => t.Item2 < 0 || t.Item1 == s_fields[t.Item2].Item1.Name))
+                if (parts.Zip(header, (a1, a2) => Tuple.Create(a1, a2)).All(t => t.Item2 < 0 || t.Item1 == s_properties[t.Item2].Item1.Name))
                 {
                     return null;
                 }
@@ -87,9 +92,9 @@ namespace Lucky.Db
                 {
                     if (header[i] >= 0)
                     {
-                        var t = s_fields[header[i]];
+                        var t = s_properties[header[i]];
                         object value = null;
-                        switch (Type.GetTypeCode(t.Item1.FieldType)) 
+                        switch (Type.GetTypeCode(t.Item1.PropertyType)) 
                         {
                             case TypeCode.UInt16:
                                 ushort u;
@@ -117,7 +122,7 @@ namespace Lucky.Db
                                 break;
                         }
 
-                        if (t.Item1.FieldType == typeof(DateTime))
+                        if (t.Item1.PropertyType == typeof(DateTime))
                         {
                             DateTime dt;
                             if (DateTime.TryParseExact(parts[i], t.Item2, null, DateTimeStyles.None, out dt))
@@ -125,7 +130,7 @@ namespace Lucky.Db
                                 value = dt;
                             }
                         }
-                        if (t.Item1.FieldType == typeof(TimeSpan))
+                        if (t.Item1.PropertyType == typeof(TimeSpan))
                         {
                             TimeSpan ts;
                             if (TimeSpan.TryParseExact(parts[i], t.Item2, null, out ts))
