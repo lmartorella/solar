@@ -19,7 +19,7 @@ interface IPvData {
     peakVTs: string;
 
     currentTs: string;
-    inverterState: keyof typeof FaultStates | keyof typeof NormalStates | null | "";
+    inverterState: keyof typeof FaultStates | keyof typeof NormalStates;
 }
 
 interface IPvChartPoint {
@@ -29,9 +29,10 @@ interface IPvChartPoint {
 }
 
 const NormalStates = {
-    "OFF": res.Solar_Off,
-    "WAIT": res.Solar_Wait,
-    "CHK": res.Solar_Check
+    "Off": res.Solar_Off,
+    "Normal": res.Solar_On,
+    "Waiting": res.Solar_Wait,
+    "Checking": res.Solar_Check
 };
 
 const FaultStates = {
@@ -77,11 +78,13 @@ export class SolarComponent implements OnInit {
                 this.firstLineClass = 'err';
             } else {
                 const state = this.pvData.inverterState;
-                if (state == null || NormalStates[state as keyof typeof NormalStates]) {
-                    this.firstLine = NormalStates[state as keyof typeof NormalStates || "OFF"];
-                    this.firstLineClass = 'gray';
-                } else if (state === undefined || state === "") {
-                    this.firstLine = format("Solar_On", { power: this.pvData.currentW });
+                if (NormalStates[state as keyof typeof NormalStates]) {
+                    if (state !== "Normal") {
+                        this.firstLine = NormalStates[state as keyof typeof NormalStates] as string;
+                        this.firstLineClass = 'gray';
+                    } else {
+                        this.firstLine = format("Solar_On", { power: this.pvData.currentW });
+                    }
                 } else {
                     this.firstLine = format("Error", this.decodeFault(this.pvData.inverterState as keyof typeof FaultStates));
                     this.firstLineClass = 'err';

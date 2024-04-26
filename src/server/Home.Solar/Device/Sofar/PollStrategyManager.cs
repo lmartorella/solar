@@ -6,7 +6,7 @@ namespace Lucky.Home.Device.Sofar
 {
     class PollStrategyManager
     {
-        private InverterState state = InverterState.Off;
+        private NightState nightState = NightState.Night;
         private DateTime _lastValidData = DateTime.Now;
         private CommunicationError? _lastCommunicationError = CommunicationError.None;
         private bool isConnected;
@@ -47,12 +47,12 @@ namespace Lucky.Home.Device.Sofar
             {
                 await PullNow();
                 TimeSpan timeout;
-                switch (state)
+                switch (nightState)
                 {
-                    case InverterState.Online:
+                    case NightState.Running:
                         timeout = PollDataPeriod;
                         break;
-                    case InverterState.Off:
+                    case NightState.Night:
                     default:
                         if (isConnected)
                         {
@@ -73,7 +73,7 @@ namespace Lucky.Home.Device.Sofar
             /// <summary>
             /// Send the strategy state, to update the MQTT
             /// </summary>
-            public InverterState State;
+            public NightState NightState;
 
             /// <summary>
             /// Tell the caller to wait
@@ -99,18 +99,18 @@ namespace Lucky.Home.Device.Sofar
 
         public event EventHandler<PullDataEventArgs> PullData;
 
-        public InverterState InverterState
+        public NightState NightState
         {
             get
             {
-                return state;
+                return nightState;
             }
             set
             {
-                if (state != value)
+                if (nightState != value)
                 {
-                    state = value;
-                    Logger.Log("State: " + value);
+                    nightState = value;
+                    Logger.Log("NightState: " + value);
                 }
             }
         }
@@ -122,14 +122,14 @@ namespace Lucky.Home.Device.Sofar
             this.isConnected = isConnected;
             if (DateTime.Now - _lastValidData > EnterNightModeAfter)
             {
-                InverterState = InverterState.Off;
+                NightState = NightState.Night;
             }
         }
 
         private async Task PullNow()
         {
             // Ask data to inverter via MODBUS. The inverter will update the MQTT in case of good data.
-            var args = new PullDataEventArgs { State = InverterState };
+            var args = new PullDataEventArgs { NightState = NightState };
             PullData?.Invoke(this, args);
             if (args.Task != null)
             {
@@ -146,11 +146,11 @@ namespace Lucky.Home.Device.Sofar
                 switch (args.CommunicationError)
                 {
                     case CommunicationError.None:
-                        InverterState = InverterState.Online;
+                        NightState = NightState.Running;
                         _lastValidData = DateTime.Now;
                         break;
                     case CommunicationError.PartialLoss:
-                        InverterState = InverterState.Online;
+                        NightState = NightState.Running;
                         break;
                     case CommunicationError.TotalLoss:
                         UpdateOffline(true);

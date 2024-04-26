@@ -28,7 +28,7 @@ namespace Lucky.Db
         }
 
         [Csv("HH:mm:ss")]
-        public DateTime TimeStamp;
+        public DateTime TimeStamp { get; set; }
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ namespace Lucky.Db
         }
 
         [Csv("yyyy-MM-dd")]
-        public DateTime Date;
+        public DateTime Date { get; set; }
 
         /// <summary>
         /// Aggregate one day of samples in a single sample line of a different time series

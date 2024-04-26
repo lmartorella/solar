@@ -42,7 +42,7 @@ namespace Lucky.Home.Device.Sofar
         private async Task PullData(PollStrategyManager.PullDataEventArgs args)
         {
             // Publish the state machine state
-            await mqttService.RawPublish(InverterDevice.SolarStateTopicId, Encoding.UTF8.GetBytes(args.State.ToString()));
+            await mqttService.RawPublish(InverterDevice.SolarStateTopicId, Encoding.UTF8.GetBytes(args.NightState.ToString()));
 
             // Check TCP MODBUS connection
             if (!modbusClient.CheckConnected())
@@ -51,7 +51,7 @@ namespace Lucky.Home.Device.Sofar
             }
             else
             {
-                var data = await GetData(args.State == InverterState.Off);
+                var data = await GetData(args.NightState == NightState.Night);
                 args.CommunicationError = data.Item2;
                 args.IsModbusConnected = true;
                 if (data.Item2 == CommunicationError.None)
@@ -204,33 +204,25 @@ namespace Lucky.Home.Device.Sofar
             {
             }
 
-            public string StateStr
+            public InverterState DetailedState
             {
                 get
                 {
-                    switch (OperatingState)
-                    {
-                        case 0:
-                            return InverterStates.Waiting;
-                        case 1:
-                            return InverterStates.Checking;
-                        case 2:
-                            return InverterStates.Normal;
-                        case 3:
-                            return "FAULT:" + FaultBits;
-                        case 4:
-                            return "PERM_FAULT:" + FaultBits;
-                        default:
-                            return "UNKNOWN:" + OperatingState;
-                    }
+                    return new InverterState(OperatingState, FaultBits);
                 }
             }
 
-            private int OperatingState
+            private OperatingState OperatingState
             {
                 get
                 {
-                    return GetValueAt(0x404);
+                    // Direct mapping
+                    var value = (OperatingState)GetValueAt(0x404);
+                    if (value < 0 || value >= OperatingState.FirstUnknownValue)
+                    {
+                        value = OperatingState.Unknown;
+                    }
+                    return value;
                 }
             }
 
@@ -317,7 +309,7 @@ namespace Lucky.Home.Device.Sofar
                 data.EnergyTodayWh = prodData.DailyProductionWh;
                 data.TotalEnergyKWh = prodData.TotalProductionKwh;
 
-                data.InverterState = stateData.StateStr;
+                data.InverterState = stateData.DetailedState;
                 data.TimeStamp = DateTime.Now;
             }
 
