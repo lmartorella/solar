@@ -218,7 +218,7 @@ namespace Lucky.Home.Device.Sofar
                 {
                     // Direct mapping
                     var value = (OperatingState)GetValueAt(0x404);
-                    if (value < 0 || value > OperatingState.MaxKnownValue)
+                    if (value < 0 || value >= OperatingState.FirstUnknownValue)
                     {
                         value = OperatingState.Unknown;
                     }

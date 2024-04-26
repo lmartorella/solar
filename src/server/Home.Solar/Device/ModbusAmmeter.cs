@@ -54,7 +54,14 @@ namespace Lucky.Home.Device
         private async Task<double?> GetData()
         {
             var buffer = await modbusClient.ReadHoldingRegistriesFloat(modbusNodeId, 0, 1);
-            return buffer[0];
+            if (buffer.Length > 0)
+            {
+                return buffer[0];
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private async Task PublishData(double? data)

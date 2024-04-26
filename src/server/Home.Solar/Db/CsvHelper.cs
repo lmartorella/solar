@@ -63,7 +63,7 @@ namespace Lucky.Db
             if (!string.IsNullOrEmpty(line))
             {
                 string[] parts = line.Split(',');
-                return parts.Select(name => s_properties.FindIndex(t => t.Item1.Name == name)).ToArray();
+                return parts.Select(name => s_properties.FindIndex(t => GetCsvFieldName(t.Item1) == name)).ToArray();
             }
             else
             {
@@ -82,7 +82,7 @@ namespace Lucky.Db
                 }
 
                 // Special case: duplicate header
-                if (parts.Zip(header, (a1, a2) => Tuple.Create(a1, a2)).All(t => t.Item2 < 0 || t.Item1 == s_properties[t.Item2].Item1.Name))
+                if (parts.Zip(header, (a1, a2) => Tuple.Create(a1, a2)).All(t => t.Item2 < 0 || t.Item1 == GetCsvFieldName(s_properties[t.Item2].Item1)))
                 {
                     return null;
                 }

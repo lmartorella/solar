@@ -12,7 +12,7 @@ namespace Lucky.Home.Solar
         [Csv("0")]
         public double TotalEnergyKWh { get; set; }
 
-        public InverterState InverterState;
+        public InverterState InverterState = new InverterState(OperatingState.Normal);
 
         [Csv("", Name = "InverterState")]
         public string InverterStateStr
