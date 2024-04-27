@@ -57,16 +57,16 @@ namespace Lucky.Home.Solar
             OperatingState = operatingState;
         }
 
-        public InverterState(OperatingState operatingState, string faultBits)
+        public InverterState(OperatingState operatingState, string faultCode)
         {
             OperatingState = operatingState;
-            FaultBits = faultBits;
+            FaultCode = faultCode;
         }
 
         [DataMember]
         public OperatingState OperatingState { get; set; }
         [DataMember]
-        public string FaultBits { get; set; }
+        public string FaultCode { get; set; }
 
         internal string ToCsv()
         {
@@ -75,13 +75,13 @@ namespace Lucky.Home.Solar
             {
                 value = "UNKNOWN";
             }
-            if (OperatingState == OperatingState.Normal)
+            if (OperatingState == OperatingState.Normal || !IsFault)
             {
                 return value;
             }
             else
             {
-                return value + ":" + FaultBits;
+                return value + ":" + FaultCode;
             }
         }
 
@@ -119,20 +119,16 @@ namespace Lucky.Home.Solar
         {
             get
             {
-                return OperatingState != OperatingState.Normal && OperatingState != OperatingState.Waiting && OperatingState != OperatingState.Checking;
+                return !string.IsNullOrEmpty(FaultCode);
             }
         }
 
-        internal string IsFaultToReport()
+        /// <summary>
+        /// Return a fault representation that won't change until the fault changes or it resets
+        /// </summary>
+        internal string IsFaultToNotify()
         {
-            if (IsFault)
-            {
-                return ToCsv();
-            }
-            else
-            {
-                return null;
-            }
+            return IsFault ? FaultCode : null;
         }
     }
 }

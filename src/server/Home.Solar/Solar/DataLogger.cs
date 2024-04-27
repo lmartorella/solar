@@ -68,7 +68,7 @@ namespace Lucky.Home.Solar
 
         private void CheckFault(InverterState inverterState)
         {
-            var fault = inverterState.IsFaultToReport();
+            var fault = inverterState.IsFaultToNotify();
             if (_lastFault != fault)
             {
                 var notification = Manager.GetService<INotificationService>();

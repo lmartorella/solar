@@ -208,7 +208,7 @@ namespace Lucky.Home.Device.Sofar
             {
                 get
                 {
-                    return new InverterState(OperatingState, FaultBits);
+                    return new InverterState(OperatingState, FaultCode);
                 }
             }
 
@@ -226,19 +226,33 @@ namespace Lucky.Home.Device.Sofar
                 }
             }
 
-            private string FaultBits
+            private string FaultCode
             {
                 get
                 {
+                    var hasError = false;
+                    for (int a = 0x405; a < 0x405 + LikelyFaultBitsWindowSize; a++)
+                    {
+                        if (GetValueAt(a) != 0)
+                        {
+                            hasError = true;
+                            break;
+                        }
+                    }
+                    if (!hasError)
+                    {
+                        return "";
+                    }
+
                     StringBuilder str = new StringBuilder();
                     bool first = true;
                     for (int a = 0x405; a < 0x405 + LikelyFaultBitsWindowSize; a++)
                     {
                         if (!first)
                         {
-                            str.Append(",");
-                            first = false;
+                            str.Append(";");
                         }
+                        first = false;
                         str.Append(GetValueAt(a).ToString("x4"));
                     }
                     return str.ToString();
