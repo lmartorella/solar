@@ -61,17 +61,31 @@ namespace Lucky.Home.Solar
         public override bool Aggregate(DateTime date, IEnumerable<PowerData> data)
         {
             Date = date;
+            if (data.Count() == 0)
+            {
+                return false;
+            }
 
             // Find first/last valid samples
             DateTime? first = data.FirstOrDefault(t => t.PowerW > 0)?.TimeStamp;
             DateTime? last = data.LastOrDefault(t => t.PowerW > 0)?.TimeStamp;
+
+            // Calc max power and voltage, regardless the sun range
+            var maxPowerSample = data.Aggregate((i1, i2) => i1.PowerW > i2.PowerW ? i1 : i2);
+            PeakPowerW = maxPowerSample.PowerW;
+            PeakPowerTimestamp = maxPowerSample.TimeStamp.TimeOfDay;
+            var maxGridVoltageSample = data.Aggregate((i1, i2) => i1.GridVoltageV > i2.GridVoltageV ? i1 : i2);
+            PeakVoltageV = maxGridVoltageSample.GridVoltageV;
+            PeakVoltageTimestamp = maxGridVoltageSample.TimeStamp.TimeOfDay;
+
+            // Calc faults, regardless the sun range
+            Fault = data.Any(t => t.InverterState.IsFault || t.Fault != 0) ? 1 : 0;
 
             if (first.HasValue && last.HasValue && !first.Value.Equals(last.Value))
             {
                 // Have a sun range
                 First = first.Value.TimeOfDay;
                 Last = last.Value.TimeOfDay;
-                Fault = data.Any(t => t.InverterState.IsFault) ? 1 : 0;
 
                 // Now take total power.
                 // Typically this is stored in the EnergyTodayWh that is progressively stored, so ideally the last sample is OK
@@ -93,20 +107,25 @@ namespace Lucky.Home.Solar
 
                 PowerKWh = totalPower / 1000.0;
 
-                // Calc max power and voltage
-                var maxPowerSample = data.Aggregate((i1, i2) => i1.PowerW > i2.PowerW ? i1 : i2);
-                PeakPowerW = maxPowerSample.PowerW;
-                PeakPowerTimestamp = maxPowerSample.TimeStamp.TimeOfDay;
-
-                var maxGridVoltageSample = data.Aggregate((i1, i2) => i1.GridVoltageV > i2.GridVoltageV ? i1 : i2);
-                PeakVoltageV = maxGridVoltageSample.GridVoltageV;
-                PeakVoltageTimestamp = maxGridVoltageSample.TimeStamp.TimeOfDay;
-
                 return true;
             }
             else
             {
-                return false;
+                // No data, or no data with valid power?
+                first = data.FirstOrDefault(t => t.PowerW >= 0)?.TimeStamp;
+                last = data.LastOrDefault(t => t.PowerW >= 0)?.TimeStamp;
+                if (first.HasValue && last.HasValue && !first.Value.Equals(last.Value))
+                {
+                    // Have a sun range using the inverter on state
+                    First = first.Value.TimeOfDay;
+                    Last = last.Value.TimeOfDay;
+                    PowerKWh = 0;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
     }

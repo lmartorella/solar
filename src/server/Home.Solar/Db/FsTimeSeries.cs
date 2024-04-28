@@ -15,7 +15,7 @@ namespace Lucky.Home.Db
     /// </summary>
     public class FsTimeSeries<T, Taggr> : ITimeSeries<T, Taggr> where T : TimeSample, new() where Taggr : DayTimeSample<T>, new()
     {
-        private const string FILENAME_FORMAT = "yyyy-MM-dd";
+        internal const string FILENAME_FORMAT = "yyyy-MM-dd";
 
         private DirectoryInfo _folder;
         private FileInfo _dayFile;
@@ -125,19 +125,6 @@ namespace Lucky.Home.Db
         private static string CalcDayCvsName(DateTime now)
         {
             return now.ToString(FILENAME_FORMAT) + ".csv";
-        }
-
-        private static DateTime? ParseDate(string name)
-        {
-            DateTime date;
-            if (DateTime.TryParseExact(Path.GetFileNameWithoutExtension(name), FILENAME_FORMAT, null, System.Globalization.DateTimeStyles.None, out date))
-            {
-                return date;
-            }
-            else
-            {
-                return null;
-            }
         }
 
         /// <summary>
@@ -290,9 +277,9 @@ namespace Lucky.Home.Db
         /// <summary>
         /// Aggregate whole DB content at startup
         /// </summary>
-        public static void AggregateData(ILogger logger, DirectoryInfo folder, DateTime now)
+        public static void AggregateData(ILogger logger, DirectoryInfo directory, DateTime now)
         {
-            FileInfo aggrFile = new FileInfo(Path.Combine(folder.FullName, "_aggr.csv"));
+            FileInfo aggrFile = new FileInfo(Path.Combine(directory.FullName, "_aggr.csv"));
             if (aggrFile.Exists)
             {
                 logger.Log("Aggregated csv already exists, using it");
@@ -302,12 +289,12 @@ namespace Lucky.Home.Db
             CsvHelper<Taggr>.WriteCsvHeader(aggrFile);
 
             // Skip the current/future dates
-            var files = folder.GetFiles().Select(file => Tuple.Create(file, ParseDate(file.Name))).Where(t => t.Item2.HasValue && t.Item2.Value < now.Date).OrderBy(t => t.Item2).ToArray();
+            var files = CsvAggregate<T, Taggr>.GetFilesInFolder(directory, FILENAME_FORMAT, now);
             logger.Log("Parsing csv files", "n", files.Length);
             foreach (var tuple in files)
             {
                 // Parse CSV
-                var aggrData = CsvAggregate<T, Taggr>.ParseCsv(tuple.Item1, tuple.Item2.Value);
+                var aggrData = CsvAggregate<T, Taggr>.ParseCsv(tuple.Item1, tuple.Item2);
                 if (aggrData != null)
                 {
                     CsvHelper<Taggr>.WriteCsvLine(aggrFile, aggrData);

@@ -16,5 +16,7 @@ namespace Lucky.Db
         public string Name { get; set; }
 
         public string Format { get; private set; }
+
+        public bool OnlyForParsing { get; set; }
     }
 }

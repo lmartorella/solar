@@ -12,7 +12,9 @@ namespace Lucky.Db
     /// </summary>
     public static class CsvHelper<T> where T : class, new()
     {
-        private static readonly List<Tuple<PropertyInfo, string>> s_properties;
+        private static readonly List<Tuple<PropertyInfo, string>> s_propertiesForWrite;
+        private static readonly List<Tuple<PropertyInfo, string>> s_propertiesForParse;
+        private static readonly string s_headerForWrite;
 
         private class TypeComparer : IComparer<Type>
         {
@@ -33,12 +35,17 @@ namespace Lucky.Db
         static CsvHelper()
         {
             // List properties
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance)
+            var propertiesForWrite = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance)
                 .OrderBy(f => f.DeclaringType, new TypeComparer())
-                .Where(f => f.GetCustomAttributes(typeof(CsvAttribute), false) != null)
+                .Where(f => f.GetCustomAttribute<CsvAttribute>() != null && f.GetCustomAttribute<CsvAttribute>().OnlyForParsing == false)
                 .ToArray();
-            Header = string.Join(",", properties.Select(pi => GetCsvFieldName(pi)));
-            s_properties = properties.Select(fi => Tuple.Create(fi, fi.GetCustomAttribute<CsvAttribute>().Format)).ToList();
+            var propertiesForRead = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance)
+                .OrderBy(f => f.DeclaringType, new TypeComparer())
+                .Where(f => f.GetCustomAttribute<CsvAttribute>() != null)
+                .ToArray();
+            s_headerForWrite = string.Join(",", propertiesForWrite.Select(pi => GetCsvFieldName(pi)));
+            s_propertiesForWrite = propertiesForWrite.Select(fi => Tuple.Create(fi, fi.GetCustomAttribute<CsvAttribute>().Format)).ToList();
+            s_propertiesForParse = propertiesForRead.Select(fi => Tuple.Create(fi, fi.GetCustomAttribute<CsvAttribute>().Format)).ToList();
         }
 
         private static string GetCsvFieldName(PropertyInfo propertyInfo)
@@ -47,11 +54,9 @@ namespace Lucky.Db
             return attr.Name ?? propertyInfo.Name;
         }
 
-        private static string Header { get; set; }
-
         private static string ToCsv(T value)
         {
-            return string.Join(",", s_properties.Select(fi =>
+            return string.Join(",", s_propertiesForWrite.Select(fi =>
             {
                 var format = fi.Item2 != null ? ("{0:" + fi.Item2 + "}") : "{0}";
                 return string.Format(CultureInfo.InvariantCulture, format, fi.Item1.GetValue(value));
@@ -63,7 +68,7 @@ namespace Lucky.Db
             if (!string.IsNullOrEmpty(line))
             {
                 string[] parts = line.Split(',');
-                return parts.Select(name => s_properties.FindIndex(t => GetCsvFieldName(t.Item1) == name)).ToArray();
+                return parts.Select(name => s_propertiesForParse.FindIndex(t => GetCsvFieldName(t.Item1) == name)).ToArray();
             }
             else
             {
@@ -82,7 +87,7 @@ namespace Lucky.Db
                 }
 
                 // Special case: duplicate header
-                if (parts.Zip(header, (a1, a2) => Tuple.Create(a1, a2)).All(t => t.Item2 < 0 || t.Item1 == GetCsvFieldName(s_properties[t.Item2].Item1)))
+                if (parts.Zip(header, (a1, a2) => Tuple.Create(a1, a2)).All(t => t.Item2 < 0 || t.Item1 == GetCsvFieldName(s_propertiesForParse[t.Item2].Item1)))
                 {
                     return null;
                 }
@@ -92,7 +97,7 @@ namespace Lucky.Db
                 {
                     if (header[i] >= 0)
                     {
-                        var t = s_properties[header[i]];
+                        var t = s_propertiesForParse[header[i]];
                         object value = null;
                         switch (Type.GetTypeCode(t.Item1.PropertyType)) 
                         {
@@ -166,7 +171,7 @@ namespace Lucky.Db
 
         public static void WriteCsvHeader(FileInfo file)
         {
-            WriteCsvLine(file, Header);
+            WriteCsvLine(file, s_headerForWrite);
         }
 
         public static void WriteCsvLine(FileInfo file, T data)
@@ -181,12 +186,18 @@ namespace Lucky.Db
                 using (var reader = new StreamReader(stream))
                 {
                     // Read header
-                    var header = ParseHeader(reader.ReadLine());
+                    var headerStr = reader.ReadLine();
+                    var header = ParseHeader(headerStr);
                     // Read data
                     string line;
                     List<T> data = new List<T>();
                     while ((line = reader.ReadLine()) != null)
                     {
+                        if (line == headerStr)
+                        {
+                            // Duplicated header after a restart, skip
+                            continue;
+                        }
                         var l = ParseLine(line, header);
                         if (l != null)
                         {

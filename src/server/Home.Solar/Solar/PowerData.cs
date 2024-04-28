@@ -46,5 +46,11 @@ namespace Lucky.Home.Solar
         // Home usage current, to calculate Net Energy Metering
         [Csv("0.00")]
         public double HomeUsageCurrentA { get; set; }
+
+        /// <summary>
+        /// For old CSV formats
+        /// </summary>
+        [Csv("0.00", OnlyForParsing = true)]
+        public int Fault { get; set; }
     }
 }
