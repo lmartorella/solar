@@ -1,7 +1,7 @@
 import mqtt from "mqtt";
 
 console.log("Connecting to MQTT...");
-const client  = mqtt.connect({ clientId: "solar.webserver" });
+const client = mqtt.connect({ host: "127.0.0.1", clientId: "solar.webserver" });
 const topics = { };
 
 const subscribeAllTopics = () => {
