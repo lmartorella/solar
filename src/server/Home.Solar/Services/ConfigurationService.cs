@@ -17,7 +17,7 @@ namespace Lucky.Home.Services
         {
             for (int i = 0; i < _arguments.Length - 1; i++)
             {
-                if (_arguments[i] == "-" + key)
+                if (_arguments[i] == "--" + key)
                 {
                     return _arguments[i + 1];
                 }
