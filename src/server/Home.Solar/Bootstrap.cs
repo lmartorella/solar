@@ -37,19 +37,6 @@ namespace Lucky.Home
                 args.Cancel = true;
             };
 
-            // If a mail should be sent at startup, do it now
-            var mailBody = Manager.GetService<IConfigurationService>().GetConfig("sendMailErr");
-            if (!string.IsNullOrEmpty(mailBody))
-            {
-                // Append err file to the mail body, if avail
-                string lastErrorFile = Manager.GetService<ILoggerFactory>().LastErrorText;
-                if (lastErrorFile != null)
-                {
-                    mailBody += Environment.NewLine + Environment.NewLine + lastErrorFile;
-                }
-                await Manager.GetService<INotificationService>().SendMail(Resources.startupMessage, mailBody, true);
-            }
-
             // Implements a IPC pipe with web server
             _ = Manager.GetService<MqttService>().SubscribeRawTopic(appName + "/kill", (_e) =>
             {

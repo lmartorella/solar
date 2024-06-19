@@ -8,10 +8,5 @@
         ILogger Create(string name);
         ILogger Create(string name, string subKey);
         ILogger Create(string name, bool verbose);
-
-        /// <summary>
-        /// Used after a restart due to exception
-        /// </summary>
-        string LastErrorText { get; }
     }
 }

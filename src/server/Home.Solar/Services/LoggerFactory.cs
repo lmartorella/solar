@@ -12,8 +12,6 @@ namespace Lucky.Home.Services
         private string _logFile;
         private string _errFile;
 
-        public string LastErrorText { get; private set; }
-
         public class ConsoleLogger : ILogger
         {
             private readonly LoggerFactory _owner;
@@ -75,7 +73,6 @@ namespace Lucky.Home.Services
             _errFile = Path.Combine(service.GetAppFolderPath(), Assembly.GetEntryAssembly().GetName().Name + ".err");
             if (File.Exists(_errFile))
             {
-                LastErrorText = File.ReadAllText(_errFile);
                 File.Delete(_errFile);
             }
         }
