@@ -19,7 +19,7 @@ namespace Lucky.Home
             Manager.GetService<ConfigurationService>().Init(arguments);
 
             Manager.Register<LoggerFactory, ILoggerFactory>();
-            Manager.GetService<LoggerFactory>().Init(Manager.GetService<PersistenceService>());
+            Manager.GetService<LoggerFactory>();
 
             Manager.GetService<IIsolatedStorageService>().InitAppRoot(appName);
 
