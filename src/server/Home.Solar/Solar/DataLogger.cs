@@ -83,10 +83,7 @@ namespace Lucky.Home.Solar
                     bool notify = true;
                     if (_lastFaultMessage != null)
                     {
-                        if (_lastFaultMessage.Update(() =>
-                        {
-                            _lastFaultMessage.Text += string.Format(Resources.solar_error_mail_error_solved, (int)(DateTime.Now - _lastFaultMessage.TimeStamp).TotalSeconds);
-                        }))
+                        if (_lastFaultMessage.Append(string.Format(Resources.solar_error_mail_error_solved, (int)(ts - _lastFaultMessage.TimeStamp).TotalSeconds)))
                         {
                             notify = false;
                         }
