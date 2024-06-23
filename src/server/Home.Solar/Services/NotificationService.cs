@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
 using System.Linq;
-using System.Net.Mime;
-using System.IO;
 
 namespace Lucky.Home.Services
 {
@@ -97,46 +95,6 @@ namespace Lucky.Home.Services
             MailMessage message = new MailMessage(configuration.Sender, isAdminReport ? configuration.AdminNotificationRecipient : configuration.NotificationRecipient);
             message.Subject = title;
             message.Body = body;
-
-            bool sent = false;
-            while (!sent)
-            {
-                sent = await TrySendMail(message);
-                if (!sent)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(30));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Send a HTML mail
-        /// </summary>
-        public async Task SendHtmlMail(string title, string htmlBody, bool isAdminReport, IEnumerable<Tuple<Stream, ContentType, string>> attachments = null)
-        {
-            var configuration = State;
-
-            if (attachments == null)
-            {
-                attachments = new Tuple<Stream, ContentType, string>[0];
-            }
-            Logger.Log("SendingHtmlMail", "title", title, "attch", attachments.Count());
-
-            // Specify the message content.
-            MailMessage message = new MailMessage(configuration.Sender, isAdminReport ? configuration.AdminNotificationRecipient : configuration.NotificationRecipient);
-            message.Subject = title;
-
-            var alternateView = AlternateView.CreateAlternateViewFromString(htmlBody, null, MediaTypeNames.Text.Html);
-
-            foreach (var attInfo in attachments)
-            {
-                LinkedResource resource = new LinkedResource(attInfo.Item1, attInfo.Item2);
-                resource.ContentId = attInfo.Item3;
-                alternateView.LinkedResources.Add(resource);
-            }
-
-            message.AlternateViews.Add(alternateView);
-            message.IsBodyHtml = true;
 
             bool sent = false;
             while (!sent)

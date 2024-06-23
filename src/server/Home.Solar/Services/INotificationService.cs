@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Mime;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Services
@@ -16,11 +12,6 @@ namespace Lucky.Home.Services
         /// Send an immediate text mail (not coalesced)
         /// </summary>
         Task SendMail(string title, string body, bool isAdminReport);
-
-        /// <summary>
-        /// Send an immediate HTML mail (not coalesced)
-        /// </summary>
-        Task SendHtmlMail(string title, string htmlBody, bool isAdminReport, IEnumerable<Tuple<Stream, ContentType, string>> attachments = null);
 
         /// <summary>
         /// Enqueue a low-priority notification (sent aggregated on throttle basis).
