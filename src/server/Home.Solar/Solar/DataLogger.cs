@@ -13,7 +13,7 @@ namespace Lucky.Home.Solar
     {
         private readonly ITimeSeries<PowerData, DayPowerData> Database;
         private string _lastFault = null;
-        private IStatusUpdate _lastFaultMessage;
+        private DateTime? _lastFaultMessageTimeStamp;
         private readonly NotificationSender notificationSender;
         private double? _lastAmmeterValue = null;
         private NightState nightState;
@@ -75,26 +75,21 @@ namespace Lucky.Home.Solar
                 DateTime ts = DateTime.Now;
                 if (fault != null)
                 {
-                    _lastFaultMessage = notification.EnqueueStatusUpdate(Resources.solar_error_mail_title, string.Format(Resources.solar_error_mail_error, fault));
+                    // Enter fault
+                    notification.EnqueueStatusUpdate(Resources.solar_error_mail_title, ts.ToString("HH:mm:ss") + ": " + string.Format(Resources.solar_error_mail_error, fault));
+                    _lastFaultMessageTimeStamp = ts;
                 }
                 else
                 {
+                    // Recover
                     // Try to recover last message update
-                    bool notify = true;
-                    if (_lastFaultMessage != null)
-                    {
-                        if (_lastFaultMessage.Update(() =>
-                        {
-                            _lastFaultMessage.Text += string.Format(Resources.solar_error_mail_error_solved, (int)(DateTime.Now - _lastFaultMessage.TimeStamp).TotalSeconds);
-                        }))
-                        {
-                            notify = false;
-                        }
-                    }
-                    if (notify)
-                    {
-                        notification.EnqueueStatusUpdate(Resources.solar_error_mail_title, Resources.solar_error_mail_normal);
-                    }
+                    notification.EnqueueStatusUpdate(
+                        Resources.solar_error_mail_title, 
+                        ts.ToString("HH:mm:ss") + ": " + Resources.solar_error_mail_normal,
+                        _lastFaultMessageTimeStamp.HasValue ?
+                            string.Format(Resources.solar_error_mail_error_solved, (int)(ts - _lastFaultMessageTimeStamp.Value).TotalSeconds) :
+                            null
+                    );
                 }
                 _lastFault = fault;
             }

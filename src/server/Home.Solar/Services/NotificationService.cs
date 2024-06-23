@@ -12,44 +12,18 @@ namespace Lucky.Home.Services
 {
     class NotificationService : ServiceBaseWithData<MailConfiguration>, INotificationService
     {
-        private class Message : IStatusUpdate
+        private class Message
         {
-            private bool _sent;
-
-            public DateTime TimeStamp { get; set; }
-
-            public string Text { get; set; }
+            public string Text { get; private set; }
 
             public object LockObject { get; set; }
 
-            public string Send()
-            {
-                lock(this)
-                {
-                    _sent = true;
-                    return ToString();
-                }
-            }
-
-            public bool Update(Action updateHandler)
+            public void Update(string appendText)
             {
                 lock (LockObject)
                 {
-                    if (_sent)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        updateHandler();
-                        return true;
-                    }
+                    Text += appendText;
                 }
-            }
-
-            public override string ToString()
-            {
-                return TimeStamp.ToString("HH:mm:ss") + ": " + Text;
             }
         }
 
@@ -66,10 +40,20 @@ namespace Lucky.Home.Services
                 _groupTitle = groupTitle;
             }
 
-            internal void Enqueue(Message message)
+            internal void Enqueue(string messageToAppend, string altMessageToAppendIfStillInQueue = null)
             {
                 lock (this)
                 {
+                    if (altMessageToAppendIfStillInQueue != null)
+                    {
+                        if (_messages.Count > 0)
+                        {
+                            _messages.Last().Update(altMessageToAppendIfStillInQueue);
+                            return;
+                        }
+                        messageToAppend = altMessageToAppendIfStillInQueue;
+                    }
+                    var message = new Message();
                     message.LockObject = this;
                     _messages.Add(message);
                     // Start timer
@@ -81,7 +65,7 @@ namespace Lucky.Home.Services
                             lock (this)
                             {
                                 // Send a single mail with all the content
-                                msg = string.Join(Environment.NewLine, _messages.Select(m => m.Send()));
+                                msg = string.Join(Environment.NewLine, _messages.Select(m => m.Text));
                                 _messages.Clear();
                                 _timer = null;
                             }
@@ -198,14 +182,7 @@ namespace Lucky.Home.Services
             }
         }
 
-        public IStatusUpdate EnqueueStatusUpdate(string groupTitle, string text)
-        {
-            var message = new Message { TimeStamp = DateTime.Now, Text = text };
-            EnqueueInStatusBucket(groupTitle, message);
-            return message;
-        }
-
-        private void EnqueueInStatusBucket(string groupTitle, Message message)
+        public void EnqueueStatusUpdate(string groupTitle, string messageToAppend, string altMessageToAppendIfStillInQueue = null)
         {
             lock (_statusBuckets)
             {
@@ -215,7 +192,7 @@ namespace Lucky.Home.Services
                     bucket = new Bucket(this, groupTitle);
                     _statusBuckets.Add(groupTitle, bucket);
                 }
-                bucket.Enqueue(message);
+                bucket.Enqueue(messageToAppend, altMessageToAppendIfStillInQueue);
             }
         }
     }
