@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Lucky.Home.Services
@@ -38,16 +39,24 @@ namespace Lucky.Home.Services
     class NotificationService : ServiceBase, INotificationService
     {
         private readonly MqttService mqttService;
+        private MqttService.RpcOriginator sendMailRpcOriginator;
+        private MqttService.RpcOriginator statusUpdateRpcOriginator;
 
         public NotificationService() : base(false)
         { 
             mqttService = Manager.GetService<MqttService>();
+            _ = Start();
         }
 
-        public Task EnqueueStatusUpdate(string groupTitle, string messageToAppend, string altMessageToAppendIfStillInQueue = null)
+        private async Task Start()
         {
-            // Post
-            return mqttService.JsonPublish("notification/enqueue_status_update", new EnqueueStatusUpdateRequestMqttPayload() 
+            sendMailRpcOriginator = await mqttService.RegisterRpcOriginator("notification/send_mail", TimeSpan.FromSeconds(10));
+            statusUpdateRpcOriginator = await mqttService.RegisterRpcOriginator("notification/enqueue_status_update", TimeSpan.FromSeconds(10));
+        }
+
+        public async Task EnqueueStatusUpdate(string groupTitle, string messageToAppend, string altMessageToAppendIfStillInQueue = null)
+        {
+            await statusUpdateRpcOriginator.JsonRemoteCall<EnqueueStatusUpdateRequestMqttPayload, RpcVoid>(new EnqueueStatusUpdateRequestMqttPayload() 
             {
                 GroupTitle = groupTitle,
                 MessageToAppend = messageToAppend,
@@ -55,10 +64,9 @@ namespace Lucky.Home.Services
             });
         }
 
-        public Task SendMail(string title, string body, bool isAdminReport)
+        public async Task SendMail(string title, string body, bool isAdminReport)
         {
-            // Post
-            return mqttService.JsonPublish("notification/send_mail", new SendMailRequestMqttPayload() 
+            await sendMailRpcOriginator.JsonRemoteCall<SendMailRequestMqttPayload, RpcVoid>(new SendMailRequestMqttPayload() 
             {
                 Body = body,
                 Title = title,

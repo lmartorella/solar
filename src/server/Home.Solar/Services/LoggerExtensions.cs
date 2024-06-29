@@ -72,6 +72,11 @@ namespace Lucky.Home.Services
             logger.LogFormatErr(EXC, "{2}: {0}: Stack: {1}", exc.Message, fullStack ? UnrollStack(exc) : "", exc.GetType().Name);
         }
 
+        public static void Exception(this ILogger logger, Exception exc, string context, bool fullStack = true)
+        {
+            logger.LogFormatErr(EXC, "{2} at {3}: {0}: Stack: {1}", exc.Message, fullStack ? UnrollStack(exc) : "", exc.GetType().Name, context);
+        }
+
         private static string UnrollStack(Exception exc)
         {
             return exc.StackTrace + ((exc.InnerException != null) ? (Environment.NewLine + exc.InnerException.GetType().Name + ": Inner exc: " + exc.InnerException.Message + UnrollStack(exc.InnerException)) : String.Empty);
